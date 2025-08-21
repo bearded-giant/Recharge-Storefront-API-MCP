@@ -44,33 +44,13 @@ To use this MCP server, you need a Recharge Storefront API access token:
 
 ## Authentication Model
 
-The Recharge Storefront API supports **two authentication methods**:
-
-### Method 1: Direct Session Creation by Customer ID (Recommended)
-
-This method allows the MCP server to create customer sessions using customer ID without portal dependency:
+The Recharge Storefront API authentication uses **Direct Session Creation**:
 
 1. **Merchant Authentication**: Use merchant token to authenticate with Recharge
 2. **Customer ID**: Provide customer ID (from your customer database)
 3. **Session Creation**: MCP server creates customer session via API
 4. **Token Usage**: Use generated session token for subsequent operations
 5. **Automatic Scoping**: Token automatically scopes to the authenticated customer
-
-### Method 2: Portal-Generated Sessions (Legacy)
-
-Traditional method requiring portal integration:
-
-1. **Portal Login**: Customer logs into Recharge customer portal
-2. **Token Extraction**: Extract session token from customer's browser session
-3. **MCP Usage**: Provide extracted token to MCP server
-4. **API Operations**: Use token for Storefront API calls
-
-### Authentication Comparison
-
-| Method | Token Type | Requirements | Portal Dependency | Use Case |
-|--------|------------|--------------|-------------------|----------|
-| **Direct Session** | Merchant + Customer ID | Merchant token + customer ID | ❌ No | Customer service, automation |
-| **Portal Session** | Customer session token | Portal integration | ✅ Yes | Customer self-service portals |
 
 ## Getting Your Authentication Tokens
 
