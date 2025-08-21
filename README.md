@@ -46,10 +46,34 @@ To use this MCP server, you need a Recharge Storefront API access token:
 The Recharge Storefront API uses a **merchant token + customer ID authentication process**:
 
 ### Step 1: Get Customer ID
-You need a **customer ID** to create sessions. Get this by:
-- Looking up customers by email: `get_customer_by_email`
-- Using your existing customer database
-- From previous API responses
+You need a **customer ID** to create sessions. Here's how to get it:
+
+#### Option A: Lookup by Email (Most Common)
+```json
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "customer@example.com"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "customer": {
+    "id": "123456",
+    "email": "customer@example.com",
+    "first_name": "John",
+    "last_name": "Doe"
+  }
+}
+```
+
+#### Option B: From Your Database
+- Use customer IDs from your existing customer database
+- Customer IDs from previous API responses
+- Customer IDs from Recharge webhooks
 
 ### Step 2: Automatic Session Creation
 The MCP server automatically creates session tokens when you provide a `customer_id`:
