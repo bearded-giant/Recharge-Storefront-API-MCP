@@ -33,8 +33,37 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 
 ### Prerequisites
 - Node.js 18.0.0 or higher
-- Recharge Storefront API access token
+- Recharge Storefront API access token (see instructions below)
 - Shopify store with Recharge integration
+
+### Getting Your API Access Token
+
+Before you can use this MCP server, you need to obtain a Recharge Storefront API access token:
+
+#### For Merchants (Store Owners):
+1. **Log into your Recharge merchant portal** at `https://rechargepayments.com/`
+2. **Navigate to Integrations** in your merchant dashboard
+3. **Go to API tokens** or **Developer settings**
+4. **Create a new Storefront API token** with the following permissions:
+   - Customer read/write access
+   - Subscription read/write access
+   - Address read/write access
+   - Payment method read/write access
+   - Order read access
+   - Product read access
+5. **Copy the generated token** - it will start with a prefix like `sk_test_` (for test mode) or `sk_live_` (for production)
+6. **Store the token securely** - you'll need it for the configuration step below
+
+#### For Developers/Partners:
+1. **Contact Recharge Support** or your Recharge partner manager to request Storefront API access
+2. **Provide your use case** and integration requirements
+3. **Follow the merchant steps above** once access is granted to your development store
+
+#### Important Notes:
+- **Test vs Production**: Use test tokens (`sk_test_`) for development and live tokens (`sk_live_`) for production
+- **Token Security**: Never commit tokens to version control or share them publicly
+- **Permissions**: Ensure your token has the necessary permissions for the operations you plan to perform
+- **Rate Limits**: Be aware of Recharge API rate limits when making requests
 
 ### Installation
 
