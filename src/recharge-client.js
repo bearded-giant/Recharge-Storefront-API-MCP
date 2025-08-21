@@ -20,28 +20,12 @@ export class RechargeClient {
   constructor({ storeUrl, accessToken }) {
     validateRequiredParams({ storeUrl, accessToken }, ['storeUrl', 'accessToken']);
 
-    // Extract domain from URL if full URL is provided
-    let domain;
-    if (storeUrl.startsWith('http://') || storeUrl.startsWith('https://')) {
-      try {
-        const url = new URL(storeUrl);
-        domain = url.hostname;
-      } catch (error) {
-        throw new Error('Invalid store URL format. Please provide a valid URL or domain.');
-      }
-    } else {
-      domain = storeUrl;
-    }
-
-    if (!domain.includes('.myshopify.com')) {
-      throw new Error('Store URL must be a valid Shopify domain ending with .myshopify.com (e.g., your-shop.myshopify.com)');
-    }
-    
-    this.domain = domain;
+    // Store URL should already be validated by server
+    this.domain = storeUrl;
     this.storeUrl = storeUrl;
     this.accessToken = accessToken;
     // Use the correct Recharge Storefront API base URL
-    this.baseURL = `https://${domain}/tools/recurring/portal`;
+    this.baseURL = `https://${storeUrl}/tools/recurring/portal`;
     
     this.client = axios.create({
       baseURL: this.baseURL,

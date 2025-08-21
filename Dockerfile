@@ -2,7 +2,7 @@
 FROM node:18-alpine
 
 # Install required system packages
-RUN apk add --no-cache grep findutils coreutils
+RUN apk add --no-cache grep findutils coreutils bash
 
 # Set working directory in container
 WORKDIR /app
@@ -16,6 +16,10 @@ RUN npm ci --only=production
 # Copy source code
 COPY src/ ./src/
 COPY .env.example ./
+
+# Copy scripts
+COPY scripts/ ./scripts/
+RUN chmod +x scripts/*.sh
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs

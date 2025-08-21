@@ -11,7 +11,6 @@ import {
 import dotenv from "dotenv";
 import { RechargeClient } from "./recharge-client.js";
 import { tools } from "./tools/index.js";
-import { formatErrorResponse } from "./utils/error-handler.js";
 
 // Load environment variables
 dotenv.config();
@@ -28,7 +27,6 @@ class RechargeStorefrontAPIMCPServer {
     this.defaultStoreUrl = process.env.RECHARGE_STOREFRONT_DOMAIN;
     this.defaultAccessToken = process.env.RECHARGE_ACCESS_TOKEN;
     
-    // Note: We don't require store URL at startup since it can be provided per-tool
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Default store URL: ${this.defaultStoreUrl || 'Not set (will require in tool calls)'}`);
       console.error(`[DEBUG] Default access token: ${this.defaultAccessToken ? 'Set' : 'Not set (will require in tool calls)'}`);
@@ -61,6 +59,7 @@ class RechargeStorefrontAPIMCPServer {
   /**
    * Validate store URL format
    * @param {string} storeUrl - Store URL to validate
+   * @returns {string} Validated domain
    * @throws {Error} If store URL is invalid
    */
   validateStoreUrl(storeUrl) {
@@ -111,19 +110,19 @@ class RechargeStorefrontAPIMCPServer {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
     
     // Validate store URL
-    this.validateStoreUrl(storeUrl);
+    const validatedDomain = this.validateStoreUrl(storeUrl);
 
     if (process.env.DEBUG === 'true') {
       const tokenSource = toolAccessToken ? 'tool parameter' : 'environment variable';
       const storeUrlSource = toolStoreUrl ? 'tool parameter' : 'environment variable';
       const maskedToken = accessToken.length > 8 ? `${accessToken.substring(0, 8)}...` : '***';
       console.error(`[DEBUG] Using access token from: ${tokenSource} (${maskedToken})`);
-      console.error(`[DEBUG] Using store URL from: ${storeUrlSource} (${storeUrl})`);
+      console.error(`[DEBUG] Using store URL from: ${storeUrlSource} (${validatedDomain})`);
     }
 
     // Create a new client instance with the appropriate token and store URL
     return new RechargeClient({
-      storeUrl: storeUrl,
+      storeUrl: validatedDomain,
       accessToken: accessToken,
     });
   }
