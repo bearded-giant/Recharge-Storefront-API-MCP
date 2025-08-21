@@ -938,6 +938,432 @@ RECHARGE_ACCESS_TOKEN=sk_test_your_token_here
 **Error Handling**:
 - If no token is available in either location, tools return: "No API access token available. Please provide an access_token parameter or set RECHARGE_ACCESS_TOKEN environment variable."
 
+## 📚 Sample Usage & Examples
+
+This section provides comprehensive examples of how to use the Recharge MCP Server with AI assistants for common subscription commerce tasks.
+
+### 🎯 Getting Started Examples
+
+#### **Basic Customer Information**
+```
+User: "Show me my customer information"
+AI Assistant: I'll retrieve your customer information from Recharge.
+
+Tool Call: get_customer
+Parameters: {}
+
+Response: Customer Information:
+{
+  "id": 12345,
+  "email": "customer@example.com",
+  "first_name": "John",
+  "last_name": "Doe",
+  "phone": "+1234567890",
+  "accepts_marketing": true,
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+#### **List Active Subscriptions**
+```
+User: "What subscriptions do I have?"
+AI Assistant: Let me check your active subscriptions.
+
+Tool Call: get_customer_subscriptions
+Parameters: {
+  "status": "active",
+  "limit": 10
+}
+
+Response: Customer Subscriptions:
+{
+  "subscriptions": [
+    {
+      "id": 67890,
+      "status": "active",
+      "next_charge_scheduled_at": "2024-02-15T00:00:00Z",
+      "order_interval_frequency": "1",
+      "order_interval_unit": "month",
+      "quantity": 2,
+      "product_title": "Premium Coffee Beans"
+    }
+  ]
+}
+```
+
+### 🔧 Subscription Management Examples
+
+#### **Skip Next Delivery**
+```
+User: "I need to skip my coffee delivery for February 15th"
+AI Assistant: I'll skip your subscription delivery for February 15th.
+
+Tool Call: skip_subscription
+Parameters: {
+  "subscriptionId": "67890",
+  "date": "2024-02-15"
+}
+
+Response: Skipped Subscription:
+{
+  "subscription_id": 67890,
+  "skipped_date": "2024-02-15",
+  "next_charge_scheduled_at": "2024-03-15T00:00:00Z"
+}
+```
+
+#### **Change Subscription Frequency**
+```
+User: "Change my coffee subscription to every 2 months instead of monthly"
+AI Assistant: I'll update your subscription frequency to every 2 months.
+
+Tool Call: update_subscription
+Parameters: {
+  "subscriptionId": "67890",
+  "order_interval_frequency": "2",
+  "order_interval_unit": "month"
+}
+
+Response: Updated Subscription:
+{
+  "id": 67890,
+  "order_interval_frequency": "2",
+  "order_interval_unit": "month",
+  "next_charge_scheduled_at": "2024-04-15T00:00:00Z"
+}
+```
+
+#### **Swap Product Variant**
+```
+User: "Switch my subscription from medium roast to dark roast coffee"
+AI Assistant: I'll swap your subscription to the dark roast variant.
+
+Tool Call: swap_subscription_product
+Parameters: {
+  "subscriptionId": "67890",
+  "variant_id": 98765,
+  "quantity": 2
+}
+
+Response: Swapped Subscription Product:
+{
+  "subscription_id": 67890,
+  "variant_id": 98765,
+  "product_title": "Premium Dark Roast Coffee Beans",
+  "quantity": 2
+}
+```
+
+### 📍 Address Management Examples
+
+#### **Add New Shipping Address**
+```
+User: "Add a new shipping address: 123 Main St, New York, NY 10001"
+AI Assistant: I'll add this new shipping address to your account.
+
+Tool Call: create_address
+Parameters: {
+  "address1": "123 Main St",
+  "city": "New York",
+  "province": "NY",
+  "zip": "10001",
+  "country": "US",
+  "first_name": "John",
+  "last_name": "Doe"
+}
+
+Response: Created Address:
+{
+  "id": 54321,
+  "address1": "123 Main St",
+  "city": "New York",
+  "province": "NY",
+  "zip": "10001",
+  "country": "US"
+}
+```
+
+#### **Update Existing Address**
+```
+User: "Update my address to apartment 4B"
+AI Assistant: I'll update your address to include apartment 4B.
+
+Tool Call: update_address
+Parameters: {
+  "addressId": "54321",
+  "address2": "Apt 4B"
+}
+
+Response: Updated Address:
+{
+  "id": 54321,
+  "address1": "123 Main St",
+  "address2": "Apt 4B",
+  "city": "New York",
+  "province": "NY"
+}
+```
+
+### 💰 Discount & Pricing Examples
+
+#### **Apply Discount Code**
+```
+User: "Apply discount code SAVE20 to my account"
+AI Assistant: I'll apply the discount code SAVE20 to your account.
+
+Tool Call: apply_discount
+Parameters: {
+  "discount_code": "SAVE20"
+}
+
+Response: Applied Discount:
+{
+  "id": 11111,
+  "code": "SAVE20",
+  "value": 20.0,
+  "value_type": "percentage",
+  "status": "active"
+}
+```
+
+#### **Add One-time Product**
+```
+User: "Add a coffee mug to my next delivery"
+AI Assistant: I'll add a coffee mug to your next subscription delivery.
+
+Tool Call: create_onetime
+Parameters: {
+  "variant_id": 55555,
+  "quantity": 1,
+  "next_charge_scheduled_at": "2024-02-15",
+  "price": 15.99
+}
+
+Response: One-time Product Created:
+{
+  "id": 77777,
+  "variant_id": 55555,
+  "quantity": 1,
+  "price": 15.99,
+  "product_title": "Premium Coffee Mug"
+}
+```
+
+### 📊 Order & Charge History Examples
+
+#### **View Recent Orders**
+```
+User: "Show me my last 5 orders"
+AI Assistant: I'll retrieve your 5 most recent orders.
+
+Tool Call: get_orders
+Parameters: {
+  "limit": 5,
+  "page": 1
+}
+
+Response: Orders:
+{
+  "orders": [
+    {
+      "id": 88888,
+      "status": "shipped",
+      "total_price": "45.99",
+      "created_at": "2024-01-15T10:00:00Z",
+      "shipped_date": "2024-01-16T14:30:00Z"
+    }
+  ]
+}
+```
+
+#### **Check Charge Status**
+```
+User: "What's the status of my latest charge?"
+AI Assistant: Let me check your most recent charge status.
+
+Tool Call: get_charges
+Parameters: {
+  "limit": 1,
+  "page": 1
+}
+
+Response: Charges:
+{
+  "charges": [
+    {
+      "id": 99999,
+      "status": "success",
+      "total_price": "45.99",
+      "processed_at": "2024-01-15T09:00:00Z"
+    }
+  ]
+}
+```
+
+### 🔧 Advanced Usage Examples
+
+#### **Multi-tenant with Custom API Token**
+```
+User: "Check subscriptions for customer with token sk_test_abc123"
+AI Assistant: I'll check subscriptions using the provided API token.
+
+Tool Call: get_customer_subscriptions
+Parameters: {
+  "access_token": "sk_test_abc123",
+  "status": "active"
+}
+
+Response: Customer Subscriptions:
+{
+  "subscriptions": [...]
+}
+```
+
+#### **Bulk Operations with Async Batch**
+```
+User: "Update multiple subscriptions to skip February deliveries"
+AI Assistant: I'll create a batch operation to skip February deliveries for multiple subscriptions.
+
+Tool Call: create_async_batch
+Parameters: {
+  "operations": [
+    {
+      "method": "POST",
+      "path": "/subscriptions/67890/skip",
+      "body": {"date": "2024-02-15"}
+    },
+    {
+      "method": "POST", 
+      "path": "/subscriptions/67891/skip",
+      "body": {"date": "2024-02-15"}
+    }
+  ]
+}
+
+Response: Created Async Batch:
+{
+  "batch_id": "batch_123",
+  "status": "processing",
+  "operations_count": 2
+}
+```
+
+### 🎯 Common Workflows
+
+#### **Complete Subscription Pause Workflow**
+```
+User: "I'm going on vacation for 2 months, pause my subscriptions"
+AI Assistant: I'll help you pause your subscriptions for your vacation.
+
+Step 1 - Get active subscriptions:
+Tool Call: get_customer_subscriptions
+Parameters: {"status": "active"}
+
+Step 2 - Pause each subscription:
+Tool Call: pause_subscription
+Parameters: {
+  "subscriptionId": "67890",
+  "pause_reason": "Customer vacation"
+}
+
+Response: Your subscriptions have been paused for your vacation. You can resume them anytime by asking me to resume your subscriptions.
+```
+
+#### **Address Change for All Subscriptions**
+```
+User: "I moved to a new address, update all my subscriptions"
+AI Assistant: I'll help you update your address for all subscriptions.
+
+Step 1 - Create new address:
+Tool Call: create_address
+Parameters: {
+  "address1": "456 New Street",
+  "city": "Boston",
+  "province": "MA",
+  "zip": "02101",
+  "country": "US",
+  "first_name": "John",
+  "last_name": "Doe"
+}
+
+Step 2 - Get all subscriptions:
+Tool Call: get_customer_subscriptions
+Parameters: {"status": "active"}
+
+Step 3 - Update each subscription with new address:
+Tool Call: update_subscription
+Parameters: {
+  "subscriptionId": "67890",
+  "shipping_address_id": "new_address_id"
+}
+
+Response: All your active subscriptions have been updated with your new address.
+```
+
+### 🛠️ Error Handling Examples
+
+#### **Missing API Token**
+```
+User: "Get my customer info"
+AI Assistant: I need an API token to access your Recharge account.
+
+Tool Call: get_customer
+Parameters: {}
+
+Error Response: "No API access token available. Please provide an access_token parameter or set RECHARGE_ACCESS_TOKEN environment variable."
+
+AI Assistant: I need your Recharge API token to access your account. You can either:
+1. Set the RECHARGE_ACCESS_TOKEN environment variable
+2. Provide the token in your request: "Get my customer info with token sk_test_your_token"
+```
+
+#### **Invalid Subscription ID**
+```
+User: "Skip subscription 99999 for next month"
+AI Assistant: I'll try to skip that subscription.
+
+Tool Call: skip_subscription
+Parameters: {
+  "subscriptionId": "99999",
+  "date": "2024-02-15"
+}
+
+Error Response: "API Error (404): Subscription not found"
+
+AI Assistant: I couldn't find a subscription with ID 99999. Let me show you your active subscriptions so you can choose the correct one.
+```
+
+### 💡 Pro Tips for AI Assistants
+
+#### **Chaining Operations**
+```
+User: "Show me my subscriptions and skip the coffee one for next month"
+AI Assistant: I'll first show your subscriptions, then skip the coffee subscription.
+
+Step 1: get_customer_subscriptions → Find coffee subscription ID
+Step 2: skip_subscription → Skip the identified subscription
+Step 3: Confirm the action was completed
+```
+
+#### **Data Validation**
+```
+User: "Update my subscription frequency to every 3 weeks"
+AI Assistant: I'll update your subscription to every 3 weeks.
+
+Note: The AI should validate that "week" is a valid interval unit and "3" is a valid frequency before making the API call.
+```
+
+#### **Contextual Responses**
+```
+User: "When is my next delivery?"
+AI Assistant: Let me check your subscription details.
+
+Tool Call: get_customer_subscriptions
+Response Analysis: Extract next_charge_scheduled_at from active subscriptions
+Human-friendly Response: "Your next delivery is scheduled for February 15th, 2024."
+```
+
+These examples demonstrate the full capabilities of the Recharge MCP Server and show how AI assistants can provide natural, conversational interfaces for complex subscription management tasks.
 ## Architecture
 
 The server follows a clean, modular architecture designed for maintainability and extensibility:
