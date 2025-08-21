@@ -82,8 +82,8 @@ Before you can use this MCP server, you need to obtain a Recharge Storefront API
 
 3. **Required environment variables:**
    ```bash
-   RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required
-   RECHARGE_ACCESS_TOKEN=your_access_token_here        # Optional (can use per-tool)
+   RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required OR provide per-tool
+   RECHARGE_ACCESS_TOKEN=your_access_token_here        # Optional (can provide per-tool)
    ```
 
 4. **Start the server:**
@@ -97,13 +97,13 @@ Before you can use this MCP server, you need to obtain a Recharge Storefront API
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `RECHARGE_STOREFRONT_DOMAIN` | Yes* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_ACCESS_TOKEN` | Yes* | Default API token | `sk_test_...` |
+| `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
+| `RECHARGE_ACCESS_TOKEN` | Conditional* | Default API token | `sk_test_...` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
-*Required unless provided as tool parameters in each call
+*Required unless provided as parameters in individual tool calls
 
 ### Authentication Options
 
@@ -119,7 +119,12 @@ The server also supports flexible store URL configuration:
 2. **Per-Tool Store URL**: Provide `store_url` parameter in individual tool calls
 3. **Store URL Precedence**: Tool parameter > Environment variable
 
-**Important**: You must provide either environment variables OR tool parameters for each call. At least one method of authentication and store identification is required.
+**Important**: You must provide authentication and store identification through EITHER:
+- Environment variables (set once, used for all calls)
+- Tool parameters (provided in each individual tool call)
+- Mixed approach (environment for one, tool parameters for the other)
+
+At minimum, each tool call must have access to both an API token and store URL through one of these methods.
 
 Example tool call with token:
 ```json
@@ -133,6 +138,26 @@ Example tool call with token:
 }
 ```
 
+Example tool call using environment defaults:
+```json
+{
+  "name": "get_customer_subscriptions",
+  "arguments": {
+    "status": "active"
+  }
+}
+```
+
+Example tool call with mixed approach (environment token, tool store URL):
+```json
+{
+  "name": "get_customer_subscriptions",
+  "arguments": {
+    "store_url": "different-shop.myshopify.com",
+    "status": "active"
+  }
+}
+```
 ## Available Tools
 
 ### Customer Management
