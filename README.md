@@ -235,10 +235,8 @@ The MCP server **automatically creates session tokens** when you provide a `cust
 ```
 
 ### Customer Management
-- `create_customer_session_by_id` - Create customer session using customer ID
 - `get_customer` - Retrieve current customer information  
 - `update_customer` - Update current customer profile
-- `delete_customer` - Delete current customer account
 - `get_customer_by_email` - Find customer by email address
 
 ### Subscription Management
@@ -811,18 +809,18 @@ docker compose logs --tail=100 recharge-storefront-api-mcp
 
 ## API Coverage
 
-This MCP server provides **complete coverage** of the Recharge Storefront API with **37 tools**:
+This MCP server provides **complete coverage** of the Recharge Storefront API with **32 tools**:
 
 - ✅ **Customer Management** - Current customer profile operations (3 tools)
-- ✅ **Subscription Lifecycle** - Complete subscription management (get, update, cancel, delete)
-- ✅ **Address Management** - Shipping and billing addresses
-- ✅ **Payment Methods** - Payment method management
-- ✅ **Product Catalog** - Product browsing and details
-- ✅ **Order Management** - Order history and tracking
-- ✅ **Charge Management** - Billing and payment tracking
-- ✅ **One-time Products** - Add-on product management
-- ✅ **Bundle Management** - Product bundle and selection management
-- ✅ **Discount System** - Coupon and discount management
+- ✅ **Subscription Lifecycle** - Complete subscription management (10 tools)
+- ✅ **Address Management** - Shipping and billing addresses (5 tools)
+- ✅ **Payment Methods** - Payment method management (3 tools)
+- ✅ **Product Catalog** - Product browsing and details (2 tools)
+- ✅ **Order Management** - Order history and tracking (2 tools)
+- ✅ **Charge Management** - Billing and payment tracking (2 tools)
+- ✅ **One-time Products** - Add-on product management (5 tools)
+- ✅ **Bundle Management** - Product bundle and selection management (7 tools)
+- ✅ **Discount System** - Coupon and discount management (4 tools)
 
 #### Authentication Confusion
 ```
@@ -960,7 +958,7 @@ For issues, questions, or contributions:
 
 ### v1.0.0
 - Initial release with complete Recharge Storefront API coverage
-- 39 comprehensive API tools covering all Recharge Storefront API endpoints
+- 32 comprehensive API tools covering all Recharge Storefront API endpoints
 - Flexible authentication system
 - Docker deployment support
 - Comprehensive error handling
