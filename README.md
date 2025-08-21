@@ -42,6 +42,101 @@ To use this MCP server, you need a Recharge Storefront API access token:
 4. **Copy the token** (starts with your store prefix)
 
 
+## Authentication Model
+
+The Recharge Storefront API uses **customer-scoped authentication**, which is different from the Admin API:
+
+### How Storefront API Authentication Works
+
+1. **Customer-Scoped Tokens**: Each API token is tied to a specific customer
+2. **No Customer ID Required**: The token automatically identifies which customer's data to access
+3. **Limited Scope**: Can only access data for the customer associated with the token
+4. **Portal Integration**: Typically used in customer portal applications
+
+### Token Types (Important!)
+
+| Token Type | Use Case | Scope | Customer ID Required? |
+|------------|----------|-------|----------------------|
+| **Storefront API** | Customer portals, self-service | Single customer | ❌ No (token identifies customer) |
+| **Admin API** | Merchant tools, backend systems | All customers | ✅ Yes (specify which customer) |
+
+### Authentication Configuration Options
+
+**Option 1: Environment Variables (Recommended)**
+```bash
+RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
+RECHARGE_ACCESS_TOKEN=your_customer_scoped_token_here
+```
+
+**Option 2: Per-Tool Parameters**
+```json
+{
+  "name": "get_customer",
+  "arguments": {
+    "store_url": "your-shop.myshopify.com",
+    "access_token": "your_customer_scoped_token_here"
+  }
+}
+```
+
+**Option 3: Mixed (Environment + Override)**
+```bash
+# Set default in environment
+RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
+RECHARGE_ACCESS_TOKEN=default_token
+```
+```json
+{
+  "name": "get_customer",
+  "arguments": {
+    "access_token": "different_customer_token"
+  }
+}
+```
+
+### How Customer Scoping Works
+
+When you call any tool, the API automatically:
+1. Uses the provided token to identify the customer
+2. Returns only data for that specific customer
+3. Applies all operations to that customer's account
+
+**Example Flow:**
+```json
+// Token "cust_abc123_token" is scoped to customer ID 123456
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "access_token": "cust_abc123_token"
+  }
+}
+// Returns only subscriptions for customer 123456
+```
+
+### Multi-Customer Support
+
+To work with multiple customers, you need:
+- Different tokens for each customer
+- Switch tokens per operation
+
+```json
+// Customer A's data
+{
+  "name": "get_customer",
+  "arguments": {
+    "access_token": "customer_a_token"
+  }
+}
+
+// Customer B's data  
+{
+  "name": "get_customer",
+  "arguments": {
+    "access_token": "customer_b_token"
+  }
+}
+```
+
 ## Prerequisites and Limitations
 
 ### Requirements
@@ -97,49 +192,6 @@ To use this MCP server, you need a Recharge Storefront API access token:
 
 ### Authentication Configuration
 
-The server supports flexible authentication configuration:
-
-1. **Environment Variables** (Recommended): Set both `RECHARGE_STOREFRONT_DOMAIN` and `RECHARGE_ACCESS_TOKEN`
-2. **Per-Tool Parameters**: Provide `store_url` and `access_token` in individual tool calls if needed
-
-### Authentication Model
-
-The Storefront API uses **customer-scoped authentication**:
-
-
-### Customer Authentication Examples
-
-**Get Current Customer Information**
-```json
-{
-  "name": "get_customer",
-  "arguments": {
-    "access_token": "customer_scoped_token"
-  }
-}
-```
-
-**Find Customer by Email**
-```json
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "customer@example.com"
-  }
-}
-```
-
-**Get Customer Subscriptions**
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "status": "active"
-  }
-}
-```
-
-### Important Notes About Storefront API
 
 ## Available Tools
 
@@ -209,68 +261,64 @@ The Storefront API uses **customer-scoped authentication**:
 
 ### Customer ID Usage Patterns
 
-The Recharge Storefront API requires customer IDs for most operations. Here are the main patterns for obtaining and using customer IDs:
+**Important**: The Storefront API is customer-scoped, so you typically don't need customer IDs. However, some operations still use them for filtering or reference:
 
-#### Pattern 1: Find Customer by Email (Most Common)
+#### Pattern 1: Get Current Customer (Most Common)
 
-When you only have a customer's email address, use this two-step process:
-
-**Step 1: Find Customer by Email**
-```json
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "john.doe@example.com"
-  }
-}
-```
-
-**Response includes customer ID:**
-```json
-{
-  "customer": {
-    "id": "123456",
-    "email": "john.doe@example.com",
-    "first_name": "John",
-    "last_name": "Doe",
-    "created_at": "2024-01-15T10:30:00Z"
-  }
-}
-```
-
-**Step 2: Use Customer ID in Other Operations**
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-```
-
-#### Pattern 2: Direct Customer ID Usage (When Known)
-
-If you already have the customer ID, use it directly:
+The token identifies the customer automatically:
 
 ```json
 {
   "name": "get_customer",
-  "arguments": {
-    "customer_id": "789012"
+  "arguments": {}
+}
+```
+
+**Response:**
+```json
+{
+  "customer": {
+    "id": "123456",
+    "email": "customer@example.com",
+    "first_name": "John",
+    "last_name": "Doe"
   }
 }
 ```
 
-#### Pattern 3: Customer ID from Previous Operations
+#### Pattern 2: Get Customer Data (No Customer ID Needed)
 
-Customer IDs can be extracted from responses of other operations:
+Most operations work without customer ID:
 
 ```json
-// From subscription response
 {
-  "subscription": {
-    "id": "sub_123",
-    "customer_id": "456789",  // Use this ID for other operations
+  "name": "get_subscriptions",
+  "arguments": {}
+}
+```
+
+#### Pattern 3: Find Customer by Email (Alternative Method)
+
+If you need to verify customer identity:
+
+```json
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "customer@example.com"
+  }
+}
+```
+
+#### Pattern 4: Optional Customer ID Filtering
+
+Some list operations accept customer_id as an optional filter:
+
+```json
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "customer_id": "123456",  // Optional filter
     "status": "active"
   }
 }
@@ -280,66 +328,40 @@ Customer IDs can be extracted from responses of other operations:
 
 #### Use Case 1: Customer Service - View All Customer Information
 
-**Scenario**: Customer calls support, you have their email
+**Scenario**: Customer logs into portal, token identifies them automatically
 
 ```json
-// Step 1: Find customer
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "sarah.smith@example.com"
-  }
-}
-
-// Step 2: Get full customer details (using customer_id from step 1)
+// Step 1: Get customer details (token identifies customer)
 {
   "name": "get_customer",
-  "arguments": {
-    "customer_id": "345678"
-  }
+  "arguments": {}
 }
 
-// Step 3: Get their subscriptions
+// Step 2: Get their subscriptions
 {
   "name": "get_subscriptions",
-  "arguments": {
-    "customer_id": "345678",
-    "status": "active"
-  }
+  "arguments": {}
 }
 
-// Step 4: Get their addresses
+// Step 3: Get their addresses
 {
   "name": "get_addresses",
-  "arguments": {
-    "customer_id": "345678"
-  }
+  "arguments": {}
 }
 ```
 
 #### Use Case 2: Subscription Management - Skip Next Delivery
 
-**Scenario**: Customer wants to skip their next delivery
+**Scenario**: Customer wants to skip their next delivery (token identifies customer)
 
 ```json
-// Step 1: Find customer
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "mike.jones@example.com"
-  }
-}
-
-// Step 2: Get their active subscriptions
+// Step 1: Get their active subscriptions
 {
   "name": "get_subscriptions",
-  "arguments": {
-    "customer_id": "567890",
-    "status": "active"
-  }
+  "arguments": {}
 }
 
-// Step 3: Skip specific subscription (using subscription_id from step 2)
+// Step 2: Skip specific subscription (using subscription_id from step 1)
 {
   "name": "skip_subscription",
   "arguments": {
@@ -351,27 +373,16 @@ Customer IDs can be extracted from responses of other operations:
 
 #### Use Case 3: Order Management - Check Recent Orders
 
-**Scenario**: Customer asks about recent order status
+**Scenario**: Customer checks recent order status in portal
 
 ```json
-// Step 1: Find customer
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "lisa.brown@example.com"
-  }
-}
-
-// Step 2: Get recent orders
+// Step 1: Get recent orders (token identifies customer)
 {
   "name": "get_orders",
-  "arguments": {
-    "customer_id": "678901",
-    "limit": 5
-  }
+  "arguments": {}
 }
 
-// Step 3: Get specific order details (using order_id from step 2)
+// Step 2: Get specific order details (using order_id from step 1)
 {
   "name": "get_order",
   "arguments": {
@@ -382,26 +393,16 @@ Customer IDs can be extracted from responses of other operations:
 
 #### Use Case 4: Address Management - Update Shipping Address
 
-**Scenario**: Customer moved and needs to update their address
+**Scenario**: Customer updates address in portal
 
 ```json
-// Step 1: Find customer
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "tom.wilson@example.com"
-  }
-}
-
-// Step 2: Get current addresses
+// Step 1: Get current addresses (token identifies customer)
 {
   "name": "get_addresses",
-  "arguments": {
-    "customer_id": "789012"
-  }
+  "arguments": {}
 }
 
-// Step 3: Update existing address (using address_id from step 2)
+// Step 2: Update existing address (using address_id from step 1)
 {
   "name": "update_address",
   "arguments": {
@@ -415,26 +416,16 @@ Customer IDs can be extracted from responses of other operations:
 
 #### Use Case 5: Product Management - Add One-time Product
 
-**Scenario**: Customer wants to add a product to their next delivery
+**Scenario**: Customer adds product to next delivery
 
 ```json
-// Step 1: Find customer
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "anna.davis@example.com"
-  }
-}
-
-// Step 2: Browse available products
+// Step 1: Browse available products
 {
   "name": "get_products",
-  "arguments": {
-    "limit": 20
-  }
+  "arguments": {}
 }
 
-// Step 3: Add one-time product (using variant_id from step 2)
+// Step 2: Add one-time product (using variant_id from step 1)
 {
   "name": "create_onetime",
   "arguments": {
@@ -447,93 +438,75 @@ Customer IDs can be extracted from responses of other operations:
 
 ### Customer ID Best Practices
 
-#### 1. **Always Validate Customer ID**
+#### 1. **Understand Token Scoping**
 ```json
-// Good: Verify customer exists before other operations
+// Token automatically identifies customer - no ID needed
 {
   "name": "get_customer",
-  "arguments": {
-    "customer_id": "123456"
-  }
+  "arguments": {}
 }
 ```
 
-#### 2. **Store Customer ID for Session**
+#### 2. **Use Customer ID Only When Needed**
 ```javascript
-// In your application, store the customer ID for the session
-const customerId = "123456"; // From get_customer_by_email response
-
-// Use throughout the session
-const subscriptions = await callTool("get_subscriptions", { customer_id: customerId });
-const addresses = await callTool("get_addresses", { customer_id: customerId });
+// Most operations don't need customer_id
+const customer = await callTool("get_customer", {});
+const subscriptions = await callTool("get_subscriptions", {});
+const addresses = await callTool("get_addresses", {});
 ```
 
-#### 3. **Handle Customer Not Found**
+#### 3. **Handle Authentication Errors**
 ```json
-// If customer doesn't exist, you'll get an error
+// If token is invalid or expired
 {
-  "error": "Customer not found with email: nonexistent@example.com"
+  "error": "Unauthorized: Invalid or expired token"
 }
 ```
 
-### Legacy vs Current Customer IDs
+### Token vs Customer ID Relationship
 
-**Important**: Customer IDs in Recharge are:
-- **Numeric strings** (e.g., "123456", "789012")
-- **Unique per store** 
-- **Persistent** (don't change over time)
-- **Different from Shopify customer IDs**
+**Important**: In Storefront API:
+- **Token identifies customer** automatically
+- **Customer ID** is returned in responses for reference
+- **No need to provide customer ID** in most requests
+- **Token scope** determines data access
 
-### Basic Operations by Customer ID
+### Basic Operations (No Customer ID Needed)
 
-Once you have a customer ID, these are the most common operations:
+These are the most common operations using customer-scoped tokens:
 
 ```json
 {
   "name": "get_subscriptions",
-  "arguments": {
-    "customer_id": "123456",
-    "status": "active",
-    "limit": 10
-  }
+  "arguments": {}
 }
 ```
 
 ```json
 {
   "name": "get_orders",
-  "arguments": {
-    "customer_id": "123456",
-    "limit": 5
-  }
+  "arguments": {}
 }
 ```
 
 ```json
 {
   "name": "get_charges",
-  "arguments": {
-    "customer_id": "123456",
-    "status": "success"
-  }
+  "arguments": {}
 }
 ```
 
 ```json
 {
   "name": "get_addresses",
-  "arguments": {
-    "customer_id": "123456"
-  }
+  "arguments": {}
 }
 ```
 
 ```json
 {
   "name": "get_payment_methods",
-  "arguments": {
-    "customer_id": "123456"
-  }
+  "arguments": {}
 }
 ```
 
