@@ -353,47 +353,50 @@ Some list operations accept customer_id as an optional filter:
 
 #### Use Case 1: Customer Service - View All Customer Information
 
-**Scenario**: Support agent helps customer using direct session creation
+**Scenario**: Customer logs into portal, token identifies them automatically
 
 ```json
-// Step 1: Create customer session using credentials
-{
-  "name": "create_customer_session",
-  "arguments": {
-    "email": "customer@example.com",
-    "password": "customer_password"
-  }
-}
-
-// Step 2: Get customer details (using generated session token)
+// Step 1: Get customer details (token identifies customer)
 {
   "name": "get_customer",
-  "arguments": {
-    "session_token": "generated_session_token"
-  }
+  "arguments": {}
 }
 
-// Step 3: Get their subscriptions
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "session_token": "generated_session_token"
-  }
-}
-```
-
-#### Use Case 2: Subscription Management - Skip Next Delivery
-
-**Scenario**: Customer wants to skip their next delivery (token identifies customer)
-
-```json
-// Step 1: Get their active subscriptions
+// Step 2: Get their subscriptions
 {
   "name": "get_subscriptions",
   "arguments": {}
 }
 
-// Step 2: Skip specific subscription (using subscription_id from step 1)
+// Step 3: Get their addresses
+{
+  "name": "get_addresses",
+  "arguments": {}
+}
+```
+
+#### Use Case 2: Subscription Management - Skip Next Delivery
+
+**Scenario**: Customer service agent helps customer skip delivery
+
+```json
+// Step 1: Create customer session by ID
+{
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+
+// Step 2: Get their active subscriptions
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "session_token": "generated_session_token"
+  }
+}
+
+// Step 3: Skip specific subscription (using subscription_id from step 2)
 {
   "name": "skip_subscription",
   "arguments": {
