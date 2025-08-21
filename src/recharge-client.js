@@ -23,14 +23,14 @@ export class RechargeClient {
     this.storeUrl = storeUrl;
     
     // Construct the correct Recharge Storefront API base URL
-    this.baseURL = `https://${this.storeUrl}/tools/recurring/portal`;
+    this.baseURL = `https://${this.storeUrl}/tools/recurring/portal/api/v1`;
     
     this.client = axios.create({
       baseURL: this.baseURL,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${this.apiToken}`,
+        'X-Recharge-Access-Token': this.apiToken,
         'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
       },
       timeout: 30000, // 30 seconds
@@ -116,31 +116,27 @@ export class RechargeClient {
    */
   async getCustomer(customerId) {
     validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('GET', `/customers/${customerId}`);
+    return this.makeRequest('GET', `/customer`);
   }
 
   /**
    * Update customer information
-   * @param {string} customerId - Customer ID
    * @param {Object} data - Customer update data
    * @returns {Promise<Object>} Updated customer data
    */
-  async updateCustomer(customerId, data) {
-    validateRequiredParams({ customerId }, ['customerId']);
+  async updateCustomer(data) {
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Customer update data is required');
     }
-    return this.makeRequest('PUT', `/customers/${customerId}`, data);
+    return this.makeRequest('PUT', `/customer`, data);
   }
 
   /**
    * Delete a customer
-   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Deletion result
    */
-  async deleteCustomer(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('DELETE', `/customers/${customerId}`);
+  async deleteCustomer() {
+    return this.makeRequest('DELETE', `/customer`);
   }
 
   /**
@@ -150,7 +146,7 @@ export class RechargeClient {
    */
   async getCustomerByEmail(email) {
     validateRequiredParams({ email }, ['email']);
-    return this.makeRequest('GET', '/customers', null, { email });
+    return this.makeRequest('GET', '/customer', null, { email });
   }
 
   // Subscription methods

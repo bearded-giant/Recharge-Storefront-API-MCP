@@ -36,11 +36,10 @@ const createCustomerSchema = z.object({
 export const customerTools = [
   {
     name: 'get_customer',
-    description: 'Retrieve customer information by customer ID',
+    description: 'Retrieve current customer information',
     inputSchema: customerSchema,
     execute: async (client, args) => {
-      const { customer_id } = args;
-      const customer = await client.getCustomer(customer_id);
+      const customer = await client.getCustomer();
       return {
         content: [
           {
@@ -54,10 +53,9 @@ export const customerTools = [
   {
     name: 'delete_customer',
     description: 'Delete a customer account',
-    inputSchema: createCustomerSchema,
+    inputSchema: deleteCustomerSchema,
     execute: async (client, args) => {
-      const { customer_id } = args;
-      const result = await client.deleteCustomer(customer_id);
+      const result = await client.deleteCustomer();
       return {
         content: [
           {
@@ -73,8 +71,8 @@ export const customerTools = [
     description: 'Update customer information',
     inputSchema: updateCustomerSchema,
     execute: async (client, args) => {
-      const { customer_id, ...updateData } = args;
-      const updatedCustomer = await client.updateCustomer(customer_id, updateData);
+      const { access_token, store_url, ...updateData } = args;
+      const updatedCustomer = await client.updateCustomer(updateData);
       return {
         content: [
           {

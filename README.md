@@ -34,11 +34,11 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 
 ### Getting Your API Access Token
 
-To use this MCP server, you need a Recharge API access token:
+To use this MCP server, you need a Recharge Storefront API access token:
 
 1. **Log into your Recharge merchant portal**
 2. **Navigate to Apps & integrations > API tokens**
-3. **Create a new API token** with Storefront API permissions
+3. **Create a new Storefront API token** (not Admin API)
 4. **Copy the token** (starts with your store prefix)
 
 
@@ -89,12 +89,11 @@ To use this MCP server, you need a Recharge API access token:
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_ACCESS_TOKEN` | Conditional* | Recharge Storefront API access token | `your_token_here` |
+| `RECHARGE_ACCESS_TOKEN` | Conditional* | Recharge Storefront API access token | `your_storefront_token_here` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
-**Note**: Customer IDs are NOT configured as environment variables. They are provided as parameters in individual tool calls.
 
 ### Authentication Configuration
 
@@ -105,16 +104,22 @@ The server supports flexible authentication configuration:
 
 ### Authentication Model
 
-The Storefront API uses **merchant authentication** with **customer identification**:
+The Storefront API uses **customer-scoped authentication**:
 
-1. **Merchant Authentication**: Your API access token authenticates you as the merchant
-2. **Customer Scoping**: Operations are scoped to specific customers using `customer_id` parameters
-3. **No Customer Sessions**: No customer login or session tokens required
-4. **Find Customers**: Use `get_customer_by_email` to find customer IDs when you only have email addresses
 
-### Customer ID Workflow Examples
+### Customer Authentication Examples
 
-**Step 1: Find Customer ID by Email**
+**Get Current Customer Information**
+```json
+{
+  "name": "get_customer",
+  "arguments": {
+    "access_token": "customer_scoped_token"
+  }
+}
+```
+
+**Find Customer by Email**
 ```json
 {
   "name": "get_customer_by_email",
@@ -124,42 +129,25 @@ The Storefront API uses **merchant authentication** with **customer identificati
 }
 ```
 
-**Step 2: Use Customer ID in Subsequent Calls**
+**Get Customer Subscriptions**
 ```json
 {
   "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "123456",
     "status": "active"
   }
 }
 ```
 
-**Alternative: Direct Customer ID Usage (if known)**
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_id": "123456",
-    "status": "active"
-  }
-}
-```
+### Important Notes About Storefront API
 
-### Important Notes About Customer IDs
-
-- **Customer IDs are NOT environment variables** - they are dynamic parameters
-- **Each customer operation requires a customer_id parameter**
-- **Customer IDs are unique identifiers** returned by Recharge (e.g., "123456", "789012")
-- **Use `get_customer_by_email` first** if you only have the customer's email address
-- **Customer IDs are different from Shopify customer IDs** - use Recharge's customer IDs
 ## Available Tools
 
 ### Customer Management
-- `delete_customer` - Delete a customer account
-- `get_customer` - Retrieve customer information by ID
+- `get_customer` - Retrieve current customer information
+- `delete_customer` - Delete current customer account
+- `update_customer` - Update current customer profile
 - `get_customer_by_email` - Find customer by email address
-- `update_customer` - Update customer profile and information
 
 ### Subscription Management
 - `delete_subscription` - Delete a subscription permanently
@@ -655,9 +643,9 @@ docker compose logs --tail=100 recharge-storefront-api-mcp
 
 ## API Coverage
 
-This MCP server provides **complete coverage** of the Recharge Storefront API:
+This MCP server provides **complete coverage** of the Recharge Storefront API with **37 tools**:
 
-- ✅ **Customer Management** - Customer profile operations (get, update, delete)
+- ✅ **Customer Management** - Current customer profile operations (4 tools)
 - ✅ **Subscription Lifecycle** - Complete subscription management (get, update, cancel, delete)
 - ✅ **Address Management** - Shipping and billing addresses
 - ✅ **Payment Methods** - Payment method management
@@ -668,65 +656,59 @@ This MCP server provides **complete coverage** of the Recharge Storefront API:
 - ✅ **Bundle Management** - Product bundle and selection management
 - ✅ **Discount System** - Coupon and discount management
 
-#### Customer ID Confusion
+#### Authentication Confusion
 ```
-Error: Missing required parameters: customer_id
+Error: Unauthorized access
 ```
-**Solution**: Customer IDs are dynamic parameters, NOT configuration. You must:
-1. Use `get_customer_by_email` to find the customer ID first
-2. Then provide the `customer_id` parameter in subsequent tool calls
-3. Customer IDs are unique Recharge identifiers (e.g., "123456", "789012")
+**Solution**: Ensure you're using a Storefront API token, not Admin API token:
+1. Get Storefront API token from Recharge merchant portal
+2. Token should be customer-scoped for the specific customer
+3. Set `RECHARGE_ACCESS_TOKEN` environment variable or provide in tool calls
 
-**Example of correct workflow**:
+**Example of correct authentication**:
 ```json
-// Step 1: Find customer
-{"name": "get_customer_by_email", "arguments": {"email": "user@example.com"}}
-
-// Step 2: Use customer_id from response
-{"name": "get_subscriptions", "arguments": {"customer_id": "123456"}}
+{"name": "get_customer", "arguments": {"access_token": "storefront_token_here"}}
 ```
 
-#### Invalid Customer ID Format
+#### Invalid Token Type
 ```
-Error: Customer not found
+Error: Invalid token permissions
 ```
-**Solution**: Ensure you're using the correct customer ID format:
-- ✅ Correct: `"123456"` (string of numbers)
-- ❌ Wrong: `123456` (number)
-- ❌ Wrong: `"cust_123456"` (prefixed string)
-- ❌ Wrong: Shopify customer ID instead of Recharge customer ID
+**Solution**: Ensure you're using the correct token type:
+- ✅ Correct: Storefront API token (customer-scoped)
+- ❌ Wrong: Admin API token (merchant-scoped)
+- ❌ Wrong: Expired or revoked token
 
-#### Customer ID vs Other IDs
+#### Resource Access Issues
 ```
-Error: Invalid customer reference
+Error: Resource not found
 ```
-**Solution**: Don't confuse customer IDs with other ID types:
-- **Customer ID**: `"123456"` - for customer operations
-- **Subscription ID**: `"sub_789"` - for subscription operations  
-- **Order ID**: `"order_456"` - for order operations
-- **Address ID**: `"addr_123"` - for address operations
+**Solution**: Ensure the resource belongs to the authenticated customer:
+- Storefront API only shows resources for the authenticated customer
+- Use correct resource IDs from previous API responses
+- Verify the customer has access to the requested resource
 
-**Correct usage by operation type**:
+**Correct usage examples**:
 ```json
-// Customer operations - use customer_id
-{"name": "get_customer", "arguments": {"customer_id": "123456"}}
-{"name": "get_subscriptions", "arguments": {"customer_id": "123456"}}
-{"name": "get_orders", "arguments": {"customer_id": "123456"}}
+// Get current customer info
+{"name": "get_customer", "arguments": {}}
 
-// Subscription operations - use subscription_id (no customer_id needed)
+// Get customer subscriptions
+{"name": "get_subscriptions", "arguments": {}}
+
+// Get specific subscription
 {"name": "get_subscription", "arguments": {"subscription_id": "sub_789"}}
-{"name": "cancel_subscription", "arguments": {"subscription_id": "sub_789"}}
 
-// Order operations - use order_id (no customer_id needed)
+// Get specific order
 {"name": "get_order", "arguments": {"order_id": "order_456"}}
 ```
 
-#### Missing API Token
+#### Missing Storefront Token
 ```
-Error: No API access token available
+Error: No Storefront API access token available
 ```
 **Solution**: 
-1. Get your merchant API token from Recharge merchant portal
+1. Get your Storefront API token from Recharge merchant portal
 2. Either set `RECHARGE_ACCESS_TOKEN` environment variable
 3. Or provide `access_token` parameter in individual tool calls
 

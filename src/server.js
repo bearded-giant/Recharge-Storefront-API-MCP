@@ -90,10 +90,10 @@ class RechargeStorefrontAPIMCPServer {
   }
 
   /**
-   * Get or create a Recharge client for the store
+   * Get or create a Recharge Storefront client for the store
    * @param {string} [toolStoreUrl] - Store URL from tool call (optional, takes precedence over env)
    * @param {string} [toolAccessToken] - Access token from tool call (optional, takes precedence over env)
-   * @returns {RechargeClient} Configured Recharge client
+   * @returns {RechargeClient} Configured Recharge Storefront client
    * @throws {Error} If no store URL or access token is available
    */
   getRechargeClient(toolStoreUrl, toolAccessToken) {
@@ -105,7 +105,7 @@ class RechargeStorefrontAPIMCPServer {
     
     if (!accessToken) {
       throw new Error(
-        "No API access token available. Please provide an 'access_token' parameter in your tool call or set RECHARGE_ACCESS_TOKEN in your environment variables."
+        "No Storefront API access token available. Please provide an 'access_token' parameter in your tool call or set RECHARGE_ACCESS_TOKEN in your environment variables."
       );
     }
     
@@ -116,7 +116,7 @@ class RechargeStorefrontAPIMCPServer {
       console.error(`[DEBUG] Using access token from: ${tokenSource}`);
     }
 
-    // Create a new client instance with the store URL
+    // Create a new Storefront client instance with the store URL
     return new RechargeClient({
       storeUrl: validatedDomain,
       apiToken: accessToken,

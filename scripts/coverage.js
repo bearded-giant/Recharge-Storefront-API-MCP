@@ -7,7 +7,7 @@
 
 import { tools } from '../src/tools/index.js';
 
-console.log('🔧 Recharge Storefront API Coverage:', tools.length, 'comprehensive tools');
+console.log('🔧 Recharge Storefront API Coverage:', tools.length, 'tools');
 console.log('📋 Categories covered:');
 
 const categories = {};
@@ -15,7 +15,7 @@ tools.forEach(t => {
   const parts = t.name.split('_');
   let category;
   
-  if (parts.includes('customer')) category = 'customers';
+  if (parts.includes('customer')) category = 'customer';
   else if (parts.includes('subscription')) category = 'subscriptions';
   else if (parts.includes('address')) category = 'addresses';
   else if (parts.includes('payment')) category = 'payments';
@@ -46,7 +46,3 @@ Object.entries(categories)
 });
 
 console.log('\n✅ Complete Recharge Storefront API coverage');
-console.log('🎯 All major customer-facing operations supported');
-console.log('🔄 Complete subscription lifecycle management');
-console.log('💳 Complete payment and billing functionality');
-console.log('📦 Comprehensive product and bundle management');
