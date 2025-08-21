@@ -8,7 +8,7 @@ const baseSchema = z.object({
 const subscriptionListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().describe('Customer ID'),
+  customer_id: z.string().optional().describe('Customer ID (optional filter)'),
   status: z.enum(['active', 'cancelled', 'expired']).optional().describe('Filter by subscription status'),
   limit: z.number().max(250).default(50).describe('Number of subscriptions to return'),
   page: z.number().default(1).describe('Page number for pagination'),
@@ -84,14 +84,12 @@ export const subscriptionTools = [
     description: 'Get subscriptions for a specific customer',
     inputSchema: subscriptionListSchema,
     execute: async (client, args) => {
-      const { customer_id, ...params } = args;
-      // Pass customer_id back to params for client method
-      const subscriptions = await client.getSubscriptions(customer_id, params);
+      const subscriptions = await client.getSubscriptions(args);
       return {
         content: [
           {
             type: 'text',
-            text: `Customer Subscriptions:\n${JSON.stringify(subscriptions, null, 2)}`,
+            text: `Subscriptions:\n${JSON.stringify(subscriptions, null, 2)}`,
           },
         ],
       };

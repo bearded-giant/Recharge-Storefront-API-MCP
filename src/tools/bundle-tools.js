@@ -8,7 +8,7 @@ const baseSchema = z.object({
 const bundleListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().describe('Customer ID'),
+  customer_id: z.string().optional().describe('Customer ID (optional filter)'),
   subscription_id: z.string().optional().describe('Filter bundles by subscription ID'),
   limit: z.number().max(250).default(50).describe('Number of bundles to return'),
   page: z.number().default(1).describe('Page number for pagination'),
@@ -57,13 +57,12 @@ export const bundleTools = [
     description: 'Get bundles for a specific customer',
     inputSchema: bundleListSchema,
     execute: async (client, args) => {
-      const { customer_id, ...params } = args;
-      const bundles = await client.getBundles(customer_id, params);
+      const bundles = await client.getBundles(args);
       return {
         content: [
           {
             type: 'text',
-            text: `Customer Bundles:\n${JSON.stringify(bundles, null, 2)}`,
+            text: `Bundles:\n${JSON.stringify(bundles, null, 2)}`,
           },
         ],
       };

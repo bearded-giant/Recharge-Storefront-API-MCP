@@ -8,7 +8,7 @@ const baseSchema = z.object({
 const discountListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().describe('Customer ID'),
+  customer_id: z.string().optional().describe('Customer ID (optional filter)'),
 });
 
 const applyDiscountSchema = z.object({
@@ -35,9 +35,7 @@ export const discountTools = [
     description: 'Get all discounts for a specific customer',
     inputSchema: discountListSchema,
     execute: async (client, args) => {
-      const { customer_id } = args;
-      // Pass customer_id to client method
-      const discounts = await client.getDiscounts(customer_id);
+      const discounts = await client.getDiscounts(args);
       return {
         content: [
           {

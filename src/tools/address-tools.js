@@ -8,7 +8,7 @@ const baseSchema = z.object({
 const addressListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().describe('Customer ID'),
+  customer_id: z.string().optional().describe('Customer ID (optional filter)'),
 });
 
 const createAddressSchema = z.object({
@@ -61,14 +61,12 @@ export const addressTools = [
     description: 'Get all addresses for a specific customer',
     inputSchema: addressListSchema,
     execute: async (client, args) => {
-      const { customer_id } = args;
-      // Pass customer_id to client method
-      const addresses = await client.getAddresses(customer_id);
+      const addresses = await client.getAddresses(args);
       return {
         content: [
           {
             type: 'text',
-            text: `Customer Addresses:\n${JSON.stringify(addresses, null, 2)}`,
+            text: `Addresses:\n${JSON.stringify(addresses, null, 2)}`,
           },
         ],
       };
@@ -96,8 +94,8 @@ export const addressTools = [
     description: 'Create a new address for a customer',
     inputSchema: createAddressSchema,
     execute: async (client, args) => {
-      const { customer_id, access_token, store_url, ...addressData } = args;
-      const newAddress = await client.createAddress(customer_id, addressData);
+      const { access_token, store_url, ...addressData } = args;
+      const newAddress = await client.createAddress(addressData);
       return {
         content: [
           {

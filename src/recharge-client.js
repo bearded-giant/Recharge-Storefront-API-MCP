@@ -146,15 +146,12 @@ export class RechargeClient {
 
   // Subscription methods
   /**
-   * Get customer subscriptions
-   * @param {string} customerId - Customer ID
+   * Get subscriptions with optional filtering
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Subscriptions data
    */
-  async getSubscriptions(customerId, params = {}) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    const queryParams = { ...params, customer_id: customerId };
-    return this.makeRequest('GET', '/subscriptions', null, queryParams);
+  async getSubscriptions(params = {}) {
+    return this.makeRequest('GET', '/subscriptions', null, params);
   }
 
   /**
@@ -251,13 +248,12 @@ export class RechargeClient {
 
   // Address methods
   /**
-   * Get all customer addresses
-   * @param {string} customerId - Customer ID
+   * Get addresses with optional filtering
+   * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Addresses data
    */
-  async getAddresses(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('GET', '/addresses', null, { customer_id: customerId });
+  async getAddresses(params = {}) {
+    return this.makeRequest('GET', '/addresses', null, params);
   }
 
   /**
@@ -272,16 +268,13 @@ export class RechargeClient {
 
   /**
    * Create a new address
-   * @param {string} customerId - Customer ID
    * @param {Object} addressData - Address data
    * @returns {Promise<Object>} Created address data
    */
-  async createAddress(customerId, addressData) {
-    validateRequiredParams({ customerId }, ['customerId']);
+  async createAddress(addressData) {
     const required = ['address1', 'city', 'province', 'zip', 'country', 'first_name', 'last_name'];
     validateRequiredParams(addressData, required);
-    const dataWithCustomer = { ...addressData, customer_id: customerId };
-    return this.makeRequest('POST', '/addresses', dataWithCustomer);
+    return this.makeRequest('POST', '/addresses', addressData);
   }
 
   /**
@@ -310,13 +303,12 @@ export class RechargeClient {
 
   // Payment method methods
   /**
-   * Get customer payment methods
-   * @param {string} customerId - Customer ID
+   * Get payment methods with optional filtering
+   * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Payment methods data
    */
-  async getPaymentMethods(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('GET', '/payment_methods', null, { customer_id: customerId });
+  async getPaymentMethods(params = {}) {
+    return this.makeRequest('GET', '/payment_methods', null, params);
   }
 
   /**
@@ -365,15 +357,12 @@ export class RechargeClient {
 
   // Order methods
   /**
-   * Get customer orders with optional filtering
-   * @param {string} customerId - Customer ID
+   * Get orders with optional filtering
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Orders data
    */
-  async getOrders(customerId, params = {}) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    const queryParams = { ...params, customer_id: customerId };
-    return this.makeRequest('GET', '/orders', null, queryParams);
+  async getOrders(params = {}) {
+    return this.makeRequest('GET', '/orders', null, params);
   }
 
   /**
@@ -388,15 +377,12 @@ export class RechargeClient {
 
   // Charge methods
   /**
-   * Get customer charges with optional filtering
-   * @param {string} customerId - Customer ID
+   * Get charges with optional filtering
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Charges data
    */
-  async getCharges(customerId, params = {}) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    const queryParams = { ...params, customer_id: customerId };
-    return this.makeRequest('GET', '/charges', null, queryParams);
+  async getCharges(params = {}) {
+    return this.makeRequest('GET', '/charges', null, params);
   }
 
   /**
@@ -411,13 +397,12 @@ export class RechargeClient {
 
   // One-time product methods
   /**
-   * Get customer one-time products
-   * @param {string} customerId - Customer ID
+   * Get one-time products with optional filtering
+   * @param {Object} params - Query parameters
    * @returns {Promise<Object>} One-time products data
    */
-  async getOnetimes(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('GET', '/onetimes', null, { customer_id: customerId });
+  async getOnetimes(params = {}) {
+    return this.makeRequest('GET', '/onetimes', null, params);
   }
 
   /**
@@ -467,15 +452,12 @@ export class RechargeClient {
 
   // Bundle methods
   /**
-   * Get customer bundles
-   * @param {string} customerId - Customer ID
+   * Get bundles with optional filtering
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Bundles data
    */
-  async getBundles(customerId, params = {}) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    const queryParams = { ...params, customer_id: customerId };
-    return this.makeRequest('GET', '/bundles', null, queryParams);
+  async getBundles(params = {}) {
+    return this.makeRequest('GET', '/bundles', null, params);
   }
 
   /**
@@ -546,13 +528,12 @@ export class RechargeClient {
 
   // Discount methods
   /**
-   * Get customer discounts
-   * @param {string} customerId - Customer ID
+   * Get discounts with optional filtering
+   * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Discounts data
    */
-  async getDiscounts(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('GET', '/discounts', null, { customer_id: customerId });
+  async getDiscounts(params = {}) {
+    return this.makeRequest('GET', '/discounts', null, params);
   }
 
   /**

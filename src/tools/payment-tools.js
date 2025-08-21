@@ -8,7 +8,7 @@ const baseSchema = z.object({
 const paymentMethodListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().describe('Customer ID'),
+  customer_id: z.string().optional().describe('Customer ID (optional filter)'),
 });
 
 const updatePaymentMethodSchema = z.object({
@@ -35,14 +35,12 @@ export const paymentTools = [
     description: 'Get all payment methods for a specific customer',
     inputSchema: paymentMethodListSchema,
     execute: async (client, args) => {
-      const { customer_id } = args;
-      // Pass customer_id to client method
-      const paymentMethods = await client.getPaymentMethods(customer_id);
+      const paymentMethods = await client.getPaymentMethods(args);
       return {
         content: [
           {
             type: 'text',
-            text: `Customer Payment Methods:\n${JSON.stringify(paymentMethods, null, 2)}`,
+            text: `Payment Methods:\n${JSON.stringify(paymentMethods, null, 2)}`,
           },
         ],
       };

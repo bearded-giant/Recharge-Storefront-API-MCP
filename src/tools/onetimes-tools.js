@@ -3,7 +3,7 @@ import { z } from 'zod';
 const onetimeListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().describe('Customer ID'),
+  customer_id: z.string().optional().describe('Customer ID (optional filter)'),
 });
 
 const onetimeSchema = z.object({
@@ -44,9 +44,7 @@ export const onetimeTools = [
     description: 'Get all one-time products for a specific customer',
     inputSchema: onetimeListSchema,
     execute: async (client, args) => {
-      const { customer_id } = args;
-      // Pass customer_id to client method
-      const onetimes = await client.getOnetimes(customer_id);
+      const onetimes = await client.getOnetimes(args);
       return {
         content: [
           {
