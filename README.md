@@ -201,6 +201,39 @@ To work with multiple customers:
 
 ## Available Tools
 
+### Automatic Session Creation
+
+The MCP server can **automatically create session tokens** when you provide a `customer_id` parameter instead of a `session_token`. This eliminates the need for manual session creation in most cases.
+
+#### Automatic Mode (Recommended)
+```json
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+```
+
+#### Manual Mode (Advanced)
+```json
+// Step 1: Create session manually
+{
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+
+// Step 2: Use session token
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "session_token": "returned_session_token"
+  }
+}
+```
+
 ### Customer Management
 - `create_customer_session_by_id` - Create customer session using customer ID
 - `get_customer` - Retrieve current customer information  
@@ -347,7 +380,37 @@ Some list operations accept customer_id as an optional filter (rarely needed):
 
 ### Complete Use Case Examples
 
-#### Use Case 1: Customer Service - Create Session and View Information
+#### Use Case 1: Customer Service - Automatic Session (Recommended)
+
+**Scenario**: Customer service agent helps customer starting with their email
+
+```json
+// Step 1: Find customer by email
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "customer@example.com"
+  }
+}
+
+// Step 2: Get customer details (auto-creates session)
+{
+  "name": "get_customer",
+  "arguments": {
+    "customer_id": "123456"  // From step 1 response
+  }
+}
+
+// Step 3: Get their subscriptions (reuses session)
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+```
+
+#### Use Case 2: Customer Service - Manual Session (Advanced)
 
 **Scenario**: Customer service agent helps customer starting with their email
 

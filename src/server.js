@@ -96,16 +96,53 @@ class RechargeStorefrontAPIMCPServer {
    * @param {string} [toolStoreUrl] - Store URL from tool call (optional, takes precedence over env)
    * @param {string} [toolSessionToken] - Session token from tool call (optional)
    * @param {string} [toolMerchantToken] - Merchant token from tool call (optional)
+   * @param {string} [customerId] - Customer ID for automatic session creation (optional)
    * @returns {RechargeClient} Configured Recharge Storefront client
    * @throws {Error} If no store URL or authentication token is available
    */
-  getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken) {
+  async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
     const sessionToken = toolSessionToken || this.defaultSessionToken;
     const merchantToken = toolMerchantToken || this.defaultMerchantToken;
     
     // Validate store URL
     const validatedDomain = this.validateStoreUrl(storeUrl);
+    
+    // If no session token but we have merchant token and customer ID, create session automatically
+    if (!sessionToken && merchantToken && customerId) {
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Auto-creating session for customer: ${customerId}`);
+      }
+      
+      // Create temporary client with merchant token to create session
+      const tempClient = new RechargeClient({
+        storeUrl: validatedDomain,
+        merchantToken: merchantToken,
+      });
+      
+      try {
+        const sessionResponse = await tempClient.createCustomerSessionById(customerId);
+        const autoSessionToken = sessionResponse.session?.token;
+        
+        if (autoSessionToken) {
+          if (process.env.DEBUG === 'true') {
+            console.error(`[DEBUG] Auto-created session token for customer ${customerId}`);
+          }
+          
+          // Return client with the new session token
+          return new RechargeClient({
+            storeUrl: validatedDomain,
+            sessionToken: autoSessionToken,
+            merchantToken: merchantToken,
+          });
+        }
+      } catch (error) {
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Failed to auto-create session for customer ${customerId}:`, error.message);
+        }
+        throw new Error(`Failed to create session for customer ${customerId}: ${error.message}`);
+      }
+    }
     
     if (!sessionToken && !merchantToken) {
       throw new Error(
@@ -232,18 +269,19 @@ class RechargeStorefrontAPIMCPServer {
         const validatedArgs = tool.inputSchema.parse(args || {});
         
         // Extract authentication parameters from validated args
-        const { store_url, session_token, merchant_token, ...toolArgs } = validatedArgs;
+        const { store_url, session_token, merchant_token, customer_id, ...toolArgs } = validatedArgs;
         
         if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] Tool '${name}' called`);
           console.error(`[DEBUG] Store URL: ${store_url ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Session token: ${session_token ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Merchant token: ${merchant_token ? 'provided in call' : 'using environment default'}`);
+          console.error(`[DEBUG] Customer ID: ${customer_id ? 'provided for auto-session' : 'not provided'}`);
           console.error(`[DEBUG] Arguments:`, JSON.stringify(toolArgs, null, 2));
         }
         
         // Get client
-        const rechargeClient = this.getRechargeClient(store_url, session_token, merchant_token);
+        const rechargeClient = await this.getRechargeClient(store_url, session_token, merchant_token, customer_id);
         
         const result = await tool.execute(rechargeClient, toolArgs);
         this.stats.successfulCalls++;
