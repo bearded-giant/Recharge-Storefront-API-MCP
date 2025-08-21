@@ -177,13 +177,11 @@ To work with multiple customers:
 ### Requirements
 - **Shopify Store**: Must have a Shopify store
 - **Recharge Integration**: Recharge subscription app must be installed and configured
-- **Session Token**: Must have customer session token from Recharge portal login
+- **Customer Portal Access**: Customers must be able to log into Recharge portal
+- **Session Token Extraction**: Method to extract session tokens from customer portal sessions
 - **Server-Side**: This MCP server runs server-side, no browser required
 
 ### Limitations
-- **Session-Based**: All operations are scoped to the customer session
-- **Temporary Tokens**: Session tokens expire and need to be refreshed
-- **Shopify Integration**: Requires Shopify store with Recharge app installed
 
 ### Installation
 
