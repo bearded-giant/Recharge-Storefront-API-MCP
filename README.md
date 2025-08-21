@@ -211,31 +211,6 @@ The Storefront API uses **merchant authentication** with **customer identificati
 - `update_bundle_selection` - Update bundle selection
 - `delete_bundle_selection` - Remove bundle selection
 
-### Notification Management
-- `get_notifications` - List customer notifications
-- `get_notification` - Get notification details
-- `mark_notification_read` - Mark notification as read
-
-### Session Management
-- `create_customer_session` - Create customer portal session
-- `get_session` - Get session information
-
-### Store Configuration
-- `get_store_settings` - Get store configuration
-- `get_delivery_schedules` - List delivery schedules
-- `get_delivery_schedule` - Get delivery schedule details
-
-### Async Batch Operations
-- `create_async_batch` - Create bulk operation batch
-- `get_async_batches` - List async batches
-- `get_async_batch` - Get batch details
-- `get_async_batch_tasks` - Get batch task status
-
-### Shopify Integration
-- `get_shopify_connectors` - List Shopify connectors
-- `get_shopify_connector` - Get connector details
-- `update_shopify_connector` - Update connector settings
-
 ### Discount Management
 - `get_discounts` - List applied discounts
 - `get_discount` - Get discount details
@@ -692,16 +667,6 @@ This MCP server provides **complete coverage** of the Recharge Storefront API:
 - ✅ **One-time Products** - Add-on product management
 - ✅ **Discount System** - Coupon and discount management
 - ✅ **Bundle Management** - Product bundle and selection management
-- ✅ **Notification System** - Customer notification management
-- ✅ **Session Management** - Customer portal session handling
-- ✅ **Store Configuration** - Store settings and delivery schedules
-- ✅ **Async Operations** - Bulk processing via async batches
-- ✅ **Shopify Integration** - Connector management and sync settings
-
-
-## Troubleshooting
-
-### Common Issues
 
 #### Customer ID Confusion
 ```

@@ -21,4 +21,3 @@ Object.entries(categories).forEach(([cat, count]) => {
 });
 
 console.log('\n✅ Complete Recharge Storefront API coverage');
-console.log('📦 Total endpoints covered: ' + tools.length);
