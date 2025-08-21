@@ -181,23 +181,23 @@ class RechargeStorefrontAPIMCPServer {
     }
   }
 
-  setupToolHandlers() {
-    // List available tools
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-      return {
-        tools: tools.map(tool => ({
-          name: tool.name,
-          description: tool.description,
-          inputSchema: tool.inputSchema,
-        })),
-      };
-    });
+  /**
+   * Validates store URL format
+   * @param {string} storeUrl - Store URL to validate
+   * @returns {boolean} - True if valid
+   */
+  validateStoreUrl(storeUrl) {
+    if (!storeUrl || typeof storeUrl !== 'string') {
+      return false;
+    }
+    
+    // Remove protocol if present
+    const cleanUrl = storeUrl.replace(/^https?:\/\//, '');
+    
+    // Check if it ends with .myshopify.com
+    return cleanUrl.endsWith('.myshopify.com');
+  }
 
-    // Handle tool calls
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      const { name, arguments: args } = request.params;
-      this.stats.toolCalls++;
-      
       const tool = tools.find(t => t.name === name);
       if (!tool) {
         this.stats.errors++;
