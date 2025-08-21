@@ -25,11 +25,13 @@ class RechargeStorefrontAPIMCPServer {
   constructor() {
     // Store environment variables for client creation
     this.defaultStoreUrl = process.env.RECHARGE_STOREFRONT_DOMAIN;
-    this.defaultAccessToken = process.env.RECHARGE_SESSION_TOKEN;
+    this.defaultSessionToken = process.env.RECHARGE_SESSION_TOKEN;
+    this.defaultMerchantToken = process.env.RECHARGE_MERCHANT_TOKEN;
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Default store URL: ${this.defaultStoreUrl || 'Not set (will require in tool calls)'}`);
-      console.error(`[DEBUG] Default session token: ${this.defaultAccessToken ? 'Set' : 'Not set (will require in tool calls)'}`);
+      console.error(`[DEBUG] Default session token: ${this.defaultSessionToken ? 'Set' : 'Not set'}`);
+      console.error(`[DEBUG] Default merchant token: ${this.defaultMerchantToken ? 'Set' : 'Not set'}`);
     }
 
     this.server = new Server(
@@ -92,34 +94,43 @@ class RechargeStorefrontAPIMCPServer {
   /**
    * Get or create a Recharge Storefront client
    * @param {string} [toolStoreUrl] - Store URL from tool call (optional, takes precedence over env)
-   * @param {string} [toolSessionToken] - Session token from tool call (optional, takes precedence over env)
+   * @param {string} [toolSessionToken] - Session token from tool call (optional)
+   * @param {string} [toolMerchantToken] - Merchant token from tool call (optional)
    * @returns {RechargeClient} Configured Recharge Storefront client
-   * @throws {Error} If no store URL or session token is available
+   * @throws {Error} If no store URL or authentication token is available
    */
-  getRechargeClient(toolStoreUrl, toolSessionToken) {
+  getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
-    const sessionToken = toolSessionToken || this.defaultAccessToken;
+    const sessionToken = toolSessionToken || this.defaultSessionToken;
+    const merchantToken = toolMerchantToken || this.defaultMerchantToken;
     
     // Validate store URL
     const validatedDomain = this.validateStoreUrl(storeUrl);
     
-    if (!sessionToken) {
+    if (!sessionToken && !merchantToken) {
       throw new Error(
-        "No Storefront API session token available. Please provide a 'session_token' parameter in your tool call or set RECHARGE_SESSION_TOKEN in your environment variables."
+        "No authentication token available. Please provide either 'session_token' or 'merchant_token' parameter in your tool call, or set RECHARGE_SESSION_TOKEN or RECHARGE_MERCHANT_TOKEN in your environment variables."
       );
     }
     
     if (process.env.DEBUG === 'true') {
       const storeUrlSource = toolStoreUrl ? 'tool parameter' : 'environment variable';
-      const tokenSource = toolSessionToken ? 'tool parameter' : 'environment variable';
+      const sessionTokenSource = toolSessionToken ? 'tool parameter' : 'environment variable';
+      const merchantTokenSource = toolMerchantToken ? 'tool parameter' : 'environment variable';
       console.error(`[DEBUG] Using store URL from: ${storeUrlSource} (${validatedDomain})`);
-      console.error(`[DEBUG] Using session token from: ${tokenSource}`);
+      if (sessionToken) {
+        console.error(`[DEBUG] Using session token from: ${sessionTokenSource}`);
+      }
+      if (merchantToken) {
+        console.error(`[DEBUG] Using merchant token from: ${merchantTokenSource}`);
+      }
     }
 
-    // Create a new Storefront client instance
+    // Create a new client instance
     return new RechargeClient({
       storeUrl: validatedDomain,
       sessionToken: sessionToken,
+      merchantToken: merchantToken,
     });
   }
 
@@ -220,18 +231,19 @@ class RechargeStorefrontAPIMCPServer {
         // Validate arguments against schema
         const validatedArgs = tool.inputSchema.parse(args || {});
         
-        // Extract store_url from validated args
-        const { store_url, session_token, ...toolArgs } = validatedArgs;
+        // Extract authentication parameters from validated args
+        const { store_url, session_token, merchant_token, ...toolArgs } = validatedArgs;
         
         if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] Tool '${name}' called`);
           console.error(`[DEBUG] Store URL: ${store_url ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Session token: ${session_token ? 'provided in call' : 'using environment default'}`);
+          console.error(`[DEBUG] Merchant token: ${merchant_token ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Arguments:`, JSON.stringify(toolArgs, null, 2));
         }
         
         // Get client
-        const rechargeClient = this.getRechargeClient(store_url, session_token);
+        const rechargeClient = this.getRechargeClient(store_url, session_token, merchant_token);
         
         const result = await tool.execute(rechargeClient, toolArgs);
         this.stats.successfulCalls++;
@@ -279,7 +291,7 @@ class RechargeStorefrontAPIMCPServer {
         }
         
         // Handle missing access token errors
-        if (error.message.includes('No Storefront API session token available')) {
+        if (error.message.includes('No authentication token available')) {
           throw new McpError(
             ErrorCode.InvalidParams,
             error.message
@@ -312,9 +324,11 @@ class RechargeStorefrontAPIMCPServer {
     if (this.defaultStoreUrl) {
       console.error(`🔗 Store: ${this.defaultStoreUrl}`);
     }
-    const hasDefaultToken = this.defaultAccessToken ? 'Yes' : 'No (will require session token in tool calls)';
-    console.error(`🔑 Default session token: ${hasDefaultToken}`);
-    console.error(`🔑 Authentication: Customer session tokens (Bearer)`);
+    const hasDefaultSessionToken = this.defaultSessionToken ? 'Yes' : 'No';
+    const hasDefaultMerchantToken = this.defaultMerchantToken ? 'Yes' : 'No';
+    console.error(`🔑 Default session token: ${hasDefaultSessionToken}`);
+    console.error(`🔑 Default merchant token: ${hasDefaultMerchantToken}`);
+    console.error(`🔑 Authentication: Session tokens (Bearer) or Merchant tokens (X-Recharge-Access-Token)`);
     console.error(`🛠️  Available tools: ${toolCount}`);
     console.error(`📊 API Coverage: Complete Recharge Storefront API`);
     console.error(`🔌 Transport: stdio`);

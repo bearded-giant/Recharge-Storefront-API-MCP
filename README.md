@@ -44,47 +44,36 @@ To use this MCP server, you need a Recharge Storefront API access token:
 
 ## Authentication Model
 
-The Recharge Storefront API uses **customer session authentication** that requires integration with Recharge's customer portal system:
+The Recharge Storefront API supports **two authentication methods**:
 
-### How Storefront API Authentication Works
+### Method 1: Direct Session Creation (Recommended)
 
-1. **Customer Portal Login**: Customer logs into Recharge customer portal
-2. **Session Creation**: Recharge generates a temporary session token
-3. **Token Extraction**: Session token must be extracted from the customer's browser session
-4. **MCP Usage**: Token is provided to MCP server for API operations
-5. **Automatic Scoping**: Token automatically identifies and scopes to the logged-in customer
-6. **Expiration**: Token expires when customer session ends or times out
+This method allows the MCP server to create customer sessions directly without portal dependency:
 
-### Session Token Creation Process
+1. **Merchant Authentication**: Use merchant token to authenticate with Recharge
+2. **Customer Credentials**: Provide customer email/password or customer ID
+3. **Session Creation**: MCP server creates customer session via API
+4. **Token Usage**: Use generated session token for subsequent operations
+5. **Automatic Scoping**: Token automatically scopes to the authenticated customer
 
-The Recharge Storefront API session tokens are **not created by the MCP server**. Instead, they are created through Recharge's customer portal authentication flow:
+### Method 2: Portal-Generated Sessions (Legacy)
 
-#### Step 1: Customer Portal Authentication
-```
-Customer → Recharge Portal Login → Session Token Generated
-```
+Traditional method requiring portal integration:
 
-#### Step 2: Token Extraction Methods
+1. **Portal Login**: Customer logs into Recharge customer portal
+2. **Token Extraction**: Extract session token from customer's browser session
+3. **MCP Usage**: Provide extracted token to MCP server
+4. **API Operations**: Use token for Storefront API calls
 
-**Method A: Browser Integration**
-- Customer logs into Recharge portal in browser
-- Session token is stored in browser cookies/localStorage
-- Extract token from browser session for MCP server use
+### Authentication Comparison
 
-**Method B: Portal Integration**
-- Integrate with Recharge's customer portal
-- Use portal's authentication callbacks
-- Receive session token after successful login
+| Method | Token Type | Requirements | Portal Dependency | Use Case |
+|--------|------------|--------------|-------------------|----------|
+| **Direct Session** | Merchant + Customer credentials | Merchant token + email/password | ❌ No | Customer service, automation |
+| **Portal Session** | Customer session token | Portal integration | ✅ Yes | Customer self-service portals |
 
-**Method C: Customer Session API** (if available)
-- Use Recharge's session creation endpoints
-- Authenticate customer credentials
-- Receive session token for API use
+## Getting Your Authentication Tokens
 
-#### Step 3: MCP Server Usage
-```
-Session Token → MCP Server → Storefront API Operations
-```
 ### Authentication Types Comparison
 
 | API Type | Authentication | Use Case | Scope | Customer ID Required? |
@@ -94,36 +83,46 @@ Session Token → MCP Server → Storefront API Operations
 
 ### Authentication Configuration Options
 
-**Important**: Session tokens must be obtained from Recharge's customer portal authentication system before using the MCP server.
+### Option 1: Direct Session Creation (Recommended)
 
-**Option 1: Environment Variables (Recommended)**
+Set merchant token in environment, create sessions as needed:
+
 ```bash
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_SESSION_TOKEN=session_token_from_customer_portal
+RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
 ```
 
-**Option 2: Per-Tool Parameters**
+Then create customer sessions:
+
 ```json
 {
-  "name": "get_customer",
+  "name": "create_customer_session",
   "arguments": {
-    "store_url": "your-shop.myshopify.com",
-    "session_token": "session_token_from_customer_portal"
+    "email": "customer@example.com",
+    "password": "customer_password"
   }
 }
 ```
 
-**Option 3: Mixed (Environment + Override)**
+### Option 2: Pre-Generated Session Token
+
+Set session token directly in environment:
+
 ```bash
-# Set default in environment
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_SESSION_TOKEN=customer_a_session_token
+RECHARGE_SESSION_TOKEN=session_token_from_portal
 ```
+
+### Option 3: Per-Tool Authentication
+
+Provide authentication in each tool call:
+
 ```json
 {
   "name": "get_customer",
   "arguments": {
-    "session_token": "customer_b_session_token"
+    "merchant_token": "your_merchant_token",
+    "store_url": "your-shop.myshopify.com"
   }
 }
 ```

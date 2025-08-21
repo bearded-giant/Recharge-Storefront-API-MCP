@@ -5,34 +5,48 @@ import { handleAPIError, validateRequiredParams } from './utils/error-handler.js
  * Recharge Storefront API Client
  * 
  * Provides methods for interacting with the Recharge Storefront API.
- * Uses customer session tokens for authentication - each token is scoped to a specific customer.
+ * Supports both session token authentication and direct customer session creation.
  * 
  * @class RechargeClient
  */
 export class RechargeClient {
   /**
-   * Create a new RechargeClient instance
+   * Create a new RechargeClient instance with session token
    * 
    * @param {Object} config - Configuration object
    * @param {string} config.storeUrl - Store URL (e.g., 'your-shop.myshopify.com')
    * @param {string} config.sessionToken - Customer session token for authentication
    */
-  constructor({ storeUrl, sessionToken }) {
-    validateRequiredParams({ storeUrl, sessionToken }, ['storeUrl', 'sessionToken']);
+  constructor({ storeUrl, sessionToken, merchantToken }) {
+    validateRequiredParams({ storeUrl }, ['storeUrl']);
+    
+    if (!sessionToken && !merchantToken) {
+      throw new Error('Either sessionToken or merchantToken is required');
+    }
+    
     this.sessionToken = sessionToken;
+    this.merchantToken = merchantToken;
     this.storeUrl = storeUrl;
     
-    // Construct the correct Recharge Storefront API base URL
+    // Construct the Recharge Storefront API base URL
     this.baseURL = `https://${this.storeUrl}/tools/recurring/portal`;
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
+    };
+    
+    // Set appropriate authentication header
+    if (this.sessionToken) {
+      headers['Authorization'] = `Bearer ${this.sessionToken}`;
+    } else if (this.merchantToken) {
+      headers['X-Recharge-Access-Token'] = this.merchantToken;
+    }
     
     this.client = axios.create({
       baseURL: this.baseURL,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${this.sessionToken}`,
-        'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
-      },
+      headers,
       timeout: 30000, // 30 seconds
       maxRedirects: 5,
       validateStatus: (status) => status < 500, // Don't throw for 4xx errors, let our handler deal with them
@@ -41,6 +55,71 @@ export class RechargeClient {
     this.setupInterceptors();
   }
 
+  /**
+   * Create a customer session using merchant token and customer credentials
+   * @param {Object} credentials - Customer credentials
+   * @param {string} credentials.email - Customer email
+   * @param {string} credentials.password - Customer password
+   * @returns {Promise<string>} Session token
+   */
+  async createCustomerSession(credentials) {
+    if (!this.merchantToken) {
+      throw new Error('Merchant token required for session creation');
+    }
+    
+    validateRequiredParams(credentials, ['email', 'password']);
+    
+    try {
+      const response = await this.makeRequest('POST', '/api/v1/sessions', {
+        email: credentials.email,
+        password: credentials.password,
+        return_url: credentials.return_url || null
+      });
+      
+      if (response.session && response.session.token) {
+        // Update client to use the new session token
+        this.sessionToken = response.session.token;
+        this.client.defaults.headers['Authorization'] = `Bearer ${this.sessionToken}`;
+        delete this.client.defaults.headers['X-Recharge-Access-Token'];
+        
+        return response.session.token;
+      }
+      
+      throw new Error('Session token not returned from API');
+    } catch (error) {
+      if (error.statusCode === 401) {
+        throw new Error('Invalid customer credentials');
+      }
+      throw error;
+    }
+  }
+  
+  /**
+   * Create a customer session using customer ID (merchant token required)
+   * @param {string} customerId - Customer ID
+   * @param {Object} options - Session options
+   * @returns {Promise<Object>} Session data including token
+   */
+  async createCustomerSessionById(customerId, options = {}) {
+    if (!this.merchantToken) {
+      throw new Error('Merchant token required for session creation');
+    }
+    
+    validateRequiredParams({ customerId }, ['customerId']);
+    
+    const response = await this.makeRequest('POST', `/api/v1/customers/${customerId}/sessions`, {
+      return_url: options.return_url || null
+    });
+    
+    if (response.session && response.session.token) {
+      // Update client to use the new session token
+      this.sessionToken = response.session.token;
+      this.client.defaults.headers['Authorization'] = `Bearer ${this.sessionToken}`;
+      delete this.client.defaults.headers['X-Recharge-Access-Token'];
+    }
+    
+    return response;
+  }
   /**
    * Setup axios interceptors for logging and error handling
    */
