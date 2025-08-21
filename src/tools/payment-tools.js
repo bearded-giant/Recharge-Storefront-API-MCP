@@ -36,6 +36,7 @@ export const paymentTools = [
     inputSchema: paymentMethodListSchema,
     execute: async (client, args) => {
       const { customer_id } = args;
+      // Pass customer_id to client method
       const paymentMethods = await client.getPaymentMethods(customer_id);
       return {
         content: [
@@ -52,7 +53,7 @@ export const paymentTools = [
     description: 'Get detailed information about a specific payment method',
     inputSchema: paymentMethodSchema,
     execute: async (client, args) => {
-      const { payment_method_id } = args;
+      const { payment_method_id, ...otherArgs } = args;
       const paymentMethod = await client.getPaymentMethod(payment_method_id);
       return {
         content: [
@@ -69,7 +70,7 @@ export const paymentTools = [
     description: 'Update payment method billing address',
     inputSchema: updatePaymentMethodSchema,
     execute: async (client, args) => {
-      const { payment_method_id, ...paymentData } = args;
+      const { payment_method_id, access_token, store_url, ...paymentData } = args;
       const updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData);
       return {
         content: [

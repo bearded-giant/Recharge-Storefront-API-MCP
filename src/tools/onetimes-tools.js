@@ -45,6 +45,7 @@ export const onetimeTools = [
     inputSchema: onetimeListSchema,
     execute: async (client, args) => {
       const { customer_id } = args;
+      // Pass customer_id to client method
       const onetimes = await client.getOnetimes(customer_id);
       return {
         content: [
@@ -61,7 +62,7 @@ export const onetimeTools = [
     description: 'Get detailed information about a specific one-time product',
     inputSchema: onetimeSchema,
     execute: async (client, args) => {
-      const { onetime_id } = args;
+      const { onetime_id, ...otherArgs } = args;
       const onetime = await client.getOnetime(onetime_id);
       return {
         content: [
@@ -78,7 +79,8 @@ export const onetimeTools = [
     description: 'Create a new one-time product',
     inputSchema: createOnetimeSchema,
     execute: async (client, args) => {
-      const onetime = await client.createOnetime(args);
+      const { access_token, store_url, ...onetimeData } = args;
+      const onetime = await client.createOnetime(onetimeData);
       return {
         content: [
           {
@@ -94,7 +96,7 @@ export const onetimeTools = [
     description: 'Update a one-time product',
     inputSchema: updateOnetimeSchema,
     execute: async (client, args) => {
-      const { onetime_id, ...updateData } = args;
+      const { onetime_id, access_token, store_url, ...updateData } = args;
       const updatedOnetime = await client.updateOnetime(onetime_id, updateData);
       return {
         content: [
@@ -111,7 +113,7 @@ export const onetimeTools = [
     description: 'Delete a one-time product',
     inputSchema: onetimeSchema,
     execute: async (client, args) => {
-      const { onetime_id } = args;
+      const { onetime_id, ...otherArgs } = args;
       const result = await client.deleteOnetime(onetime_id);
       return {
         content: [

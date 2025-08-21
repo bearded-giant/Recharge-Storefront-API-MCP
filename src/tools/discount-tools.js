@@ -36,6 +36,7 @@ export const discountTools = [
     inputSchema: discountListSchema,
     execute: async (client, args) => {
       const { customer_id } = args;
+      // Pass customer_id to client method
       const discounts = await client.getDiscounts(customer_id);
       return {
         content: [
@@ -52,7 +53,7 @@ export const discountTools = [
     description: 'Get detailed information about a specific discount',
     inputSchema: discountSchema,
     execute: async (client, args) => {
-      const { discount_id } = args;
+      const { discount_id, ...otherArgs } = args;
       const discount = await client.getDiscount(discount_id);
       return {
         content: [
@@ -69,7 +70,7 @@ export const discountTools = [
     description: 'Apply a discount code',
     inputSchema: applyDiscountSchema,
     execute: async (client, args) => {
-      const { discount_code } = args;
+      const { discount_code, ...otherArgs } = args;
       const appliedDiscount = await client.applyDiscount(discount_code);
       return {
         content: [
@@ -86,7 +87,7 @@ export const discountTools = [
     description: 'Remove a discount',
     inputSchema: removeDiscountSchema,
     execute: async (client, args) => {
-      const { discount_id } = args;
+      const { discount_id, ...otherArgs } = args;
       const result = await client.removeDiscount(discount_id);
       return {
         content: [

@@ -27,6 +27,7 @@ export const orderTools = [
     inputSchema: orderListSchema,
     execute: async (client, args) => {
       const { customer_id, ...params } = args;
+      // Pass customer_id to client method
       const orders = await client.getOrders(customer_id, params);
       return {
         content: [
@@ -43,7 +44,7 @@ export const orderTools = [
     description: 'Get detailed information about a specific order',
     inputSchema: orderSchema,
     execute: async (client, args) => {
-      const { order_id } = args;
+      const { order_id, ...otherArgs } = args;
       const order = await client.getOrder(order_id);
       return {
         content: [

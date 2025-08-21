@@ -62,6 +62,7 @@ export const addressTools = [
     inputSchema: addressListSchema,
     execute: async (client, args) => {
       const { customer_id } = args;
+      // Pass customer_id to client method
       const addresses = await client.getAddresses(customer_id);
       return {
         content: [
@@ -78,7 +79,7 @@ export const addressTools = [
     description: 'Get detailed information about a specific address',
     inputSchema: addressSchema,
     execute: async (client, args) => {
-      const { address_id } = args;
+      const { address_id, ...otherArgs } = args;
       const address = await client.getAddress(address_id);
       return {
         content: [
@@ -95,7 +96,7 @@ export const addressTools = [
     description: 'Create a new address for a customer',
     inputSchema: createAddressSchema,
     execute: async (client, args) => {
-      const { customer_id, ...addressData } = args;
+      const { customer_id, access_token, store_url, ...addressData } = args;
       const newAddress = await client.createAddress(customer_id, addressData);
       return {
         content: [
@@ -112,7 +113,7 @@ export const addressTools = [
     description: 'Update an existing address',
     inputSchema: updateAddressSchema,
     execute: async (client, args) => {
-      const { address_id, ...addressData } = args;
+      const { address_id, access_token, store_url, ...addressData } = args;
       const updatedAddress = await client.updateAddress(address_id, addressData);
       return {
         content: [
@@ -129,7 +130,7 @@ export const addressTools = [
     description: 'Delete an existing address',
     inputSchema: deleteAddressSchema,
     execute: async (client, args) => {
-      const { address_id } = args;
+      const { address_id, ...otherArgs } = args;
       const result = await client.deleteAddress(address_id);
       return {
         content: [

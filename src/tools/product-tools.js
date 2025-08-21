@@ -25,7 +25,8 @@ export const productTools = [
     description: 'Get products available for subscription',
     inputSchema: productListSchema,
     execute: async (client, args) => {
-      const products = await client.getProducts(args);
+      const { access_token, store_url, ...params } = args;
+      const products = await client.getProducts(params);
       return {
         content: [
           {
@@ -41,7 +42,7 @@ export const productTools = [
     description: 'Get detailed information about a specific product',
     inputSchema: productSchema,
     execute: async (client, args) => {
-      const { product_id } = args;
+      const { product_id, ...otherArgs } = args;
       const product = await client.getProduct(product_id);
       return {
         content: [

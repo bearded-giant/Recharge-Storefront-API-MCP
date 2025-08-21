@@ -85,6 +85,7 @@ export const subscriptionTools = [
     inputSchema: subscriptionListSchema,
     execute: async (client, args) => {
       const { customer_id, ...params } = args;
+      // Pass customer_id back to params for client method
       const subscriptions = await client.getSubscriptions(customer_id, params);
       return {
         content: [
@@ -101,7 +102,7 @@ export const subscriptionTools = [
     description: 'Get detailed information about a specific subscription',
     inputSchema: subscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id } = args;
+      const { subscription_id, ...otherArgs } = args;
       const subscription = await client.getSubscription(subscription_id);
       return {
         content: [
@@ -118,7 +119,7 @@ export const subscriptionTools = [
     description: 'Update subscription details like frequency, quantity, or next charge date',
     inputSchema: updateSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, ...updateData } = args;
+      const { subscription_id, access_token, store_url, ...updateData } = args;
       const updatedSubscription = await client.updateSubscription(subscription_id, updateData);
       return {
         content: [
@@ -135,7 +136,7 @@ export const subscriptionTools = [
     description: 'Skip a subscription delivery for a specific date',
     inputSchema: skipSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, date } = args;
+      const { subscription_id, date, ...otherArgs } = args;
       const result = await client.skipSubscription(subscription_id, date);
       return {
         content: [
@@ -152,7 +153,7 @@ export const subscriptionTools = [
     description: 'Unskip a previously skipped subscription delivery',
     inputSchema: unskipSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, date } = args;
+      const { subscription_id, date, ...otherArgs } = args;
       const result = await client.unskipSubscription(subscription_id, date);
       return {
         content: [
@@ -169,7 +170,7 @@ export const subscriptionTools = [
     description: 'Swap the variant of a subscription',
     inputSchema: swapSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, ...swapData } = args;
+      const { subscription_id, access_token, store_url, ...swapData } = args;
       const swappedSubscription = await client.swapSubscription(subscription_id, swapData);
       return {
         content: [
@@ -186,7 +187,7 @@ export const subscriptionTools = [
     description: 'Cancel a subscription',
     inputSchema: cancelSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, ...cancelData } = args;
+      const { subscription_id, access_token, store_url, ...cancelData } = args;
       const cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData);
       return {
         content: [
@@ -203,7 +204,7 @@ export const subscriptionTools = [
     description: 'Activate a cancelled subscription',
     inputSchema: activateSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id } = args;
+      const { subscription_id, ...otherArgs } = args;
       const activatedSubscription = await client.activateSubscription(subscription_id);
       return {
         content: [
@@ -220,7 +221,7 @@ export const subscriptionTools = [
     description: 'Set the next charge date for a subscription',
     inputSchema: setNextChargeDateSchema,
     execute: async (client, args) => {
-      const { subscription_id, date } = args;
+      const { subscription_id, date, ...otherArgs } = args;
       const updatedSubscription = await client.setNextChargeDate(subscription_id, date);
       return {
         content: [

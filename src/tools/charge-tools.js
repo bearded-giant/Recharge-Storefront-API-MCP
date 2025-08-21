@@ -27,6 +27,7 @@ export const chargeTools = [
     inputSchema: chargeListSchema,
     execute: async (client, args) => {
       const { customer_id, ...params } = args;
+      // Pass customer_id to client method
       const charges = await client.getCharges(customer_id, params);
       return {
         content: [
@@ -43,7 +44,7 @@ export const chargeTools = [
     description: 'Get detailed information about a specific charge',
     inputSchema: chargeSchema,
     execute: async (client, args) => {
-      const { charge_id } = args;
+      const { charge_id, ...otherArgs } = args;
       const charge = await client.getCharge(charge_id);
       return {
         content: [
