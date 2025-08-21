@@ -23,15 +23,14 @@ export class RechargeClient {
     this.storeUrl = storeUrl;
     
     // Construct the correct Recharge Storefront API base URL
-    this.baseURL = `https://storefront-checkout.rechargepayments.com`;
+    this.baseURL = `https://${this.storeUrl}/tools/recurring/portal`;
     
     this.client = axios.create({
       baseURL: this.baseURL,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'X-Recharge-Access-Token': this.apiToken,
-        'X-Recharge-Domain': this.storeUrl,
+        'Authorization': `Bearer ${this.apiToken}`,
         'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
       },
       timeout: 30000, // 30 seconds
@@ -111,6 +110,17 @@ export class RechargeClient {
 
   // Customer methods
   /**
+   * Create a new customer
+   * @param {Object} customerData - Customer data
+   * @returns {Promise<Object>} Created customer data
+   */
+  async createCustomer(customerData) {
+    const required = ['email', 'first_name', 'last_name'];
+    validateRequiredParams(customerData, required);
+    return this.makeRequest('POST', '/customers', customerData);
+  }
+
+  /**
    * Get customer information by customer ID
    * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Customer data
@@ -145,6 +155,17 @@ export class RechargeClient {
   }
 
   // Subscription methods
+  /**
+   * Create a new subscription
+   * @param {Object} subscriptionData - Subscription data
+   * @returns {Promise<Object>} Created subscription data
+   */
+  async createSubscription(subscriptionData) {
+    const required = ['customer_id', 'address_id', 'variant_id', 'order_interval_frequency', 'order_interval_unit'];
+    validateRequiredParams(subscriptionData, required);
+    return this.makeRequest('POST', '/subscriptions', subscriptionData);
+  }
+
   /**
    * Get subscriptions with optional filtering
    * @param {Object} params - Query parameters

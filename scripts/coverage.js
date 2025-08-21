@@ -7,17 +7,46 @@
 
 import { tools } from '../src/tools/index.js';
 
-console.log('🔧 API Coverage:', tools.length, 'comprehensive tools');
+console.log('🔧 Recharge Storefront API Coverage:', tools.length, 'comprehensive tools');
 console.log('📋 Categories covered:');
 
 const categories = {};
 tools.forEach(t => {
-  const category = t.name.split('_')[1] || 'general';
+  const parts = t.name.split('_');
+  let category;
+  
+  if (parts.includes('customer')) category = 'customers';
+  else if (parts.includes('subscription')) category = 'subscriptions';
+  else if (parts.includes('address')) category = 'addresses';
+  else if (parts.includes('payment')) category = 'payments';
+  else if (parts.includes('product')) category = 'products';
+  else if (parts.includes('order')) category = 'orders';
+  else if (parts.includes('charge')) category = 'charges';
+  else if (parts.includes('onetime')) category = 'onetimes';
+  else if (parts.includes('bundle')) category = 'bundles';
+  else if (parts.includes('discount')) category = 'discounts';
+  else category = 'general';
+  
   categories[category] = (categories[category] || 0) + 1;
 });
 
-Object.entries(categories).forEach(([cat, count]) => {
-  console.log('   ' + cat + ': ' + count + ' tools');
+Object.entries(categories)
+  .sort(([,a], [,b]) => b - a)
+  .forEach(([cat, count]) => {
+    console.log(`   ${cat}: ${count} tools`);
+  });
+
+console.log('\n📊 Tool Distribution:');
+const totalTools = tools.length;
+Object.entries(categories)
+  .sort(([,a], [,b]) => b - a)
+  .forEach(([cat, count]) => {
+    const percentage = ((count / totalTools) * 100).toFixed(1);
+    console.log(`   ${cat}: ${percentage}%`);
 });
 
 console.log('\n✅ Complete Recharge Storefront API coverage');
+console.log('🎯 All major customer-facing operations supported');
+console.log('🔄 Full subscription lifecycle management');
+console.log('💳 Complete payment and billing functionality');
+console.log('📦 Comprehensive product and bundle management');

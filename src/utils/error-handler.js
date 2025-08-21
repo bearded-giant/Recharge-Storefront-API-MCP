@@ -195,12 +195,31 @@ export function validateRequiredParams(params, required) {
     params[param] === undefined || 
     params[param] === null || 
     (typeof params[param] === 'string' && params[param].trim() === '') ||
-    (typeof params[param] === 'number' && isNaN(params[param]))
+    (typeof params[param] === 'number' && (isNaN(params[param]) || params[param] < 0))
   );
   
   if (missing.length > 0) {
     throw new Error(`Missing required parameters: ${missing.join(', ')}`);
   }
+  
+  // Validate email format if email parameter exists
+  if (params.email && typeof params.email === 'string') {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(params.email)) {
+      throw new Error('Invalid email format');
+    }
+  }
+  
+  // Validate date format if date parameters exist
+  const dateFields = ['date', 'next_charge_scheduled_at'];
+  dateFields.forEach(field => {
+    if (params[field] && typeof params[field] === 'string') {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(params[field])) {
+        throw new Error(`Invalid date format for ${field}. Expected YYYY-MM-DD format`);
+      }
+    }
+  });
 }
 
 /**

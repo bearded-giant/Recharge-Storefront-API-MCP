@@ -41,7 +41,10 @@
     "ecommerce",
     "api",
     "storefront",
-    "shopify"
+    "shopify",
+    "recurring-billing",
+    "subscription-management",
+    "customer-portal"
   ],
   "author": "",
   "license": "MIT",

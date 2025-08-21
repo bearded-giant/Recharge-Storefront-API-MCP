@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial release of Recharge Storefront API MCP Server
-- Complete coverage of Recharge Storefront API with 50+ tools
+- Complete coverage of Recharge Storefront API with 39 comprehensive tools
 - Flexible authentication system supporting environment variables and per-tool tokens
 - Flexible store URL configuration supporting environment variables and per-tool parameters
 - Comprehensive error handling with detailed error messages
@@ -21,8 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Security best practices implementation
 
 ### Features
-- **Customer Management**: Profile updates, preferences, settings
-- **Subscription Management**: Complete lifecycle management (create, update, pause, resume, cancel, skip)
+- **Customer Management**: Full CRUD operations including customer creation and profile management
+- **Subscription Management**: Complete lifecycle management (create, update, cancel, skip, swap, activate)
 - **Address Management**: Full CRUD operations for shipping and billing addresses
 - **Payment Methods**: Payment method management and updates
 - **Product Catalog**: Browse available products and variants
@@ -31,11 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **One-time Products**: Add products to upcoming deliveries
 - **Bundle Management**: Handle product bundles and selections
 - **Discount Management**: Apply and manage discount codes
-- **Notification System**: View and manage customer notifications
-- **Session Management**: Customer authentication and session handling
-- **Store Configuration**: Access store settings and delivery schedules
-- **Async Operations**: Bulk operations via async batch processing
-- **Shopify Integration**: Connector configuration and sync settings
 
 ### Technical Features
 - Model Context Protocol (MCP) compliance
