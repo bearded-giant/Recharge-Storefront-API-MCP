@@ -203,7 +203,7 @@ To work with multiple customers:
 
 ### Automatic Session Creation
 
-The MCP server can **automatically create session tokens** when you provide a `customer_id` parameter instead of a `session_token`. This eliminates the need for manual session creation in most cases.
+The MCP server **automatically creates session tokens** when you provide a `customer_id` parameter instead of a `session_token`. This eliminates the need for manual session creation in most cases.
 
 #### Automatic Mode (Recommended)
 ```json
