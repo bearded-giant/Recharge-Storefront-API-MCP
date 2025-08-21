@@ -282,10 +282,11 @@ npm run lint         # Check code syntax
 
 ### Docker Development
 ```bash
-npm run docker:build     # Build Docker image
+npm run docker:build     # Build Docker image with version tag
 npm run docker:run       # Run with Docker Compose
 npm run docker:logs      # View container logs
 npm run docker:stop      # Stop containers
+npm run docker:clean     # Clean up containers and volumes
 ```
 
 ## Docker Deployment

@@ -194,7 +194,8 @@ export function validateRequiredParams(params, required) {
   const missing = required.filter(param => 
     params[param] === undefined || 
     params[param] === null || 
-    (typeof params[param] === 'string' && params[param].trim() === '')
+    (typeof params[param] === 'string' && params[param].trim() === '') ||
+    (typeof params[param] === 'number' && isNaN(params[param]))
   );
   
   if (missing.length > 0) {

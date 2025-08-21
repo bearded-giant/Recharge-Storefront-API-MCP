@@ -135,6 +135,7 @@ class RechargeStorefrontAPIMCPServer {
     process.on('uncaughtException', (error) => {
       console.error('[FATAL] Uncaught Exception:', error);
       this.stats.errors++;
+      this.logStats();
       process.exit(1);
     });
 
@@ -142,6 +143,7 @@ class RechargeStorefrontAPIMCPServer {
     process.on('unhandledRejection', (reason, promise) => {
       console.error('[ERROR] Unhandled Rejection at:', promise, 'reason:', reason);
       this.stats.errors++;
+      this.logStats();
       process.exit(1);
     });
 

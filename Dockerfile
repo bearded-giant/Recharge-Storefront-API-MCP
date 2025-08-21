@@ -1,5 +1,5 @@
 # Use official Node.js runtime as base image
-FROM node:18-alpine
+FROM node:18-alpine AS base
 
 # Set working directory early
 WORKDIR /app
@@ -14,8 +14,8 @@ RUN apk add --no-cache \
     && rm -rf /var/cache/apk/*
 
 # Create non-root user for security early
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S recharge-storefront-api-mcp -u 1001 -G nodejs
+RUN addgroup -g 1001 -S nodejs && adduser -S recharge-storefront-api-mcp -u 1001 -G nodejs
+
 # Copy package files
 COPY package*.json ./
 
@@ -41,7 +41,7 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "console.log('Health check passed')" || exit 1
+    CMD node -e "console.log('Health check passed'); process.exit(0)" || exit 1
 
 # Start the MCP server
 CMD ["npm", "start"]

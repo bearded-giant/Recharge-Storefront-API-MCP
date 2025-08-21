@@ -26,7 +26,7 @@ export class RechargeClient {
     this.accessToken = accessToken;
     
     // Construct the correct Recharge Storefront API base URL
-    this.baseURL = `https://${storeUrl}/tools/recurring/portal/api/storefront`;
+    this.baseURL = `https://${storeUrl}/tools/recurring/portal`;
     
     this.client = axios.create({
       baseURL: this.baseURL,

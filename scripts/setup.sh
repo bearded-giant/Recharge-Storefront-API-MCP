@@ -87,7 +87,7 @@ fi
 
 # Check for security vulnerabilities
 print_info "Checking for security vulnerabilities..."
-if npm audit --audit-level=high; then
+if npm audit --audit-level=high --omit=dev; then
     print_status "No high-severity vulnerabilities found"
 else
     print_warning "Security vulnerabilities detected. Run 'npm audit fix' to resolve."

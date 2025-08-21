@@ -5,8 +5,6 @@
  * This script tests the token and store URL precedence system without making actual API calls
  */
 
-import { RechargeClient } from '../src/recharge-client.js';
-
 console.log('🧪 Testing API Key and Store URL Handling Logic\n');
 
 // Test 1: Environment variables only
