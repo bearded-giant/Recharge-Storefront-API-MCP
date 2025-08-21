@@ -775,91 +775,6 @@ Once integrated, your AI assistant will have access to all 40+ Recharge tools fo
 
 The server provides **48 comprehensive tools** covering all major Recharge Storefront API endpoints:
 
-## 🛠️ Available Tools (48 Total)
-
-> **Complete API Coverage**: This MCP server provides 100% coverage of the Recharge Storefront API with 48 comprehensive tools.
-
-### Customer Management
-- `get_customer` - Retrieve current customer information
-- `update_customer` - Update customer details
-
-### Subscription Management (12 tools)
-- `get_customer_subscriptions` - List customer subscriptions with filtering
-- `get_subscription` - Get detailed subscription information
-- `update_subscription` - Update subscription details (frequency, quantity, etc.)
-- `skip_subscription` - Skip a delivery for specific date
-- `unskip_subscription` - Unskip a previously skipped delivery
-- `swap_subscription_product` - Change subscription product variant
-- `cancel_subscription` - Cancel a subscription with reason
-- `activate_subscription` - Reactivate a cancelled subscription
-- `set_subscription_next_charge_date` - Set next charge date
-- `pause_subscription` - Temporarily pause subscription
-- `resume_subscription` - Resume a paused subscription
-
-### Address Management (5 tools)
-- `get_addresses` - List customer addresses
-- `get_address` - Get specific address details
-- `create_address` - Create new address
-- `update_address` - Update existing address
-- `delete_address` - Remove address
-
-### Payment Methods (3 tools)
-- `get_payment_methods` - List payment methods
-- `get_payment_method` - Get specific payment method
-- `update_payment_method` - Update payment method billing info
-
-### Orders & Charges (4 tools)
-- `get_orders` - List customer orders with filtering
-- `get_order` - Get detailed order information
-- `get_charges` - List customer charges with filtering
-- `get_charge` - Get detailed charge information
-
-### Products (2 tools)
-- `get_products` - List available subscription products
-- `get_product` - Get detailed product information
-
-### Discounts (4 tools)
-- `get_discounts` - List customer discounts
-- `get_discount` - Get specific discount details
-- `apply_discount` - Apply discount code
-- `remove_discount` - Remove applied discount
-
-### One-time Products (5 tools)
-- `get_onetimes` - List one-time products
-- `get_onetime` - Get specific one-time product
-- `create_onetime` - Add one-time product to next charge
-- `update_onetime` - Update one-time product
-- `delete_onetime` - Remove one-time product
-
-### Bundle Selections (5 tools)
-- `get_bundle_selections` - List bundle selections
-- `get_bundle_selection` - Get specific bundle selection
-- `create_bundle_selection` - Create bundle selection
-- `update_bundle_selection` - Update bundle selection
-- `delete_bundle_selection` - Remove bundle selection
-
-### Session Management (3 tools)
-- `create_session` - Create customer session
-- `validate_session` - Validate current session
-- `destroy_session` - End session (logout)
-
-### Store & Settings (4 tools)
-- `get_store` - Get store information
-- `get_delivery_schedule` - Get delivery schedule
-- `get_settings` - Get customer preferences
-- `update_settings` - Update customer preferences
-
-### Notifications (3 tools)
-- `get_notifications` - List customer notifications
-- `get_notification` - Get specific notification
-- `mark_notification_as_read` - Mark notification as read
-
-### Advanced Operations (4 tools)
-- `get_async_batch` - Get batch operation status
-- `create_async_batch` - Create bulk operation
-- `get_shopify_connector` - Get Shopify integration status
-- `update_shopify_connector` - Update Shopify integration
-
 ### 👤 Customer Management (2 tools)
 - **`get_customer`**: Retrieve current customer information
   - **Parameters**: `access_token` (optional) - API token override
@@ -874,7 +789,6 @@ The server provides **48 comprehensive tools** covering all major Recharge Store
 - **`destroy_session`**: Destroy current session (logout)
   - **Parameters**: `access_token` (optional)
 
-### 📦 Subscription Management (8 tools)
 ### 📦 Subscription Management (10 tools)
 - **`get_customer_subscriptions`**: List subscriptions with filtering
   - **Parameters**: `access_token` (optional), `status`, `limit`, `page` (all optional)
@@ -1649,6 +1563,70 @@ When adding new tools or endpoints:
 
 ### Common Issues
 
+**Server won't start**
+```bash
+# Check Node.js version
+node --version  # Should be 18+
+
+# Validate configuration
+npm run validate
+
+# Check environment variables
+cat .env
+```
+
+**API authentication errors**
+```bash
+# Test with debug mode
+DEBUG=true npm start
+
+# Verify token format
+echo $RECHARGE_ACCESS_TOKEN
+```
+
+**MCP client connection issues**
+```bash
+# Test MCP protocol
+npm run mcp:test
+
+# Check client configuration
+# Ensure absolute paths are used
+```
+
+**Tool execution errors**
+```bash
+# Enable debug logging
+DEBUG=true npm start
+
+# Check API coverage
+npm run coverage
+
+# Validate all tools are loaded
+npm run validate
+```
+
+### Debug Mode
+
+Enable detailed logging:
+```bash
+DEBUG=true npm start
+```
+
+This will show:
+- HTTP requests and responses
+- API endpoint calls
+- Error details and stack traces
+- Tool loading and validation
+- MCP protocol messages
+
+### Getting Help
+
+1. **Check the logs**: Enable debug mode for detailed information
+2. **Validate setup**: Run `npm run validate` to check configuration
+3. **Test connectivity**: Use `npm run mcp:test` to verify MCP protocol
+4. **Review examples**: Check the sample usage section for proper syntax
+5. **API Coverage**: Run `npm run coverage` to see all available tools
+
 #### 🔐 Authentication Errors
 
 **Problem**: `API Error (401): Unauthorized`
@@ -1754,16 +1732,6 @@ curl -H "X-Recharge-Access-Token: your_token" \
 - 📊 Monitor API rate limits and implement backoff strategies
 - 🔄 Use async batch operations for bulk updates
 - 📈 Profile memory usage for long-running processes
-
-### Getting Help
-
-1. **📚 Check Documentation**: Review this README and inline code documentation
-2. **🐛 Enable Debug Mode**: Use `DEBUG=true` to get detailed logging
-3. **✅ Run Validation**: Use `npm run validate` to check configuration
-4. **🧪 Run Tests**: Use `npm run test:full` for comprehensive testing
-5. **🔍 Check Logs**: Review error messages and stack traces
-6. **🐳 Check Docker**: If using Docker, check container logs with `npm run docker:logs`
-7. **📞 Contact Support**: Reach out with specific error messages and configuration details
 
 ### Build & Deployment Issues
 
