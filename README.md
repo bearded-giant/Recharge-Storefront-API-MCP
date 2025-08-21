@@ -44,28 +44,29 @@ To use this MCP server, you need a Recharge Storefront API access token:
 
 ## Authentication Model
 
-The Recharge Storefront API uses **customer-scoped authentication**, which is different from the Admin API:
+The Recharge Storefront API uses **customer session authentication**:
 
 ### How Storefront API Authentication Works
 
-1. **Customer-Scoped Tokens**: Each API token is tied to a specific customer
-2. **No Customer ID Required**: The token automatically identifies which customer's data to access
-3. **Limited Scope**: Can only access data for the customer associated with the token
-4. **Portal Integration**: Typically used in customer portal applications
+1. **Session-Based**: Tokens are generated when customers log into the portal
+2. **Customer-Scoped**: Each token is automatically tied to the logged-in customer
+3. **Temporary**: Tokens expire when the customer session ends
+4. **Bearer Authentication**: Uses standard Bearer token in Authorization header
+5. **No Customer ID Required**: Token automatically identifies the customer
 
-### Token Types (Important!)
+### Authentication Types Comparison
 
-| Token Type | Use Case | Scope | Customer ID Required? |
-|------------|----------|-------|----------------------|
-| **Storefront API** | Customer portals, self-service | Single customer | ❌ No (token identifies customer) |
-| **Admin API** | Merchant tools, backend systems | All customers | ✅ Yes (specify which customer) |
+| API Type | Authentication | Use Case | Scope | Customer ID Required? |
+|----------|---------------|----------|-------|----------------------|
+| **Storefront API** | Bearer session token | Customer portals | Single customer session | ❌ No |
+| **Admin API** | X-Recharge-Access-Token | Merchant tools | All customers | ✅ Yes |
 
 ### Authentication Configuration Options
 
 **Option 1: Environment Variables (Recommended)**
 ```bash
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_ACCESS_TOKEN=your_customer_scoped_token_here
+RECHARGE_SESSION_TOKEN=your_customer_session_token_here
 ```
 
 **Option 2: Per-Tool Parameters**
@@ -74,7 +75,7 @@ RECHARGE_ACCESS_TOKEN=your_customer_scoped_token_here
   "name": "get_customer",
   "arguments": {
     "store_url": "your-shop.myshopify.com",
-    "access_token": "your_customer_scoped_token_here"
+    "session_token": "your_customer_session_token_here"
   }
 }
 ```
@@ -83,13 +84,13 @@ RECHARGE_ACCESS_TOKEN=your_customer_scoped_token_here
 ```bash
 # Set default in environment
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_ACCESS_TOKEN=default_token
+RECHARGE_SESSION_TOKEN=default_session_token
 ```
 ```json
 {
   "name": "get_customer",
   "arguments": {
-    "access_token": "different_customer_token"
+    "session_token": "different_customer_session_token"
   }
 }
 ```
@@ -103,36 +104,37 @@ When you call any tool, the API automatically:
 
 **Example Flow:**
 ```json
-// Token "cust_abc123_token" is scoped to customer ID 123456
+// Session token is automatically scoped to logged-in customer
 {
   "name": "get_subscriptions",
   "arguments": {
-    "access_token": "cust_abc123_token"
+    "session_token": "session_abc123_token"
   }
 }
-// Returns only subscriptions for customer 123456
+// Returns only subscriptions for the customer who owns this session
 ```
 
 ### Multi-Customer Support
 
-To work with multiple customers, you need:
-- Different tokens for each customer
-- Switch tokens per operation
+To work with multiple customers:
+- Each customer needs their own session token
+- Tokens are generated when customers log into the portal
+- Switch tokens per customer operation
 
 ```json
-// Customer A's data
+// Customer A's session
 {
   "name": "get_customer",
   "arguments": {
-    "access_token": "customer_a_token"
+    "session_token": "customer_a_session_token"
   }
 }
 
-// Customer B's data  
+// Customer B's session
 {
   "name": "get_customer",
   "arguments": {
-    "access_token": "customer_b_token"
+    "session_token": "customer_b_session_token"
   }
 }
 ```
@@ -142,11 +144,12 @@ To work with multiple customers, you need:
 ### Requirements
 - **Shopify Store**: Must have a Shopify store
 - **Recharge Integration**: Recharge subscription app must be installed and configured
-- **API Token**: Must have Recharge API token with Storefront permissions
+- **Session Token**: Must have customer session token from Recharge portal login
 - **Server-Side**: This MCP server runs server-side, no browser required
 
 ### Limitations
-- **Customer Scoped**: All operations are scoped to individual customers via customer IDs
+- **Session-Based**: All operations are scoped to the customer session
+- **Temporary Tokens**: Session tokens expire and need to be refreshed
 - **Shopify Integration**: Requires Shopify store with Recharge app installed
 
 ### Installation
@@ -167,10 +170,10 @@ To work with multiple customers, you need:
 3. **Required environment variables:**
    ```bash
    RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required
-   RECHARGE_ACCESS_TOKEN=your_token_here               # Required*
+   RECHARGE_SESSION_TOKEN=your_session_token_here      # Required*
    ```
    
-   *Required unless you provide `access_token` parameter in each tool call
+   *Required unless you provide `session_token` parameter in each tool call
 
 4. **Start the server:**
    ```bash
@@ -184,7 +187,7 @@ To work with multiple customers, you need:
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_ACCESS_TOKEN` | Conditional* | Recharge Storefront API access token | `your_storefront_token_here` |
+| `RECHARGE_SESSION_TOKEN` | Conditional* | Recharge customer session token | `your_session_token_here` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
@@ -633,14 +636,15 @@ This MCP server provides **complete coverage** of the Recharge Storefront API wi
 ```
 Error: Unauthorized access
 ```
-**Solution**: Ensure you're using a Storefront API token, not Admin API token:
-1. Get Storefront API token from Recharge merchant portal
-2. Token should be customer-scoped for the specific customer
-3. Set `RECHARGE_ACCESS_TOKEN` environment variable or provide in tool calls
+**Solution**: Ensure you're using a valid customer session token:
+1. Customer must be logged into the Recharge portal
+2. Session token is generated automatically during login
+3. Set `RECHARGE_SESSION_TOKEN` environment variable or provide in tool calls
+4. Token must not be expired
 
 **Example of correct authentication**:
 ```json
-{"name": "get_customer", "arguments": {"access_token": "storefront_token_here"}}
+{"name": "get_customer", "arguments": {"session_token": "session_token_here"}}
 ```
 
 #### Invalid Token Type
@@ -648,8 +652,8 @@ Error: Unauthorized access
 Error: Invalid token permissions
 ```
 **Solution**: Ensure you're using the correct token type:
-- ✅ Correct: Storefront API token (customer-scoped)
-- ❌ Wrong: Admin API token (merchant-scoped)
+- ✅ Correct: Customer session token (Bearer authentication)
+- ❌ Wrong: Admin API token (X-Recharge-Access-Token header)
 - ❌ Wrong: Expired or revoked token
 
 #### Resource Access Issues
@@ -676,14 +680,15 @@ Error: Resource not found
 {"name": "get_order", "arguments": {"order_id": "order_456"}}
 ```
 
-#### Missing Storefront Token
+#### Missing Session Token
 ```
-Error: No Storefront API access token available
+Error: No Storefront API session token available
 ```
 **Solution**: 
-1. Get your Storefront API token from Recharge merchant portal
-2. Either set `RECHARGE_ACCESS_TOKEN` environment variable
-3. Or provide `access_token` parameter in individual tool calls
+1. Ensure customer is logged into Recharge portal
+2. Get the session token from the customer session
+3. Either set `RECHARGE_SESSION_TOKEN` environment variable
+4. Or provide `session_token` parameter in individual tool calls
 
 #### Invalid Domain
 ```

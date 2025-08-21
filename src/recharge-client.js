@@ -5,7 +5,7 @@ import { handleAPIError, validateRequiredParams } from './utils/error-handler.js
  * Recharge Storefront API Client
  * 
  * Provides methods for interacting with the Recharge Storefront API.
- * Uses merchant API tokens for authentication with customer identification.
+ * Uses customer session tokens for authentication - each token is scoped to a specific customer.
  * 
  * @class RechargeClient
  */
@@ -15,22 +15,22 @@ export class RechargeClient {
    * 
    * @param {Object} config - Configuration object
    * @param {string} config.storeUrl - Store URL (e.g., 'your-shop.myshopify.com')
-   * @param {string} config.apiToken - Merchant API token for authentication
+   * @param {string} config.sessionToken - Customer session token for authentication
    */
-  constructor({ storeUrl, apiToken }) {
-    validateRequiredParams({ storeUrl, apiToken }, ['storeUrl', 'apiToken']);
-    this.apiToken = apiToken;
+  constructor({ storeUrl, sessionToken }) {
+    validateRequiredParams({ storeUrl, sessionToken }, ['storeUrl', 'sessionToken']);
+    this.sessionToken = sessionToken;
     this.storeUrl = storeUrl;
     
     // Construct the correct Recharge Storefront API base URL
-    this.baseURL = `https://${this.storeUrl}/tools/recurring/portal/api/v1`;
+    this.baseURL = `https://${this.storeUrl}/tools/recurring/portal`;
     
     this.client = axios.create({
       baseURL: this.baseURL,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'X-Recharge-Access-Token': this.apiToken,
+        'Authorization': `Bearer ${this.sessionToken}`,
         'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
       },
       timeout: 30000, // 30 seconds
