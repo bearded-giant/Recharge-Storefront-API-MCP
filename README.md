@@ -44,13 +44,60 @@ To use this MCP server, you need a Recharge Storefront API access token:
 
 ## Authentication Model
 
-The Recharge Storefront API authentication uses **Direct Session Creation**:
+The Recharge Storefront API uses a **two-step authentication process**:
 
-1. **Merchant Authentication**: Use merchant token to authenticate with Recharge
-2. **Customer ID**: Provide customer ID (from your customer database)
-3. **Session Creation**: MCP server creates customer session via API
-4. **Token Usage**: Use generated session token for subsequent operations
-5. **Automatic Scoping**: Token automatically scopes to the authenticated customer
+### Step 1: Get Customer ID
+You need a **customer ID** to create sessions. Get this by:
+- Looking up customers by email: `get_customer_by_email`
+- Using your existing customer database
+- From previous API responses
+
+### Step 2: Create Customer Session
+Use the customer ID to create a session token:
+- **Automatic**: Provide `customer_id` in any tool call (recommended)
+- **Manual**: Call `create_customer_session_by_id` first, then use returned token
+
+### How It Works
+```
+Merchant Token + Customer ID → Session Token → API Operations
+```
+
+1. **Merchant Token**: Authenticates you with Recharge (set in environment)
+2. **Customer ID**: Identifies which customer to create session for
+3. **Session Token**: Customer-scoped token for API operations
+4. **API Operations**: All operations automatically scoped to that customer
+
+### Authentication Flow Examples
+
+**Option A: Automatic (Recommended)**
+```json
+// Single call - session created automatically
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+```
+
+**Option B: Manual (Advanced)**
+```json
+// Step 1: Create session manually
+{
+  "name": "create_customer_session_by_id", 
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+
+// Step 2: Use returned session token
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "session_token": "session_abc123"
+  }
+}
+```
 
 ## Getting Your Authentication Tokens
 
