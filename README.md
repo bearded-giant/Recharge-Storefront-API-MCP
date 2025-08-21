@@ -82,12 +82,19 @@ The server supports flexible authentication:
 2. **Per-Tool Token**: Provide `access_token` parameter in individual tool calls
 3. **Token Precedence**: Tool parameter > Environment variable
 
+The server also supports flexible store URL configuration:
+
+1. **Environment Variable (Default)**: Set `RECHARGE_STOREFRONT_DOMAIN` in your environment
+2. **Per-Tool Store URL**: Provide `store_url` parameter in individual tool calls
+3. **Store URL Precedence**: Tool parameter > Environment variable
+
 Example tool call with token:
 ```json
 {
   "name": "get_customer_subscriptions",
   "arguments": {
     "access_token": "sk_test_your_token_here",
+    "store_url": "your-shop.myshopify.com",
     "status": "active"
   }
 }
