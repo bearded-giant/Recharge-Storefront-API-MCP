@@ -161,10 +161,18 @@ To work with multiple customers:
 }
 ```
 
-```
+## Prerequisites and Limitations
 
-### Workflow 3: Multi-Customer Support
+### Requirements
+- **Shopify Store**: Must have a Shopify store
+- **Recharge Integration**: Recharge subscription app must be installed and configured
+- **Session Token**: Must have customer session token from Recharge portal login
+- **Server-Side**: This MCP server runs server-side, no browser required
 
+### Limitations
+- **Session-Based**: All operations are scoped to the customer session
+- **Temporary Tokens**: Session tokens expire and need to be refreshed
+- **Shopify Integration**: Requires Shopify store with Recharge app installed
 
 ### Installation
 
@@ -345,25 +353,32 @@ Some list operations accept customer_id as an optional filter:
 
 #### Use Case 1: Customer Service - View All Customer Information
 
-**Scenario**: Customer logs into portal, token identifies them automatically
+**Scenario**: Support agent helps customer using direct session creation
 
 ```json
-// Step 1: Get customer details (token identifies customer)
+// Step 1: Create customer session using credentials
+{
+  "name": "create_customer_session",
+  "arguments": {
+    "email": "customer@example.com",
+    "password": "customer_password"
+  }
+}
+
+// Step 2: Get customer details (using generated session token)
 {
   "name": "get_customer",
-  "arguments": {}
+  "arguments": {
+    "session_token": "generated_session_token"
+  }
 }
 
-// Step 2: Get their subscriptions
+// Step 3: Get their subscriptions
 {
   "name": "get_subscriptions",
-  "arguments": {}
-}
-
-// Step 3: Get their addresses
-{
-  "name": "get_addresses",
-  "arguments": {}
+  "arguments": {
+    "session_token": "generated_session_token"
+  }
 }
 ```
 
