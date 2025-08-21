@@ -19,6 +19,7 @@ export class RechargeClient {
    * @param {string} config.apiToken - Merchant API token for authentication
    */
   constructor({ storeUrl, apiToken }) {
+  }
   constructor({ storeUrl, apiToken }) {
     validateRequiredParams({ storeUrl, apiToken }, ['storeUrl', 'apiToken']);
     this.apiToken = apiToken;
