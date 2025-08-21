@@ -33,21 +33,21 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 
 ### Getting Your API Access Token
 
-To use this MCP server, you need a Recharge merchant API access token:
+To use this MCP server, you need to authenticate customers through the Recharge Storefront API:
 
-#### Getting Your Token
+#### Authentication Methods
 
-1. **Log into your Recharge merchant portal**
-2. **Navigate to Apps & integrations > API tokens**
-3. **Create a new API token** with Storefront API permissions
-4. **Copy the token** (starts with `sk_test_` for sandbox or `sk_live_` for production)
+The Storefront API supports customer authentication through:
+1. **Customer email/password authentication**
+2. **Customer session tokens**
+3. **Magic link authentication**
 
 #### Authentication Method
 
-The Storefront API uses merchant API tokens with customer identification:
-- **API Token**: Your merchant token for authentication (`sk_test_` or `sk_live_`)
-- **Customer ID**: Specify which customer to operate on
+The Storefront API uses customer-based authentication:
+- **Customer Sessions**: Authenticate customers directly
 - **Store Domain**: Your Shopify store domain
+- **Customer Scoping**: All operations automatically scoped to authenticated customer
 
 ## Prerequisites and Limitations
 
@@ -79,8 +79,7 @@ The Storefront API uses merchant API tokens with customer identification:
 
 3. **Required environment variables:**
    ```bash
-   RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required OR provide per-tool
-   RECHARGE_ACCESS_TOKEN=sk_test_your_token_here       # Required OR provide per-tool
+   RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required
    ```
 
 4. **Start the server:**
@@ -95,47 +94,45 @@ The Storefront API uses merchant API tokens with customer identification:
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_ACCESS_TOKEN` | Conditional* | Your Storefront API token | `sk_test_abc123...` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
-*Required unless provided as parameters in individual tool calls
 
 ### Authentication Configuration
 
 The server supports flexible authentication configuration:
 
-1. **Environment Variables (Default)**: Set `RECHARGE_STOREFRONT_DOMAIN` and `RECHARGE_ACCESS_TOKEN`
-2. **Per-Tool Parameters**: Provide `store_url` and `access_token` in individual tool calls
-3. **Precedence**: Tool parameter > Environment variable
+1. **Environment Variables**: Set `RECHARGE_STOREFRONT_DOMAIN`
+2. **Customer Authentication**: Use customer email/password or session tokens
+3. **Per-Tool Parameters**: Provide `store_url` in individual tool calls if needed
 
 ### Customer Identification
 
-The Storefront API requires customer identification for most operations:
+The Storefront API requires customer authentication for all operations:
 
-1. **Find Customer**: Use `get_customer_by_email` to find customer by email
-2. **Get Customer ID**: Extract the customer ID from the response
-3. **Use Customer ID**: Include `customer_id` in subsequent API calls
+1. **Authenticate Customer**: Use customer email/password
+2. **Get Session Token**: Receive session token from authentication
+3. **Use Session Token**: Include in subsequent API calls
 
 Example workflow:
 ```json
 {
-  "name": "get_customer_by_email",
+  "name": "authenticate_customer",
   "arguments": {
     "store_url": "your-shop.myshopify.com",
-    "access_token": "sk_test_your_token_here",
-    "email": "customer@example.com"
+    "email": "customer@example.com",
+    "password": "customer_password"
   }
 }
 ```
 
-Then use the customer ID:
+Then use the session token:
 ```json
 {
   "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "123456",
+    "session_token": "session_token_from_auth",
     "status": "active"
   }
 }
@@ -146,7 +143,7 @@ Example using environment variables:
 {
   "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "123456",
+    "session_token": "customer_session_token",
     "status": "active"
   }
 }
@@ -212,8 +209,7 @@ Example using environment variables:
 {
   "name": "get_subscriptions",
   "arguments": {
-    "access_token": "sk_test_your_token_here",
-    "customer_id": "123456",
+    "session_token": "customer_session_token",
     "status": "active",
     "limit": 10
   }
@@ -225,7 +221,7 @@ Example using environment variables:
 {
   "name": "update_subscription",
   "arguments": {
-    "access_token": "sk_test_your_token_here",
+    "session_token": "customer_session_token",
     "subscription_id": "12345",
     "order_interval_frequency": 2,
     "order_interval_unit": "month"
@@ -238,7 +234,7 @@ Example using environment variables:
 {
   "name": "skip_subscription",
   "arguments": {
-    "access_token": "sk_test_your_token_here",
+    "session_token": "customer_session_token",
     "subscription_id": "12345",
     "date": "2024-02-15"
   }
@@ -250,7 +246,7 @@ Example using environment variables:
 {
   "name": "create_onetime",
   "arguments": {
-    "access_token": "sk_test_your_token_here",
+    "session_token": "customer_session_token",
     "variant_id": 67890,
     "quantity": 1,
     "next_charge_scheduled_at": "2024-02-01"
@@ -332,16 +328,14 @@ DEBUG=true npm start
 ## Security
 
 ### Best Practices
-- **Token Security**: Never commit API tokens to version control
+- **Session Security**: Handle customer session tokens securely
 - **Environment Variables**: Use `.env` files for sensitive data
-- **Docker Secrets**: Use Docker secrets in production
 - **Access Control**: Implement proper access controls
-- **Token Rotation**: Regularly rotate API tokens
 
 ### Production Security
 - Non-root container user
 - Resource limits and monitoring
-- Secure environment variable handling
+- Secure session token handling
 - Network isolation options
 
 ## Monitoring and Maintenance
@@ -386,9 +380,9 @@ This MCP server provides **complete coverage** of the Recharge Storefront API:
 
 #### Missing API Token
 ```
-Error: No API access token available
+Error: No session token available
 ```
-**Solution**: Set `RECHARGE_ACCESS_TOKEN` environment variable or provide `access_token` in tool calls.
+**Solution**: Authenticate customer first to get session token, then provide `session_token` in tool calls.
 
 #### Invalid Domain
 ```
