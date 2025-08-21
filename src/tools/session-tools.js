@@ -1,14 +1,17 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const createSessionSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   email: z.string().email().describe('Customer email address'),
+});
+
+const sessionTokenSchema = z.object({
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().describe('Customer session token'),
 });
 
 export const sessionTools = [
@@ -32,9 +35,10 @@ export const sessionTools = [
   {
     name: 'validate_session',
     description: 'Validate the current session',
-    inputSchema: baseSchema,
+    inputSchema: sessionTokenSchema,
     execute: async (client, args) => {
-      const validation = await client.validateSession();
+      const { session_token } = args;
+      const validation = await client.validateSession(session_token);
       return {
         content: [
           {
@@ -48,9 +52,10 @@ export const sessionTools = [
   {
     name: 'destroy_session',
     description: 'Destroy the current session (logout)',
-    inputSchema: baseSchema,
+    inputSchema: sessionTokenSchema,
     execute: async (client, args) => {
-      const result = await client.destroySession();
+      const { session_token } = args;
+      const result = await client.destroySession(session_token);
       return {
         content: [
           {

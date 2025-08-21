@@ -1,28 +1,26 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const subscriptionListSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().describe('Customer ID'),
+  session_token: z.string().describe('Customer session token'),
   status: z.enum(['active', 'cancelled', 'expired']).optional().describe('Filter by subscription status'),
   limit: z.number().max(250).default(50).describe('Number of subscriptions to return'),
   page: z.number().default(1).describe('Page number for pagination'),
 });
 
 const subscriptionSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().describe('Customer session token'),
   subscriptionId: z.string().describe('The subscription ID'),
 });
 
 const updateSubscriptionSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().describe('Customer session token'),
   subscriptionId: z.string().describe('The subscription ID'),
   next_charge_scheduled_at: z.string().optional().describe('Next charge date (ISO format)'),
   order_interval_frequency: z.number().optional().describe('Order interval frequency (e.g., 1, 2, 3)'),
@@ -36,30 +34,30 @@ const updateSubscriptionSchema = z.object({
 });
 
 const skipSubscriptionSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().describe('Customer session token'),
   subscriptionId: z.string().describe('The subscription ID'),
   date: z.string().describe('Date to skip (YYYY-MM-DD format)'),
 });
 
 const unskipSubscriptionSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().describe('Customer session token'),
   subscriptionId: z.string().describe('The subscription ID'),
   date: z.string().describe('Date to unskip (YYYY-MM-DD format)'),
 });
 
 const swapSubscriptionSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().describe('Customer session token'),
   subscriptionId: z.string().describe('The subscription ID'),
   variant_id: z.number().describe('New variant ID to swap to'),
   quantity: z.number().optional().describe('New quantity'),
 });
 
 const cancelSubscriptionSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().describe('Customer session token'),
   subscriptionId: z.string().describe('The subscription ID'),
   cancellation_reason: z.string().optional().describe('Reason for cancellation'),
   cancellation_reason_comments: z.string().optional().describe('Additional comments for cancellation'),
@@ -93,12 +91,12 @@ const resumeSubscriptionSchema = z.object({
 
 export const subscriptionTools = [
   {
-    name: 'get_customer_subscriptions',
-    description: 'Get all subscriptions for the current customer',
+    name: 'get_subscriptions',
+    description: 'Get subscriptions for the current customer session',
     inputSchema: subscriptionListSchema,
     execute: async (client, args) => {
-      const { customer_id, ...params } = args;
-      const subscriptions = await client.getSubscriptions(customer_id, params);
+      const { session_token, ...params } = args;
+      const subscriptions = await client.getSubscriptions(session_token, params);
       return {
         content: [
           {
@@ -114,8 +112,8 @@ export const subscriptionTools = [
     description: 'Get detailed information about a specific subscription',
     inputSchema: subscriptionSchema,
     execute: async (client, args) => {
-      const { subscriptionId } = args;
-      const subscription = await client.getSubscription(subscriptionId);
+      const { session_token, subscriptionId } = args;
+      const subscription = await client.getSubscription(session_token, subscriptionId);
       return {
         content: [
           {
@@ -131,8 +129,8 @@ export const subscriptionTools = [
     description: 'Update subscription details like frequency, quantity, or next charge date',
     inputSchema: updateSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscriptionId, ...updateData } = args;
-      const updatedSubscription = await client.updateSubscription(subscriptionId, updateData);
+      const { session_token, subscriptionId, ...updateData } = args;
+      const updatedSubscription = await client.updateSubscription(session_token, subscriptionId, updateData);
       return {
         content: [
           {
@@ -148,8 +146,8 @@ export const subscriptionTools = [
     description: 'Skip a subscription delivery for a specific date',
     inputSchema: skipSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscriptionId, date } = args;
-      const result = await client.skipSubscription(subscriptionId, date);
+      const { session_token, subscriptionId, date } = args;
+      const result = await client.skipSubscription(session_token, subscriptionId, date);
       return {
         content: [
           {
@@ -165,8 +163,8 @@ export const subscriptionTools = [
     description: 'Unskip a previously skipped subscription delivery',
     inputSchema: unskipSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscriptionId, date } = args;
-      const result = await client.unskipSubscription(subscriptionId, date);
+      const { session_token, subscriptionId, date } = args;
+      const result = await client.unskipSubscription(session_token, subscriptionId, date);
       return {
         content: [
           {
@@ -178,12 +176,12 @@ export const subscriptionTools = [
     },
   },
   {
-    name: 'swap_subscription_product',
+    name: 'swap_subscription',
     description: 'Swap the variant of a subscription',
     inputSchema: swapSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscriptionId, ...swapData } = args;
-      const swappedSubscription = await client.swapSubscription(subscriptionId, swapData);
+      const { session_token, subscriptionId, ...swapData } = args;
+      const swappedSubscription = await client.swapSubscription(session_token, subscriptionId, swapData);
       return {
         content: [
           {
@@ -199,8 +197,8 @@ export const subscriptionTools = [
     description: 'Cancel a subscription',
     inputSchema: cancelSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscriptionId, ...cancelData } = args;
-      const cancelledSubscription = await client.cancelSubscription(subscriptionId, cancelData);
+      const { session_token, subscriptionId, ...cancelData } = args;
+      const cancelledSubscription = await client.cancelSubscription(session_token, subscriptionId, cancelData);
       return {
         content: [
           {

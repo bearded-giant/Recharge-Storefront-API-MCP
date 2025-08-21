@@ -4,8 +4,8 @@ import { handleAPIError, validateRequiredParams } from './utils/error-handler.js
 /**
  * Recharge Storefront API Client
  * 
- * Provides methods for interacting with the Recharge Storefront API.
- * All methods handle authentication, error handling, and response formatting.
+ * Provides methods for interacting with the Recharge Storefront API using customer sessions.
+ * All methods handle session authentication, error handling, and response formatting.
  * 
  * @class RechargeClient
  */
@@ -15,24 +15,20 @@ export class RechargeClient {
    * 
    * @param {Object} config - Configuration object
    * @param {string} config.storeUrl - Store URL (e.g., 'your-shop.myshopify.com' or full URL)
-   * @param {string} config.accessToken - Recharge Storefront API access token
    */
-  constructor({ storeUrl, accessToken }) {
-    validateRequiredParams({ storeUrl, accessToken }, ['storeUrl', 'accessToken']);
+  constructor({ storeUrl }) {
+    validateRequiredParams({ storeUrl }, ['storeUrl']);
 
     // Store URL should already be validated by server
     this.domain = storeUrl;
     this.storeUrl = storeUrl;
-    this.accessToken = accessToken;
     
     // Construct the correct Recharge Storefront API base URL
-    this.baseURL = `https://api.rechargeapps.com`;
+    this.baseURL = `https://${storeUrl}/tools/recurring/portal`;
     
     this.client = axios.create({
       baseURL: this.baseURL,
       headers: {
-        'X-Recharge-Access-Token': accessToken,
-        'X-Recharge-Version': '2021-11',
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
@@ -53,13 +49,8 @@ export class RechargeClient {
     this.client.interceptors.request.use(
       (config) => {
         if (process.env.DEBUG === 'true') {
-          const sanitizedHeaders = { ...config.headers };
-          if (sanitizedHeaders['X-Recharge-Access-Token']) {
-            sanitizedHeaders['X-Recharge-Access-Token'] = '***';
-          }
-          
           console.error(`[DEBUG] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-          console.error(`[DEBUG] Headers:`, sanitizedHeaders);
+          console.error(`[DEBUG] Headers:`, config.headers);
           if (config.data) {
             console.error(`[DEBUG] Request body:`, JSON.stringify(config.data, null, 2));
           }
@@ -87,19 +78,26 @@ export class RechargeClient {
   }
 
   /**
-   * Make a safe API request with error handling
+   * Make a safe API request with session token
    * @param {string} method - HTTP method
    * @param {string} endpoint - API endpoint
    * @param {Object} data - Request data
    * @param {Object} params - Query parameters
+   * @param {string} sessionToken - Customer session token
    * @returns {Promise<Object>} API response data
    */
-  async makeRequest(method, endpoint, data = null, params = null) {
+  async makeRequest(method, endpoint, data = null, params = null, sessionToken = null) {
     try {
       const config = {
         method: method.toLowerCase(),
         url: endpoint,
+        headers: {}
       };
+      
+      // Add session token if provided
+      if (sessionToken) {
+        config.headers['X-Recharge-Session-Token'] = sessionToken;
+      }
       
       if (data) {
         config.data = data;
@@ -117,144 +115,183 @@ export class RechargeClient {
     }
   }
 
+  // Session methods
+  /**
+   * Create a customer session
+   * @param {string} email - Customer email address
+   * @returns {Promise<Object>} Session data with token
+   */
+  async createSession(email) {
+    validateRequiredParams({ email }, ['email']);
+    return this.makeRequest('POST', '/session', { email });
+  }
+
+  /**
+   * Validate current session
+   * @param {string} sessionToken - Session token
+   * @returns {Promise<Object>} Session validation result
+   */
+  async validateSession(sessionToken) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('GET', '/session', null, null, sessionToken);
+  }
+
+  /**
+   * Destroy current session (logout)
+   * @param {string} sessionToken - Session token
+   * @returns {Promise<Object>} Destruction result
+   */
+  async destroySession(sessionToken) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('DELETE', '/session', null, null, sessionToken);
+  }
+
   // Customer methods
   /**
    * Get current customer information
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @returns {Promise<Object>} Customer data
    */
-  async getCustomer(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('GET', `/customers/${customerId}`);
+  async getCustomer(sessionToken) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('GET', '/customer', null, null, sessionToken);
   }
 
   /**
    * Update customer information
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @param {Object} data - Customer update data
    * @returns {Promise<Object>} Updated customer data
    */
-  async updateCustomer(customerId, data) {
-    validateRequiredParams({ customerId }, ['customerId']);
+  async updateCustomer(sessionToken, data) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Customer update data is required');
     }
-    return this.makeRequest('PUT', `/customers/${customerId}`, data);
+    return this.makeRequest('PUT', '/customer', data, null, sessionToken);
   }
 
   // Subscription methods
   /**
    * Get customer subscriptions with optional filtering
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Subscriptions data
    */
-  async getSubscriptions(customerId, params = {}) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    const queryParams = { customer_id: customerId, ...params };
-    return this.makeRequest('GET', '/subscriptions', null, queryParams);
+  async getSubscriptions(sessionToken, params = {}) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('GET', '/subscriptions', null, params, sessionToken);
   }
 
   /**
    * Get detailed information about a specific subscription
+   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @returns {Promise<Object>} Subscription data
    */
-  async getSubscription(subscriptionId) {
-    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('GET', `/subscriptions/${subscriptionId}`);
+  async getSubscription(sessionToken, subscriptionId) {
+    validateRequiredParams({ sessionToken, subscriptionId }, ['sessionToken', 'subscriptionId']);
+    return this.makeRequest('GET', `/subscriptions/${subscriptionId}`, null, null, sessionToken);
   }
 
   /**
    * Update subscription details
+   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @param {Object} data - Update data
    * @returns {Promise<Object>} Updated subscription data
    */
-  async updateSubscription(subscriptionId, data) {
-    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+  async updateSubscription(sessionToken, subscriptionId, data) {
+    validateRequiredParams({ sessionToken, subscriptionId }, ['sessionToken', 'subscriptionId']);
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Subscription update data is required');
     }
-    return this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, data);
+    return this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, data, null, sessionToken);
   }
 
   /**
    * Skip a subscription delivery for a specific date
+   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @param {string} date - Date to skip (YYYY-MM-DD)
    * @returns {Promise<Object>} Skip result
    */
-  async skipSubscription(subscriptionId, date) {
-    validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/skip`, { date });
+  async skipSubscription(sessionToken, subscriptionId, date) {
+    validateRequiredParams({ sessionToken, subscriptionId, date }, ['sessionToken', 'subscriptionId', 'date']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/skip`, { date }, null, sessionToken);
   }
 
   /**
    * Unskip a previously skipped subscription delivery
+   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @param {string} date - Date to unskip (YYYY-MM-DD)
    * @returns {Promise<Object>} Unskip result
    */
-  async unskipSubscription(subscriptionId, date) {
-    validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/unskip`, { date });
+  async unskipSubscription(sessionToken, subscriptionId, date) {
+    validateRequiredParams({ sessionToken, subscriptionId, date }, ['sessionToken', 'subscriptionId', 'date']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/unskip`, { date }, null, sessionToken);
   }
 
   /**
    * Swap subscription product variant
+   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @param {Object} data - Swap data including variant_id
    * @returns {Promise<Object>} Swap result
    */
-  async swapSubscription(subscriptionId, data) {
-    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+  async swapSubscription(sessionToken, subscriptionId, data) {
+    validateRequiredParams({ sessionToken, subscriptionId }, ['sessionToken', 'subscriptionId']);
     if (!data?.variant_id) {
       throw new Error('variant_id is required for subscription swap');
     }
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/swap`, data);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/swap`, data, null, sessionToken);
   }
 
   /**
    * Cancel a subscription
+   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @param {Object} data - Cancellation data
    * @returns {Promise<Object>} Cancellation result
    */
-  async cancelSubscription(subscriptionId, data = {}) {
-    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/cancel`, data);
+  async cancelSubscription(sessionToken, subscriptionId, data = {}) {
+    validateRequiredParams({ sessionToken, subscriptionId }, ['sessionToken', 'subscriptionId']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/cancel`, data, null, sessionToken);
   }
 
   /**
    * Activate a cancelled subscription
+   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @returns {Promise<Object>} Activation result
    */
-  async activateSubscription(subscriptionId) {
-    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/activate`);
+  async activateSubscription(sessionToken, subscriptionId) {
+    validateRequiredParams({ sessionToken, subscriptionId }, ['sessionToken', 'subscriptionId']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/activate`, null, null, sessionToken);
   }
 
   /**
    * Pause a subscription temporarily
+   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @param {Object} data - Pause data
    * @returns {Promise<Object>} Pause result
    */
-  async pauseSubscription(subscriptionId, data = {}) {
-    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/pause`, data);
+  async pauseSubscription(sessionToken, subscriptionId, data = {}) {
+    validateRequiredParams({ sessionToken, subscriptionId }, ['sessionToken', 'subscriptionId']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/pause`, data, null, sessionToken);
   }
 
   /**
    * Resume a paused subscription
+   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @returns {Promise<Object>} Resume result
    */
-  async resumeSubscription(subscriptionId) {
-    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/resume`);
+  async resumeSubscription(sessionToken, subscriptionId) {
+    validateRequiredParams({ sessionToken, subscriptionId }, ['sessionToken', 'subscriptionId']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/resume`, null, null, sessionToken);
   }
 
   /**
@@ -271,215 +308,227 @@ export class RechargeClient {
   // Address methods
   /**
    * Get all customer addresses
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @returns {Promise<Object>} Addresses data
    */
-  async getAddresses(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('GET', '/addresses', null, { customer_id: customerId });
+  async getAddresses(sessionToken) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('GET', '/addresses', null, null, sessionToken);
   }
 
   /**
    * Get detailed information about a specific address
+   * @param {string} sessionToken - Session token
    * @param {string} addressId - The address ID
    * @returns {Promise<Object>} Address data
    */
-  async getAddress(addressId) {
-    validateRequiredParams({ addressId }, ['addressId']);
-    return this.makeRequest('GET', `/addresses/${addressId}`);
+  async getAddress(sessionToken, addressId) {
+    validateRequiredParams({ sessionToken, addressId }, ['sessionToken', 'addressId']);
+    return this.makeRequest('GET', `/addresses/${addressId}`, null, null, sessionToken);
   }
 
   /**
    * Create a new address
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @param {Object} addressData - Address data
    * @returns {Promise<Object>} Created address data
    */
-  async createAddress(customerId, addressData) {
-    validateRequiredParams({ customerId }, ['customerId']);
+  async createAddress(sessionToken, addressData) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
     const required = ['address1', 'city', 'province', 'zip', 'country', 'first_name', 'last_name'];
     validateRequiredParams(addressData, required);
-    const dataWithCustomer = { ...addressData, customer_id: customerId };
-    return this.makeRequest('POST', '/addresses', dataWithCustomer);
+    return this.makeRequest('POST', '/addresses', addressData, null, sessionToken);
   }
 
   /**
    * Update an existing address
+   * @param {string} sessionToken - Session token
    * @param {string} addressId - The address ID
    * @param {Object} addressData - Updated address data
    * @returns {Promise<Object>} Updated address data
    */
-  async updateAddress(addressId, addressData) {
-    validateRequiredParams({ addressId }, ['addressId']);
+  async updateAddress(sessionToken, addressId, addressData) {
+    validateRequiredParams({ sessionToken, addressId }, ['sessionToken', 'addressId']);
     if (!addressData || Object.keys(addressData).length === 0) {
       throw new Error('Address update data is required');
     }
-    return this.makeRequest('PUT', `/addresses/${addressId}`, addressData);
+    return this.makeRequest('PUT', `/addresses/${addressId}`, addressData, null, sessionToken);
   }
 
   /**
    * Delete an address
+   * @param {string} sessionToken - Session token
    * @param {string} addressId - The address ID
    * @returns {Promise<Object>} Deletion result
    */
-  async deleteAddress(addressId) {
-    validateRequiredParams({ addressId }, ['addressId']);
-    return this.makeRequest('DELETE', `/addresses/${addressId}`);
+  async deleteAddress(sessionToken, addressId) {
+    validateRequiredParams({ sessionToken, addressId }, ['sessionToken', 'addressId']);
+    return this.makeRequest('DELETE', `/addresses/${addressId}`, null, null, sessionToken);
   }
 
   // Payment method methods
   /**
    * Get customer payment methods
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @returns {Promise<Object>} Payment methods data
    */
-  async getPaymentMethods(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('GET', '/payment_methods', null, { customer_id: customerId });
+  async getPaymentMethods(sessionToken) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('GET', '/payment_methods', null, null, sessionToken);
   }
 
   /**
    * Get detailed information about a specific payment method
+   * @param {string} sessionToken - Session token
    * @param {string} paymentMethodId - The payment method ID
    * @returns {Promise<Object>} Payment method data
    */
-  async getPaymentMethod(paymentMethodId) {
-    validateRequiredParams({ paymentMethodId }, ['paymentMethodId']);
-    return this.makeRequest('GET', `/payment_methods/${paymentMethodId}`);
+  async getPaymentMethod(sessionToken, paymentMethodId) {
+    validateRequiredParams({ sessionToken, paymentMethodId }, ['sessionToken', 'paymentMethodId']);
+    return this.makeRequest('GET', `/payment_methods/${paymentMethodId}`, null, null, sessionToken);
   }
 
   /**
    * Update payment method billing information
+   * @param {string} sessionToken - Session token
    * @param {string} paymentMethodId - The payment method ID
    * @param {Object} paymentData - Updated payment data
    * @returns {Promise<Object>} Updated payment method data
    */
-  async updatePaymentMethod(paymentMethodId, paymentData) {
-    validateRequiredParams({ paymentMethodId }, ['paymentMethodId']);
+  async updatePaymentMethod(sessionToken, paymentMethodId, paymentData) {
+    validateRequiredParams({ sessionToken, paymentMethodId }, ['sessionToken', 'paymentMethodId']);
     if (!paymentData || Object.keys(paymentData).length === 0) {
       throw new Error('Payment method update data is required');
     }
-    return this.makeRequest('PUT', `/payment_methods/${paymentMethodId}`, paymentData);
+    return this.makeRequest('PUT', `/payment_methods/${paymentMethodId}`, paymentData, null, sessionToken);
   }
 
   // Discount methods
   /**
    * Get customer discounts
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @returns {Promise<Object>} Discounts data
    */
-  async getDiscounts(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('GET', '/discounts', null, { customer_id: customerId });
+  async getDiscounts(sessionToken) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('GET', '/discounts', null, null, sessionToken);
   }
 
   /**
    * Get detailed information about a specific discount
+   * @param {string} sessionToken - Session token
    * @param {string} discountId - The discount ID
    * @returns {Promise<Object>} Discount data
    */
-  async getDiscount(discountId) {
-    validateRequiredParams({ discountId }, ['discountId']);
-    return this.makeRequest('GET', `/discounts/${discountId}`);
+  async getDiscount(sessionToken, discountId) {
+    validateRequiredParams({ sessionToken, discountId }, ['sessionToken', 'discountId']);
+    return this.makeRequest('GET', `/discounts/${discountId}`, null, null, sessionToken);
   }
 
   /**
    * Apply a discount code
+   * @param {string} sessionToken - Session token
    * @param {string} discountCode - The discount code to apply
    * @returns {Promise<Object>} Applied discount data
    */
-  async applyDiscount(discountCode) {
-    validateRequiredParams({ discountCode }, ['discountCode']);
-    return this.makeRequest('POST', '/discounts', { discount_code: discountCode });
+  async applyDiscount(sessionToken, discountCode) {
+    validateRequiredParams({ sessionToken, discountCode }, ['sessionToken', 'discountCode']);
+    return this.makeRequest('POST', '/discounts', { discount_code: discountCode }, null, sessionToken);
   }
 
   /**
    * Remove a discount
+   * @param {string} sessionToken - Session token
    * @param {string} discountId - The discount ID to remove
    * @returns {Promise<Object>} Removal result
    */
-  async removeDiscount(discountId) {
-    validateRequiredParams({ discountId }, ['discountId']);
-    return this.makeRequest('DELETE', `/discounts/${discountId}`);
+  async removeDiscount(sessionToken, discountId) {
+    validateRequiredParams({ sessionToken, discountId }, ['sessionToken', 'discountId']);
+    return this.makeRequest('DELETE', `/discounts/${discountId}`, null, null, sessionToken);
   }
 
   // Product methods
   /**
    * Get available products with optional filtering
+   * @param {string} sessionToken - Session token
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Products data
    */
-  async getProducts(params = {}) {
-    return this.makeRequest('GET', '/products', null, params);
+  async getProducts(sessionToken, params = {}) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('GET', '/products', null, params, sessionToken);
   }
 
   /**
    * Get detailed product information
+   * @param {string} sessionToken - Session token
    * @param {string} productId - The product ID
    * @returns {Promise<Object>} Product data
    */
-  async getProduct(productId) {
-    validateRequiredParams({ productId }, ['productId']);
-    return this.makeRequest('GET', `/products/${productId}`);
+  async getProduct(sessionToken, productId) {
+    validateRequiredParams({ sessionToken, productId }, ['sessionToken', 'productId']);
+    return this.makeRequest('GET', `/products/${productId}`, null, null, sessionToken);
   }
 
   // One-time product methods
   /**
    * Get customer one-time products
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @returns {Promise<Object>} One-time products data
    */
-  async getOnetimes(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    return this.makeRequest('GET', '/onetimes', null, { customer_id: customerId });
+  async getOnetimes(sessionToken) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('GET', '/onetimes', null, null, sessionToken);
   }
 
   /**
    * Get detailed information about a specific one-time product
+   * @param {string} sessionToken - Session token
    * @param {string} onetimeId - The one-time product ID
    * @returns {Promise<Object>} One-time product data
    */
-  async getOnetime(onetimeId) {
-    validateRequiredParams({ onetimeId }, ['onetimeId']);
-    return this.makeRequest('GET', `/onetimes/${onetimeId}`);
+  async getOnetime(sessionToken, onetimeId) {
+    validateRequiredParams({ sessionToken, onetimeId }, ['sessionToken', 'onetimeId']);
+    return this.makeRequest('GET', `/onetimes/${onetimeId}`, null, null, sessionToken);
   }
 
   /**
    * Create a one-time product
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @param {Object} onetimeData - One-time product data
    * @returns {Promise<Object>} Created one-time product data
    */
-  async createOnetime(customerId, onetimeData) {
-    validateRequiredParams({ customerId }, ['customerId']);
+  async createOnetime(sessionToken, onetimeData) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
     const required = ['variant_id', 'quantity', 'next_charge_scheduled_at'];
     validateRequiredParams(onetimeData, required);
-    const dataWithCustomer = { ...onetimeData, customer_id: customerId };
-    return this.makeRequest('POST', '/onetimes', dataWithCustomer);
+    return this.makeRequest('POST', '/onetimes', onetimeData, null, sessionToken);
   }
 
   /**
    * Update a one-time product
+   * @param {string} sessionToken - Session token
    * @param {string} onetimeId - The one-time product ID
    * @param {Object} onetimeData - Updated one-time product data
    * @returns {Promise<Object>} Updated one-time product data
    */
-  async updateOnetime(onetimeId, onetimeData) {
-    validateRequiredParams({ onetimeId }, ['onetimeId']);
+  async updateOnetime(sessionToken, onetimeId, onetimeData) {
+    validateRequiredParams({ sessionToken, onetimeId }, ['sessionToken', 'onetimeId']);
     if (!onetimeData || Object.keys(onetimeData).length === 0) {
       throw new Error('One-time product update data is required');
     }
-    return this.makeRequest('PUT', `/onetimes/${onetimeId}`, onetimeData);
+    return this.makeRequest('PUT', `/onetimes/${onetimeId}`, onetimeData, null, sessionToken);
   }
 
   /**
    * Delete a one-time product
+   * @param {string} sessionToken - Session token
    * @param {string} onetimeId - The one-time product ID
    * @returns {Promise<Object>} Deletion result
    */
-  async deleteOnetime(onetimeId) {
-    validateRequiredParams({ onetimeId }, ['onetimeId']);
-    return this.makeRequest('DELETE', `/onetimes/${onetimeId}`);
+  async deleteOnetime(sessionToken, onetimeId) {
+    validateRequiredParams({ sessionToken, onetimeId }, ['sessionToken', 'onetimeId']);
+    return this.makeRequest('DELETE', `/onetimes/${onetimeId}`, null, null, sessionToken);
   }
 
   // Bundle selection methods
@@ -691,46 +740,46 @@ export class RechargeClient {
   // Order methods
   /**
    * Get customer orders with optional filtering
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Orders data
    */
-  async getOrders(customerId, params = {}) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    const queryParams = { customer_id: customerId, ...params };
-    return this.makeRequest('GET', '/orders', null, queryParams);
+  async getOrders(sessionToken, params = {}) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('GET', '/orders', null, params, sessionToken);
   }
 
   /**
    * Get detailed order information
+   * @param {string} sessionToken - Session token
    * @param {string} orderId - The order ID
    * @returns {Promise<Object>} Order data
    */
-  async getOrder(orderId) {
-    validateRequiredParams({ orderId }, ['orderId']);
-    return this.makeRequest('GET', `/orders/${orderId}`);
+  async getOrder(sessionToken, orderId) {
+    validateRequiredParams({ sessionToken, orderId }, ['sessionToken', 'orderId']);
+    return this.makeRequest('GET', `/orders/${orderId}`, null, null, sessionToken);
   }
 
   // Charge methods
   /**
    * Get customer charges with optional filtering
-   * @param {string} customerId - Customer ID
+   * @param {string} sessionToken - Session token
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Charges data
    */
-  async getCharges(customerId, params = {}) {
-    validateRequiredParams({ customerId }, ['customerId']);
-    const queryParams = { customer_id: customerId, ...params };
-    return this.makeRequest('GET', '/charges', null, queryParams);
+  async getCharges(sessionToken, params = {}) {
+    validateRequiredParams({ sessionToken }, ['sessionToken']);
+    return this.makeRequest('GET', '/charges', null, params, sessionToken);
   }
 
   /**
    * Get detailed charge information
+   * @param {string} sessionToken - Session token
    * @param {string} chargeId - The charge ID
    * @returns {Promise<Object>} Charge data
    */
-  async getCharge(chargeId) {
-    validateRequiredParams({ chargeId }, ['chargeId']);
-    return this.makeRequest('GET', `/charges/${chargeId}`);
+  async getCharge(sessionToken, chargeId) {
+    validateRequiredParams({ sessionToken, chargeId }, ['sessionToken', 'chargeId']);
+    return this.makeRequest('GET', `/charges/${chargeId}`, null, null, sessionToken);
   }
 }

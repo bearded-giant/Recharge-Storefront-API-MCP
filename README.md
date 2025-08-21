@@ -1,28 +1,23 @@
 # Recharge Storefront API MCP Server
 
-A comprehensive Model Context Protocol (MCP) server that provides complete access to the Recharge Storefront API. This server enables AI assistants and other MCP clients to interact with Recharge subscription management functionality through a standardized interface.
+A comprehensive Model Context Protocol (MCP) server that provides complete access to the Recharge Storefront API. This server enables AI assistants and other MCP clients to interact with Recharge customer portal functionality through a standardized interface.
 
 ## Features
 
 ### Complete API Coverage
-- **Customer Management**: Profile updates, preferences, settings
-- **Subscription Management**: Create, update, pause, resume, cancel, skip deliveries
-- **Address Management**: Shipping and billing address CRUD operations
-- **Payment Methods**: Payment method management and updates
-- **Product Catalog**: Browse available products and variants
-- **Order History**: View past orders and their status
-- **Charge Management**: View upcoming and past charges
-- **One-time Products**: Add products to upcoming deliveries
-- **Bundle Management**: Handle product bundles and selections
+- **Customer Portal**: Customer profile and preferences management
+- **Subscription Management**: View, update, pause, resume, cancel, skip subscriptions
+- **Address Management**: Shipping and billing address operations
+- **Payment Methods**: Payment method viewing and updates
+- **Product Catalog**: Browse subscription products and variants
+- **Order History**: View past orders and delivery status
+- **Charge Management**: View upcoming and past billing charges
+- **One-time Products**: Add products to next delivery
 - **Discount Management**: Apply and manage discount codes
-- **Notification System**: View and manage customer notifications
-- **Session Management**: Customer authentication and session handling
-- **Store Configuration**: Access store settings and delivery schedules
-- **Async Operations**: Bulk operations via async batch processing
-- **Shopify Integration**: Connector configuration and sync settings
+- **Session Management**: Customer authentication and portal access
 
 ### Key Capabilities
-- **Flexible Authentication**: Support for environment variables or per-tool API tokens
+- **Customer Sessions**: Proper customer authentication for portal access
 - **Comprehensive Error Handling**: Detailed error messages with proper HTTP status codes
 - **Input Validation**: Zod schema validation for all tool parameters
 - **Debug Support**: Optional debug logging for development and troubleshooting
@@ -38,37 +33,34 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 
 ### Getting Your API Access Token
 
-To use this MCP server, you need a Recharge Storefront API access token from your merchant portal:
+To use this MCP server, you need to understand the Recharge Storefront API authentication:
 
-#### Getting Your Merchant API Token
+#### Storefront API Authentication
 
-1. **Log into Recharge**: Go to your Recharge merchant portal
-2. **Navigate to API Settings**: Go to Settings > API & Webhooks
-3. **Generate Token**: Create a new Storefront API token
-4. **Copy Token**: Save the token securely (starts with `sk_`)
+The Recharge Storefront API uses **customer session tokens**, not merchant API keys:
 
-#### Token Permissions
-The Storefront API token allows you to:
-- Read and manage customer subscriptions
-- Access customer addresses and payment methods
-- View orders and charges
-- Manage one-time products and bundles
+1. **Customer Sessions**: Each customer gets a unique session token
+2. **Session Creation**: Sessions are created by providing customer email
+3. **Token Usage**: Session tokens are used for all subsequent API calls
+4. **Customer Context**: All operations are automatically scoped to the authenticated customer
 
-#### Important Notes
-- **Merchant Token**: This uses merchant API tokens, not customer session tokens
-- **Server-Side**: Runs server-side with full API access
-- **Customer Context**: API calls are made on behalf of customers using their email or customer ID
+#### How It Works
+1. Create a session using customer email: `create_session`
+2. Use the returned session token for all other operations
+3. All API calls are automatically scoped to that customer
+4. Sessions can be validated and destroyed as needed
 
 ## Prerequisites and Limitations
 
 ### Requirements
 - **Shopify Store**: Must have a Shopify store
 - **Recharge Integration**: Recharge subscription app must be installed and configured
-- **Merchant API Access**: Must have Recharge Storefront API access enabled
+- **Customer Portal**: Must have Recharge customer portal enabled
 - **Server-Side**: This MCP server runs server-side, no browser required
 
 ### Limitations
-- **Shopify Only**: Only works with Shopify stores using Recharge
+- **Customer Scoped**: All operations are scoped to individual customers via sessions
+- **Shopify Integration**: Requires Shopify store with Recharge app installed
 
 ### Installation
 
@@ -88,7 +80,7 @@ The Storefront API token allows you to:
 3. **Required environment variables:**
    ```bash
    RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required OR provide per-tool
-   RECHARGE_ACCESS_TOKEN=your_access_token_here        # Optional (can provide per-tool)
+   # Note: No API token needed - uses customer sessions
    ```
 
 4. **Start the server:**
@@ -103,64 +95,56 @@ The Storefront API token allows you to:
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_ACCESS_TOKEN` | Conditional* | Merchant Storefront API token | `sk_live_...` or `sk_test_...` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
-*Required unless provided as parameters in individual tool calls
+*Required unless provided as store_url parameter in individual tool calls
 
-### Authentication Options
+### Store URL Configuration
 
-The server supports flexible authentication:
-
-1. **Environment Variable (Default)**: Set `RECHARGE_ACCESS_TOKEN` in your environment
-2. **Per-Tool Token**: Provide `access_token` parameter in individual tool calls
-3. **Token Precedence**: Tool parameter > Environment variable
-
-The server also supports flexible store URL configuration:
+The server supports flexible store URL configuration:
 
 1. **Environment Variable (Default)**: Set `RECHARGE_STOREFRONT_DOMAIN` in your environment
 2. **Per-Tool Store URL**: Provide `store_url` parameter in individual tool calls
 3. **Store URL Precedence**: Tool parameter > Environment variable
 
-**Important**: You must provide authentication and store identification through EITHER:
-- Environment variables (set once, used for all calls)
-- Tool parameters (provided in each individual tool call)
-- Mixed approach (environment for one, tool parameters for the other)
+### Customer Authentication
 
-At minimum, each tool call must have access to both an API token and store URL through one of these methods.
+The Storefront API uses customer sessions:
 
-Example tool call with token:
+1. **Create Session**: Use `create_session` with customer email
+2. **Use Session Token**: Include the returned token in subsequent calls
+3. **Session Management**: Validate and destroy sessions as needed
+
+Example session workflow:
 ```json
 {
-  "name": "get_customer_subscriptions",
+  "name": "create_session",
   "arguments": {
-    "access_token": "sk_live_your_merchant_token_here",
     "store_url": "your-shop.myshopify.com",
-    "customer_id": "123456789",
+    "email": "customer@example.com"
+  }
+}
+```
+
+Then use the returned session token:
+```json
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "session_token": "returned_session_token_here",
     "status": "active"
   }
 }
 ```
 
-Example tool call using environment defaults:
+Example using environment store URL:
 ```json
 {
-  "name": "get_customer_subscriptions",
+  "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "123456789",
-    "status": "active"
-  }
-}
-```
-
-Example tool call with mixed approach (environment token, tool store URL):
-```json
-{
-  "name": "get_customer_subscriptions",
-  "arguments": {
-    "store_url": "different-shop.myshopify.com",
+    "session_token": "session_token_here",
     "status": "active"
   }
 }
@@ -168,21 +152,20 @@ Example tool call with mixed approach (environment token, tool store URL):
 ## Available Tools
 
 ### Customer Management
-- `get_customer` - Retrieve current customer information
+- `get_customer` - Retrieve customer information for current session
 - `update_customer` - Update customer profile and preferences
 
 ### Subscription Management
-- `get_customer_subscriptions` - List all customer subscriptions
+- `get_subscriptions` - List customer subscriptions
 - `get_subscription` - Get detailed subscription information
 - `update_subscription` - Modify subscription details
 - `skip_subscription` - Skip a delivery date
 - `unskip_subscription` - Restore a skipped delivery
-- `swap_subscription_product` - Change subscription product
+- `swap_subscription` - Change subscription product
 - `cancel_subscription` - Cancel a subscription
 - `activate_subscription` - Reactivate a cancelled subscription
 - `pause_subscription` - Temporarily pause subscription
 - `resume_subscription` - Resume a paused subscription
-- `set_subscription_next_charge_date` - Update next charge date
 
 ### Address Management
 - `get_addresses` - List all customer addresses
@@ -236,26 +219,15 @@ Example tool call with mixed approach (environment token, tool store URL):
 - `validate_session` - Validate current session
 - `destroy_session` - End session (logout)
 
-### Store & Settings
-- `get_store` - Get store configuration
-- `get_delivery_schedule` - Get delivery schedule
-- `get_settings` - Get customer settings
-- `update_settings` - Update preferences
-
-### Advanced Operations
-- `get_async_batch` - Check batch operation status
-- `create_async_batch` - Create bulk operation
-- `get_shopify_connector` - Get Shopify integration status
-- `update_shopify_connector` - Update integration settings
 
 ## Usage Examples
 
 ### Basic Subscription Management
 ```json
 {
-  "name": "get_customer_subscriptions",
+  "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "123456789",
+    "session_token": "customer_session_token_here",
     "status": "active",
     "limit": 10
   }
@@ -267,6 +239,7 @@ Example tool call with mixed approach (environment token, tool store URL):
 {
   "name": "update_subscription",
   "arguments": {
+    "session_token": "customer_session_token_here",
     "subscriptionId": "12345",
     "order_interval_frequency": 2,
     "order_interval_unit": "month"
@@ -279,6 +252,7 @@ Example tool call with mixed approach (environment token, tool store URL):
 {
   "name": "skip_subscription",
   "arguments": {
+    "session_token": "customer_session_token_here",
     "subscriptionId": "12345",
     "date": "2024-02-15"
   }
@@ -290,7 +264,7 @@ Example tool call with mixed approach (environment token, tool store URL):
 {
   "name": "create_onetime",
   "arguments": {
-    "customer_id": "123456789",
+    "session_token": "customer_session_token_here",
     "variant_id": 67890,
     "quantity": 1,
     "next_charge_scheduled_at": "2024-02-01"

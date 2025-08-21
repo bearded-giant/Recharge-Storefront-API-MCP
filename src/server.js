@@ -25,11 +25,9 @@ class RechargeStorefrontAPIMCPServer {
   constructor() {
     // Store environment variables for client creation
     this.defaultStoreUrl = process.env.RECHARGE_STOREFRONT_DOMAIN;
-    this.defaultAccessToken = process.env.RECHARGE_ACCESS_TOKEN;
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Default store URL: ${this.defaultStoreUrl || 'Not set (will require in tool calls)'}`);
-      console.error(`[DEBUG] Default access token: ${this.defaultAccessToken ? 'Set' : 'Not set (will require in tool calls)'}`);
     }
 
     this.server = new Server(
@@ -90,22 +88,12 @@ class RechargeStorefrontAPIMCPServer {
   }
 
   /**
-   * Get or create a Recharge client with the appropriate access token and store URL
-   * @param {string} [toolAccessToken] - Access token from tool call (optional, takes precedence over env)
+   * Get or create a Recharge client with the appropriate store URL
    * @param {string} [toolStoreUrl] - Store URL from tool call (optional, takes precedence over env)
    * @returns {RechargeClient} Configured Recharge client
-   * @throws {Error} If no access token or store URL is available
+   * @throws {Error} If no store URL is available
    */
-  getRechargeClient(toolAccessToken, toolStoreUrl) {
-    // Token precedence: tool parameter > environment variable
-    const accessToken = toolAccessToken || this.defaultAccessToken;
-    
-    if (!accessToken) {
-      throw new Error(
-        "No API access token available. Please provide an 'access_token' parameter in your tool call or set RECHARGE_ACCESS_TOKEN in your environment variables."
-      );
-    }
-
+  getRechargeClient(toolStoreUrl) {
     // Store URL precedence: tool parameter > environment variable
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
     
@@ -113,17 +101,13 @@ class RechargeStorefrontAPIMCPServer {
     const validatedDomain = this.validateStoreUrl(storeUrl);
 
     if (process.env.DEBUG === 'true') {
-      const tokenSource = toolAccessToken ? 'tool parameter' : 'environment variable';
       const storeUrlSource = toolStoreUrl ? 'tool parameter' : 'environment variable';
-      const maskedToken = accessToken.length > 8 ? `${accessToken.substring(0, 8)}...` : '***';
-      console.error(`[DEBUG] Using access token from: ${tokenSource} (${maskedToken})`);
       console.error(`[DEBUG] Using store URL from: ${storeUrlSource} (${validatedDomain})`);
     }
 
-    // Create a new client instance with the appropriate token and store URL
+    // Create a new client instance with the store URL
     return new RechargeClient({
       storeUrl: validatedDomain,
-      accessToken: accessToken,
     });
   }
 
@@ -224,18 +208,17 @@ class RechargeStorefrontAPIMCPServer {
         // Validate arguments against schema
         const validatedArgs = tool.inputSchema.parse(args || {});
         
-        // Extract access_token and store_url from validated args (undefined if not provided)
-        const { access_token, store_url, ...toolArgs } = validatedArgs;
+        // Extract store_url from validated args (undefined if not provided)
+        const { store_url, ...toolArgs } = validatedArgs;
         
         if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] Tool '${name}' called`);
-          console.error(`[DEBUG] Access token: ${access_token ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Store URL: ${store_url ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Arguments:`, JSON.stringify(toolArgs, null, 2));
         }
         
-        // Get client with token and store URL precedence: tool parameter > environment variable
-        const rechargeClient = this.getRechargeClient(access_token, store_url);
+        // Get client with store URL precedence: tool parameter > environment variable
+        const rechargeClient = this.getRechargeClient(store_url);
         
         const result = await tool.execute(rechargeClient, toolArgs);
         this.stats.successfulCalls++;
@@ -274,8 +257,8 @@ class RechargeStorefrontAPIMCPServer {
           );
         }
         
-        // Handle missing API token or store URL errors
-        if (error.message.includes('No API access token available') || error.message.includes('No store URL available')) {
+        // Handle missing store URL errors
+        if (error.message.includes('No store URL available')) {
           throw new McpError(
             ErrorCode.InvalidParams,
             error.message
@@ -297,7 +280,6 @@ class RechargeStorefrontAPIMCPServer {
     
     // Log startup information to stderr (won't interfere with MCP protocol)
     const version = process.env.MCP_SERVER_VERSION || "1.0.0";
-    const hasDefaultToken = this.defaultAccessToken ? 'Yes' : 'No (will require token in tool calls)';
     const hasDefaultStoreUrl = this.defaultStoreUrl ? 'Yes' : 'No (will require store URL in tool calls)';
     const toolCount = tools.length;
     const nodeVersion = process.version;
@@ -309,15 +291,15 @@ class RechargeStorefrontAPIMCPServer {
     if (this.defaultStoreUrl) {
       console.error(`🔗 Store: ${this.defaultStoreUrl}`);
     }
-    console.error(`🔑 Default API token configured: ${hasDefaultToken}`);
+    console.error(`🔑 Authentication: Customer sessions (no API token needed)`);
     console.error(`🛠️  Available tools: ${toolCount}`);
-    console.error(`📊 API Coverage: Complete Recharge Storefront API (Customer Portal)`);
+    console.error(`📊 API Coverage: Recharge Storefront API (Customer Portal)`);
     console.error(`🔌 Transport: stdio`);
     console.error(`✅ Server ready for MCP connections`);
     
     if (process.env.DEBUG === 'true') {
       console.error(`🐛 Debug mode enabled`);
-      console.error(`🔑 Merchant API token authentication`);
+      console.error(`🔑 Customer session authentication`);
       console.error(`📋 Tool list: ${tools.map(t => t.name).join(', ')}`);
       console.error(`📈 Statistics tracking enabled`);
     }
