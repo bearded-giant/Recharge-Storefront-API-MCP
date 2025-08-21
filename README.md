@@ -377,26 +377,16 @@ Some list operations accept customer_id as an optional filter:
 
 #### Use Case 2: Subscription Management - Skip Next Delivery
 
-**Scenario**: Customer service agent helps customer skip delivery
+**Scenario**: Customer wants to skip their next delivery (token identifies customer)
 
 ```json
-// Step 1: Create customer session by ID
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-
-// Step 2: Get their active subscriptions
+// Step 1: Get their active subscriptions
 {
   "name": "get_subscriptions",
-  "arguments": {
-    "session_token": "generated_session_token"
-  }
+  "arguments": {}
 }
 
-// Step 3: Skip specific subscription (using subscription_id from step 2)
+// Step 2: Skip specific subscription (using subscription_id from step 1)
 {
   "name": "skip_subscription",
   "arguments": {
@@ -404,24 +394,37 @@ Some list operations accept customer_id as an optional filter:
     "date": "2024-02-15"
   }
 }
+
+// Step 3: Skip specific subscription
+{
+  "name": "skip_subscription",
+  "arguments": {
+    "session_token": "generated_session_token",
+    "subscription_id": "sub_456",
+    "date": "2024-02-15"
+  }
+}
 ```
 
-#### Use Case 3: Order Management - Check Recent Orders
+#### Use Case 3: Automated Customer Operations
 
-**Scenario**: Customer checks recent order status in portal
+**Scenario**: Automated system processes customer requests
 
 ```json
-// Step 1: Get recent orders (token identifies customer)
+// Step 1: Create session for customer
 {
-  "name": "get_orders",
-  "arguments": {}
+  "name": "create_customer_session",
+  "arguments": {
+    "email": "customer@example.com",
+    "password": "customer_password"
+  }
 }
 
-// Step 2: Get specific order details (using order_id from step 1)
+// Step 2: Get recent orders
 {
-  "name": "get_order",
+  "name": "get_orders",
   "arguments": {
-    "order_id": "order_789"
+    "session_token": "generated_session_token"
   }
 }
 ```
