@@ -30,7 +30,7 @@ const createAddressSchema = z.object({
 const updateAddressSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  addressId: z.string().describe('The address ID'),
+  address_id: z.string().describe('The address ID'),
   address1: z.string().optional().describe('Street address line 1'),
   address2: z.string().optional().describe('Street address line 2'),
   city: z.string().optional().describe('City'),
@@ -46,19 +46,19 @@ const updateAddressSchema = z.object({
 const deleteAddressSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  addressId: z.string().describe('The address ID'),
+  address_id: z.string().describe('The address ID'),
 });
 
 const addressSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  addressId: z.string().describe('The address ID'),
+  address_id: z.string().describe('The address ID'),
 });
 
 export const addressTools = [
   {
     name: 'get_addresses',
-    description: 'Get all addresses for the current customer',
+    description: 'Get all addresses for a specific customer',
     inputSchema: addressListSchema,
     execute: async (client, args) => {
       const { customer_id } = args;
@@ -78,8 +78,8 @@ export const addressTools = [
     description: 'Get detailed information about a specific address',
     inputSchema: addressSchema,
     execute: async (client, args) => {
-      const { addressId } = args;
-      const address = await client.getAddress(addressId);
+      const { address_id } = args;
+      const address = await client.getAddress(address_id);
       return {
         content: [
           {
@@ -92,7 +92,7 @@ export const addressTools = [
   },
   {
     name: 'create_address',
-    description: 'Create a new address for the current customer',
+    description: 'Create a new address for a customer',
     inputSchema: createAddressSchema,
     execute: async (client, args) => {
       const { customer_id, ...addressData } = args;
@@ -112,8 +112,8 @@ export const addressTools = [
     description: 'Update an existing address',
     inputSchema: updateAddressSchema,
     execute: async (client, args) => {
-      const { addressId, ...addressData } = args;
-      const updatedAddress = await client.updateAddress(addressId, addressData);
+      const { address_id, ...addressData } = args;
+      const updatedAddress = await client.updateAddress(address_id, addressData);
       return {
         content: [
           {
@@ -129,8 +129,8 @@ export const addressTools = [
     description: 'Delete an existing address',
     inputSchema: deleteAddressSchema,
     execute: async (client, args) => {
-      const { addressId } = args;
-      const result = await client.deleteAddress(addressId);
+      const { address_id } = args;
+      const result = await client.deleteAddress(address_id);
       return {
         content: [
           {

@@ -8,13 +8,13 @@ const baseSchema = z.object({
 const paymentMethodListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().optional().describe('Customer ID (optional for some endpoints)'),
+  customer_id: z.string().describe('Customer ID'),
 });
 
 const updatePaymentMethodSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  paymentMethodId: z.string().describe('The payment method ID'),
+  payment_method_id: z.string().describe('The payment method ID'),
   billing_address1: z.string().optional().describe('Billing address line 1'),
   billing_address2: z.string().optional().describe('Billing address line 2'),
   billing_city: z.string().optional().describe('Billing city'),
@@ -26,13 +26,13 @@ const updatePaymentMethodSchema = z.object({
 const paymentMethodSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  paymentMethodId: z.string().describe('The payment method ID'),
+  payment_method_id: z.string().describe('The payment method ID'),
 });
 
 export const paymentTools = [
   {
     name: 'get_payment_methods',
-    description: 'Get all payment methods for the current customer',
+    description: 'Get all payment methods for a specific customer',
     inputSchema: paymentMethodListSchema,
     execute: async (client, args) => {
       const { customer_id } = args;
@@ -52,8 +52,8 @@ export const paymentTools = [
     description: 'Get detailed information about a specific payment method',
     inputSchema: paymentMethodSchema,
     execute: async (client, args) => {
-      const { paymentMethodId } = args;
-      const paymentMethod = await client.getPaymentMethod(paymentMethodId);
+      const { payment_method_id } = args;
+      const paymentMethod = await client.getPaymentMethod(payment_method_id);
       return {
         content: [
           {
@@ -69,8 +69,8 @@ export const paymentTools = [
     description: 'Update payment method billing address',
     inputSchema: updatePaymentMethodSchema,
     execute: async (client, args) => {
-      const { paymentMethodId, ...paymentData } = args;
-      const updatedPaymentMethod = await client.updatePaymentMethod(paymentMethodId, paymentData);
+      const { payment_method_id, ...paymentData } = args;
+      const updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData);
       return {
         content: [
           {

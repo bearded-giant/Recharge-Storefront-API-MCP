@@ -1,12 +1,12 @@
 # Recharge Storefront API MCP Server
 
-A comprehensive Model Context Protocol (MCP) server that provides complete access to the Recharge Storefront API. This server enables AI assistants and other MCP clients to interact with Recharge customer portal functionality through a standardized interface.
+A comprehensive Model Context Protocol (MCP) server that provides complete access to the Recharge Storefront API. This server enables AI assistants and other MCP clients to interact with Recharge subscription management functionality through a standardized interface.
 
 ## Features
 
-### Complete API Coverage
-- **Customer Portal**: Customer profile and preferences management
-- **Subscription Management**: View, update, pause, resume, cancel, skip subscriptions
+### Complete Storefront API Coverage
+- **Customer Management**: Customer profile and information retrieval
+- **Subscription Management**: View, update, cancel, skip, swap subscriptions
 - **Address Management**: Shipping and billing address operations
 - **Payment Methods**: Payment method viewing and updates
 - **Product Catalog**: Browse subscription products and variants
@@ -14,10 +14,10 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 - **Charge Management**: View upcoming and past billing charges
 - **One-time Products**: Add products to next delivery
 - **Discount Management**: Apply and manage discount codes
-- **Session Management**: Customer authentication and portal access
 
 ### Key Capabilities
-- **Customer Sessions**: Proper customer authentication for portal access
+- **Merchant Authentication**: Uses merchant API tokens for secure access
+- **Customer Scoping**: All operations properly scoped to specific customers
 - **Comprehensive Error Handling**: Detailed error messages with proper HTTP status codes
 - **Input Validation**: Zod schema validation for all tool parameters
 - **Debug Support**: Optional debug logging for development and troubleshooting
@@ -28,24 +28,24 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 
 ### Prerequisites
 - Node.js 18.0.0 or higher
-- Recharge Storefront API access token (see instructions below)
+- Recharge Storefront API access token (merchant token)
 - Shopify store with Recharge integration
 
 ### Getting Your API Access Token
 
-To use this MCP server, you need a Recharge Storefront API access token:
+To use this MCP server, you need a Recharge merchant API access token:
 
 #### Getting Your Token
 
 1. **Log into your Recharge merchant portal**
 2. **Navigate to Apps & integrations > API tokens**
-3. **Create a new Storefront API token**
+3. **Create a new API token** with Storefront API permissions
 4. **Copy the token** (starts with `sk_test_` for sandbox or `sk_live_` for production)
 
 #### Authentication Method
 
 The Storefront API uses merchant API tokens with customer identification:
-- **API Token**: Your merchant token for authentication
+- **API Token**: Your merchant token for authentication (`sk_test_` or `sk_live_`)
 - **Customer ID**: Specify which customer to operate on
 - **Store Domain**: Your Shopify store domain
 
@@ -54,12 +54,13 @@ The Storefront API uses merchant API tokens with customer identification:
 ### Requirements
 - **Shopify Store**: Must have a Shopify store
 - **Recharge Integration**: Recharge subscription app must be installed and configured
-- **Customer Portal**: Must have Recharge customer portal enabled
+- **Merchant Token**: Must have Recharge merchant API token with Storefront permissions
 - **Server-Side**: This MCP server runs server-side, no browser required
 
 ### Limitations
-- **Customer Scoped**: All operations are scoped to individual customers via sessions
+- **Customer Scoped**: All operations are scoped to individual customers via customer IDs
 - **Shopify Integration**: Requires Shopify store with Recharge app installed
+- **Merchant Level**: Uses merchant tokens, not customer session tokens
 
 ### Installation
 
@@ -150,14 +151,13 @@ Example using environment variables:
   }
 }
 ```
+
 ## Available Tools
 
 ### Customer Management
 - `get_customer` - Retrieve customer information by ID
 - `get_customer_by_email` - Find customer by email address
-- `update_customer` - Update customer profile and preferences
-- `authenticate_customer` - Authenticate customer with email/password
-- `create_customer_token` - Create session token for customer
+- `update_customer` - Update customer profile and information
 
 ### Subscription Management
 - `get_subscriptions` - List customer subscriptions
@@ -168,8 +168,7 @@ Example using environment variables:
 - `swap_subscription` - Change subscription product
 - `cancel_subscription` - Cancel a subscription
 - `activate_subscription` - Reactivate a cancelled subscription
-- `pause_subscription` - Temporarily pause subscription
-- `resume_subscription` - Resume a paused subscription
+- `set_subscription_next_charge_date` - Set next charge date
 
 ### Address Management
 - `get_addresses` - List all customer addresses
@@ -200,29 +199,11 @@ Example using environment variables:
 - `update_onetime` - Modify one-time product
 - `delete_onetime` - Remove one-time product
 
-### Bundle Management
-- `get_bundle_selections` - List bundle selections
-- `get_bundle_selection` - Get bundle details
-- `create_bundle_selection` - Create bundle selection
-- `update_bundle_selection` - Modify bundle selection
-- `delete_bundle_selection` - Remove bundle selection
-
 ### Discount Management
 - `get_discounts` - List applied discounts
 - `get_discount` - Get discount details
 - `apply_discount` - Apply discount code
 - `remove_discount` - Remove discount
-
-### Notifications
-- `get_notifications` - List notifications
-- `get_notification` - Get notification details
-- `mark_notification_as_read` - Mark as read
-
-### Session Management
-- `create_session` - Create customer session
-- `validate_session` - Validate current session
-- `destroy_session` - End session (logout)
-
 
 ## Usage Examples
 
@@ -245,7 +226,7 @@ Example using environment variables:
   "name": "update_subscription",
   "arguments": {
     "access_token": "sk_test_your_token_here",
-    "subscriptionId": "12345",
+    "subscription_id": "12345",
     "order_interval_frequency": 2,
     "order_interval_unit": "month"
   }
@@ -258,7 +239,7 @@ Example using environment variables:
   "name": "skip_subscription",
   "arguments": {
     "access_token": "sk_test_your_token_here",
-    "subscriptionId": "12345",
+    "subscription_id": "12345",
     "date": "2024-02-15"
   }
 }
@@ -387,7 +368,7 @@ docker compose logs --tail=100 recharge-storefront-api-mcp
 
 This MCP server provides **complete coverage** of the Recharge Storefront API:
 
-- ✅ **Customer Management** - Profile, preferences, settings
+- ✅ **Customer Management** - Profile and information retrieval
 - ✅ **Subscription Lifecycle** - Full CRUD operations
 - ✅ **Address Management** - Shipping and billing addresses
 - ✅ **Payment Methods** - Payment method management
@@ -395,15 +376,9 @@ This MCP server provides **complete coverage** of the Recharge Storefront API:
 - ✅ **Order Management** - Order history and tracking
 - ✅ **Charge Management** - Billing and payment tracking
 - ✅ **One-time Products** - Add-on product management
-- ✅ **Bundle Management** - Product bundle handling
 - ✅ **Discount System** - Coupon and discount management
-- ✅ **Notification System** - Customer communication
-- ✅ **Session Management** - Authentication and sessions
-- ✅ **Store Configuration** - Settings and preferences
-- ✅ **Async Operations** - Bulk operation support
-- ✅ **Shopify Integration** - Connector management
 
-**Total Tools**: 50+ comprehensive API tools covering all Recharge Storefront endpoints.
+**Total Tools**: 30+ comprehensive API tools covering all Recharge Storefront endpoints.
 
 ## Troubleshooting
 
@@ -485,7 +460,7 @@ For issues, questions, or contributions:
 
 ### v1.0.0
 - Initial release with complete Recharge Storefront API coverage
-- 50+ comprehensive API tools
+- 30+ comprehensive API tools
 - Flexible authentication system
 - Docker deployment support
 - Comprehensive error handling

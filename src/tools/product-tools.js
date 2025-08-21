@@ -16,7 +16,7 @@ const productListSchema = z.object({
 const productSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  productId: z.string().describe('The product ID'),
+  product_id: z.string().describe('The product ID'),
 });
 
 export const productTools = [
@@ -41,8 +41,8 @@ export const productTools = [
     description: 'Get detailed information about a specific product',
     inputSchema: productSchema,
     execute: async (client, args) => {
-      const { productId } = args;
-      const product = await client.getProduct(productId);
+      const { product_id } = args;
+      const product = await client.getProduct(product_id);
       return {
         content: [
           {

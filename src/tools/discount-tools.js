@@ -8,6 +8,7 @@ const baseSchema = z.object({
 const discountListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().describe('Customer ID'),
 });
 
 const applyDiscountSchema = z.object({
@@ -19,22 +20,23 @@ const applyDiscountSchema = z.object({
 const removeDiscountSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  discountId: z.string().describe('The discount ID to remove'),
+  discount_id: z.string().describe('The discount ID to remove'),
 });
 
 const discountSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  discountId: z.string().describe('The discount ID'),
+  discount_id: z.string().describe('The discount ID'),
 });
 
 export const discountTools = [
   {
     name: 'get_discounts',
-    description: 'Get all discounts for the current customer',
+    description: 'Get all discounts for a specific customer',
     inputSchema: discountListSchema,
     execute: async (client, args) => {
-      const discounts = await client.getDiscounts();
+      const { customer_id } = args;
+      const discounts = await client.getDiscounts(customer_id);
       return {
         content: [
           {
@@ -50,8 +52,8 @@ export const discountTools = [
     description: 'Get detailed information about a specific discount',
     inputSchema: discountSchema,
     execute: async (client, args) => {
-      const { discountId } = args;
-      const discount = await client.getDiscount(discountId);
+      const { discount_id } = args;
+      const discount = await client.getDiscount(discount_id);
       return {
         content: [
           {
@@ -64,7 +66,7 @@ export const discountTools = [
   },
   {
     name: 'apply_discount',
-    description: 'Apply a discount code to the current customer',
+    description: 'Apply a discount code',
     inputSchema: applyDiscountSchema,
     execute: async (client, args) => {
       const { discount_code } = args;
@@ -81,11 +83,11 @@ export const discountTools = [
   },
   {
     name: 'remove_discount',
-    description: 'Remove a discount from the current customer',
+    description: 'Remove a discount',
     inputSchema: removeDiscountSchema,
     execute: async (client, args) => {
-      const { discountId } = args;
-      const result = await client.removeDiscount(discountId);
+      const { discount_id } = args;
+      const result = await client.removeDiscount(discount_id);
       return {
         content: [
           {

@@ -8,6 +8,7 @@ const baseSchema = z.object({
 const orderListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().describe('Customer ID'),
   status: z.enum(['queued', 'processing', 'shipped', 'cancelled', 'refunded']).optional().describe('Filter by order status'),
   limit: z.number().max(250).default(50).describe('Number of orders to return'),
   page: z.number().default(1).describe('Page number for pagination'),
@@ -16,16 +17,17 @@ const orderListSchema = z.object({
 const orderSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  orderId: z.string().describe('The order ID'),
+  order_id: z.string().describe('The order ID'),
 });
 
 export const orderTools = [
   {
     name: 'get_orders',
-    description: 'Get all orders for the current customer',
+    description: 'Get all orders for a specific customer',
     inputSchema: orderListSchema,
     execute: async (client, args) => {
-      const orders = await client.getOrders(args);
+      const { customer_id, ...params } = args;
+      const orders = await client.getOrders(customer_id, params);
       return {
         content: [
           {
@@ -41,8 +43,8 @@ export const orderTools = [
     description: 'Get detailed information about a specific order',
     inputSchema: orderSchema,
     execute: async (client, args) => {
-      const { orderId } = args;
-      const order = await client.getOrder(orderId);
+      const { order_id } = args;
+      const order = await client.getOrder(order_id);
       return {
         content: [
           {

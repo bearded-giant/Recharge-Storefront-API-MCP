@@ -3,12 +3,13 @@ import { z } from 'zod';
 const onetimeListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().describe('Customer ID'),
 });
 
 const onetimeSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  onetimeId: z.string().describe('The one-time product ID'),
+  onetime_id: z.string().describe('The one-time product ID'),
 });
 
 const createOnetimeSchema = z.object({
@@ -27,7 +28,7 @@ const createOnetimeSchema = z.object({
 const updateOnetimeSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  onetimeId: z.string().describe('The one-time product ID'),
+  onetime_id: z.string().describe('The one-time product ID'),
   next_charge_scheduled_at: z.string().optional().describe('When to add this to next charge (YYYY-MM-DD format)'),
   quantity: z.number().optional().describe('Quantity'),
   price: z.number().optional().describe('Price per unit'),
@@ -40,10 +41,11 @@ const updateOnetimeSchema = z.object({
 export const onetimeTools = [
   {
     name: 'get_onetimes',
-    description: 'Get all one-time products for the current customer',
+    description: 'Get all one-time products for a specific customer',
     inputSchema: onetimeListSchema,
     execute: async (client, args) => {
-      const onetimes = await client.getOnetimes();
+      const { customer_id } = args;
+      const onetimes = await client.getOnetimes(customer_id);
       return {
         content: [
           {
@@ -59,8 +61,8 @@ export const onetimeTools = [
     description: 'Get detailed information about a specific one-time product',
     inputSchema: onetimeSchema,
     execute: async (client, args) => {
-      const { onetimeId } = args;
-      const onetime = await client.getOnetime(onetimeId);
+      const { onetime_id } = args;
+      const onetime = await client.getOnetime(onetime_id);
       return {
         content: [
           {
@@ -73,7 +75,7 @@ export const onetimeTools = [
   },
   {
     name: 'create_onetime',
-    description: 'Create a new one-time product for the current customer',
+    description: 'Create a new one-time product',
     inputSchema: createOnetimeSchema,
     execute: async (client, args) => {
       const onetime = await client.createOnetime(args);
@@ -92,8 +94,8 @@ export const onetimeTools = [
     description: 'Update a one-time product',
     inputSchema: updateOnetimeSchema,
     execute: async (client, args) => {
-      const { onetimeId, ...updateData } = args;
-      const updatedOnetime = await client.updateOnetime(onetimeId, updateData);
+      const { onetime_id, ...updateData } = args;
+      const updatedOnetime = await client.updateOnetime(onetime_id, updateData);
       return {
         content: [
           {
@@ -109,8 +111,8 @@ export const onetimeTools = [
     description: 'Delete a one-time product',
     inputSchema: onetimeSchema,
     execute: async (client, args) => {
-      const { onetimeId } = args;
-      const result = await client.deleteOnetime(onetimeId);
+      const { onetime_id } = args;
+      const result = await client.deleteOnetime(onetime_id);
       return {
         content: [
           {

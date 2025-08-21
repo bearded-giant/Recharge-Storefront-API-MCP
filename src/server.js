@@ -307,14 +307,15 @@ class RechargeStorefrontAPIMCPServer {
       console.error(`🔗 Store: ${this.defaultStoreUrl}`);
     }
     console.error(`🔑 Authentication: Customer sessions (no API token needed)`);
+    console.error(`🔑 Authentication: Merchant API tokens with customer identification`);
     console.error(`🛠️  Available tools: ${toolCount}`);
-    console.error(`📊 API Coverage: Recharge Storefront API (Customer Portal)`);
+    console.error(`📊 API Coverage: Recharge Storefront API`);
     console.error(`🔌 Transport: stdio`);
     console.error(`✅ Server ready for MCP connections`);
     
     if (process.env.DEBUG === 'true') {
       console.error(`🐛 Debug mode enabled`);
-      console.error(`🔑 Customer session authentication`);
+      console.error(`🔑 Merchant API token authentication`);
       console.error(`📋 Tool list: ${tools.map(t => t.name).join(', ')}`);
       console.error(`📈 Statistics tracking enabled`);
     }
