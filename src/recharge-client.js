@@ -193,16 +193,6 @@ export class RechargeClient {
     return this.makeRequest('DELETE', `/customer`);
   }
 
-  /**
-   * Get customer by email address
-   * @param {string} email - Customer email address
-   * @returns {Promise<Object>} Customer data
-   */
-  async getCustomerByEmail(email) {
-    validateRequiredParams({ email }, ['email']);
-    return this.makeRequest('GET', '/customer', null, { email });
-  }
-
   // Subscription methods
   /**
    * Get subscriptions with optional filtering
