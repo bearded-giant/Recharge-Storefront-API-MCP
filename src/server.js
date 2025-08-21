@@ -182,21 +182,35 @@ class RechargeStorefrontAPIMCPServer {
   }
 
   /**
-   * Validates store URL format
-   * @param {string} storeUrl - Store URL to validate
-   * @returns {boolean} - True if valid
+   * Setup tool handlers for the MCP server
    */
-  validateStoreUrl(storeUrl) {
-    if (!storeUrl || typeof storeUrl !== 'string') {
-      return false;
-    }
-    
-    // Remove protocol if present
-    const cleanUrl = storeUrl.replace(/^https?:\/\//, '');
-    
-    // Check if it ends with .myshopify.com
-    return cleanUrl.endsWith('.myshopify.com');
-  }
+  setupToolHandlers() {
+    // Handle tool listing
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+      return {
+        tools: tools.map(tool => ({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema.shape ? {
+            type: "object",
+            properties: Object.fromEntries(
+              Object.entries(tool.inputSchema.shape).map(([key, value]) => [
+                key,
+                value._def ? { type: value._def.typeName?.toLowerCase() || "string" } : { type: "string" }
+              ])
+            ),
+            required: Object.keys(tool.inputSchema.shape).filter(key => 
+              !tool.inputSchema.shape[key]._def?.defaultValue
+            )
+          } : { type: "object" }
+        }))
+      };
+    });
+
+    // Handle tool execution
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      const { name, arguments: args } = request.params;
+      this.stats.toolCalls++;
 
       const tool = tools.find(t => t.name === name);
       if (!tool) {
