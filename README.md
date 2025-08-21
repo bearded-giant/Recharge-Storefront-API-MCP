@@ -29,7 +29,7 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 
 ### Prerequisites
 - Node.js 18.0.0 or higher
-- Recharge Storefront API access token (merchant token)
+- Recharge Storefront API access token
 - Shopify store with Recharge integration
 
 ### Getting Your API Access Token
@@ -72,7 +72,10 @@ To use this MCP server, you need a Recharge API access token:
 3. **Required environment variables:**
    ```bash
    RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required
+   RECHARGE_ACCESS_TOKEN=your_token_here               # Required*
    ```
+   
+   *Required unless you provide `access_token` parameter in each tool call
 
 4. **Start the server:**
    ```bash
@@ -86,19 +89,18 @@ To use this MCP server, you need a Recharge API access token:
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_ACCESS_TOKEN` | Conditional* | Recharge API access token | `your_token_here` |
+| `RECHARGE_ACCESS_TOKEN` | Conditional* | Recharge Storefront API access token | `your_token_here` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
 **Note**: Customer IDs are NOT configured as environment variables. They are provided as parameters in individual tool calls.
 
-*Conditional: Required unless provided as parameters in individual tool calls.
 ### Authentication Configuration
 
 The server supports flexible authentication configuration:
 
-1. **Environment Variables**: Set `RECHARGE_STOREFRONT_DOMAIN` and `RECHARGE_ACCESS_TOKEN`
+1. **Environment Variables** (Recommended): Set both `RECHARGE_STOREFRONT_DOMAIN` and `RECHARGE_ACCESS_TOKEN`
 2. **Per-Tool Parameters**: Provide `store_url` and `access_token` in individual tool calls if needed
 
 ### Authentication Model
