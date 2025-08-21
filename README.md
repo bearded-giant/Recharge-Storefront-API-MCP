@@ -414,28 +414,27 @@ Some list operations accept customer_id as an optional filter:
     "order_id": "order_789"
   }
 }
-
-// Step 3: Process orders automatically
-// (Additional logic based on order data)
 ```
 
-#### Use Case 4: Multi-Customer Batch Operations
+#### Use Case 4: Address Management - Update Shipping Address
 
-**Scenario**: Process multiple customers with single merchant token
+**Scenario**: Customer updates address in portal
 
 ```json
-// Process Customer A
+// Step 1: Get current addresses (token identifies customer)
 {
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "customer_a_id"
-  }
+  "name": "get_addresses",
+  "arguments": {}
 }
 
+// Step 2: Update existing address (using address_id from step 1)
 {
-  "name": "get_subscriptions",
+  "name": "update_address",
   "arguments": {
-    "session_token": "customer_a_session_token"
+    "address_id": "addr_123",
+    "address1": "456 New Street",
+    "city": "New City",
+    "zip": "54321"
   }
 }
 ```
@@ -703,25 +702,25 @@ Error: Resource not found
 {"name": "get_order", "arguments": {"order_id": "order_456"}}
 ```
 
-#### Missing Session Token
+#### Token Expiration
 ```
-Error: No session token available
+Error: Session token expired
 ```
-**Solution**: 
-1. Customer must log into Recharge customer portal
-2. Extract session token from customer's authenticated portal session
-3. Provide token via `RECHARGE_SESSION_TOKEN` environment variable
-4. Or provide `session_token` parameter in individual tool calls
+**Solution**: Create a new session token:
+```json
+{
+  "name": "create_customer_session",
+  "arguments": {
+    "email": "customer@example.com",
+    "password": "customer_password"
+  }
+}
+```
 
-#### Session Token Extraction
+#### Multiple Authentication Methods
 ```
-Error: Cannot create session token
+Error: Multiple authentication tokens provided
 ```
-**Solution**: 
-- MCP server cannot create session tokens directly
-- Tokens must be obtained from Recharge's customer portal authentication
-- Implement portal integration or browser session extraction
-- Consider using Recharge's session creation APIs if available
 #### Invalid Domain
 ```
 Error: Domain must be a valid Shopify domain
