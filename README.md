@@ -78,7 +78,7 @@ A comprehensive Model Context Protocol (MCP) server that provides tools for inte
 
 ## API Compliance
 
-This MCP server is built to comply with the official **Recharge Storefront API v2021-11** specification:
+This MCP server is built to comply with the official **Recharge Storefront API** specification:
 
 ✅ **Correct Base URL**: Uses the proper Recharge Storefront portal endpoint  
 ✅ **Proper Authentication**: Implements X-Recharge-Access-Token header authentication  
