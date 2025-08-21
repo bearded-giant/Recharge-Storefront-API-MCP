@@ -52,6 +52,11 @@ You need a **customer ID** to create sessions. Here's how to get it:
 ```json
 {
   "name": "get_customer_by_email",
+  "arguments": {
+    "email": "customer@example.com"
+  }
+}
+```
 
 ### Step 2: Automatic Session Creation
 The MCP server automatically creates session tokens when you provide a `customer_id`:
