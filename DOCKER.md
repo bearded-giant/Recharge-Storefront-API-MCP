@@ -135,7 +135,7 @@ The container includes built-in health checks:
 docker-compose ps
 
 # View health check logs
-docker inspect --format='{{json .State.Health}}' recharge-storefront-api-mcp_recharge-storefront-api-mcp_1
+docker inspect --format='{{json .State.Health}}' $(docker-compose ps -q recharge-storefront-api-mcp)
 ```
 
 ### Log Management
