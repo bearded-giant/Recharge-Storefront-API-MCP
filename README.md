@@ -38,45 +38,37 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 
 ### Getting Your API Access Token
 
-Before you can use this MCP server, you need to understand how Recharge Storefront API authentication works:
+To use this MCP server, you need a Recharge Storefront API access token from your merchant portal:
 
-#### Authentication Method
-This MCP server uses **customer session tokens**, not admin API tokens. The authentication flow works as follows:
+#### Getting Your Merchant API Token
 
-1. **Customer Authentication**: Customers authenticate through your Shopify store's customer portal
-2. **Session Token**: The Recharge customer portal generates session tokens for authenticated customers
-3. **Token Usage**: These session tokens are used to access the customer's subscription data
+1. **Log into Recharge**: Go to your Recharge merchant portal
+2. **Navigate to API Settings**: Go to Settings > API & Webhooks
+3. **Generate Token**: Create a new Storefront API token
+4. **Copy Token**: Save the token securely (starts with `sk_`)
 
-#### For Shopify Merchants Using Recharge:
-1. **Ensure Recharge Integration**: Your Shopify store must have Recharge installed and configured
-2. **Customer Portal Access**: Customers access their subscriptions through `https://your-shop.myshopify.com/tools/recurring/portal`
-3. **Session Management**: Use the session management tools in this MCP server to handle customer authentication
+#### Token Permissions
+The Storefront API token allows you to:
+- Read and manage customer subscriptions
+- Access customer addresses and payment methods
+- View orders and charges
+- Manage one-time products and bundles
 
-#### Getting Session Tokens:
-```json
-{
-  "name": "create_session",
-  "arguments": {
-    "email": "customer@example.com"
-  }
-}
-```
-
-#### Important Notes:
+#### Important Notes
+- **Merchant Token**: This uses merchant API tokens, not customer session tokens
+- **Server-Side**: Runs server-side with full API access
+- **Customer Context**: API calls are made on behalf of customers using their email or customer ID
 
 ## Prerequisites and Limitations
 
 ### Requirements
 - **Shopify Store**: Must have a Shopify store
 - **Recharge Integration**: Recharge subscription app must be installed and configured
-- **Customer Portal**: Customers must have access to the Recharge customer portal
+- **Merchant API Access**: Must have Recharge Storefront API access enabled
 - **Server-Side**: This MCP server runs server-side, no browser required
 
 ### Limitations
 - **Shopify Only**: Only works with Shopify stores using Recharge
-- **Customer-Specific**: Each session token is tied to one customer
-- **Session Management**: Sessions may expire and need renewal
-- **Portal Dependency**: Relies on Recharge's customer portal being enabled
 
 ### Installation
 
@@ -111,7 +103,7 @@ This MCP server uses **customer session tokens**, not admin API tokens. The auth
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_ACCESS_TOKEN` | Conditional* | Default API token | `sk_test_...` |
+| `RECHARGE_ACCESS_TOKEN` | Conditional* | Merchant Storefront API token | `sk_live_...` or `sk_test_...` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
@@ -144,8 +136,9 @@ Example tool call with token:
 {
   "name": "get_customer_subscriptions",
   "arguments": {
-    "access_token": "sk_test_your_token_here",
+    "access_token": "sk_live_your_merchant_token_here",
     "store_url": "your-shop.myshopify.com",
+    "customer_id": "123456789",
     "status": "active"
   }
 }
@@ -156,6 +149,7 @@ Example tool call using environment defaults:
 {
   "name": "get_customer_subscriptions",
   "arguments": {
+    "customer_id": "123456789",
     "status": "active"
   }
 }
@@ -261,6 +255,7 @@ Example tool call with mixed approach (environment token, tool store URL):
 {
   "name": "get_customer_subscriptions",
   "arguments": {
+    "customer_id": "123456789",
     "status": "active",
     "limit": 10
   }
@@ -295,6 +290,7 @@ Example tool call with mixed approach (environment token, tool store URL):
 {
   "name": "create_onetime",
   "arguments": {
+    "customer_id": "123456789",
     "variant_id": 67890,
     "quantity": 1,
     "next_charge_scheduled_at": "2024-02-01"

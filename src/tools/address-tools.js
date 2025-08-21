@@ -8,11 +8,13 @@ const baseSchema = z.object({
 const addressListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().describe('Customer ID'),
 });
 
 const createAddressSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().describe('Customer ID'),
   address1: z.string().describe('Street address line 1'),
   address2: z.string().optional().describe('Street address line 2'),
   city: z.string().describe('City'),
@@ -59,7 +61,8 @@ export const addressTools = [
     description: 'Get all addresses for the current customer',
     inputSchema: addressListSchema,
     execute: async (client, args) => {
-      const addresses = await client.getAddresses();
+      const { customer_id } = args;
+      const addresses = await client.getAddresses(customer_id);
       return {
         content: [
           {
@@ -92,7 +95,8 @@ export const addressTools = [
     description: 'Create a new address for the current customer',
     inputSchema: createAddressSchema,
     execute: async (client, args) => {
-      const newAddress = await client.createAddress(args);
+      const { customer_id, ...addressData } = args;
+      const newAddress = await client.createAddress(customer_id, addressData);
       return {
         content: [
           {

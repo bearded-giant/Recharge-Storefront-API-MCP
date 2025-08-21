@@ -26,12 +26,13 @@ export class RechargeClient {
     this.accessToken = accessToken;
     
     // Construct the correct Recharge Storefront API base URL
-    this.baseURL = `https://${storeUrl}/tools/recurring/portal`;
+    this.baseURL = `https://api.rechargeapps.com`;
     
     this.client = axios.create({
       baseURL: this.baseURL,
       headers: {
         'X-Recharge-Access-Token': accessToken,
+        'X-Recharge-Version': '2021-11',
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
@@ -119,32 +120,39 @@ export class RechargeClient {
   // Customer methods
   /**
    * Get current customer information
+   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Customer data
    */
-  async getCustomer() {
-    return this.makeRequest('GET', '/customer');
+  async getCustomer(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('GET', `/customers/${customerId}`);
   }
 
   /**
    * Update customer information
+   * @param {string} customerId - Customer ID
    * @param {Object} data - Customer update data
    * @returns {Promise<Object>} Updated customer data
    */
-  async updateCustomer(data) {
+  async updateCustomer(customerId, data) {
+    validateRequiredParams({ customerId }, ['customerId']);
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Customer update data is required');
     }
-    return this.makeRequest('PUT', '/customer', data);
+    return this.makeRequest('PUT', `/customers/${customerId}`, data);
   }
 
   // Subscription methods
   /**
    * Get customer subscriptions with optional filtering
+   * @param {string} customerId - Customer ID
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Subscriptions data
    */
-  async getSubscriptions(params = {}) {
-    return this.makeRequest('GET', '/subscriptions', null, params);
+  async getSubscriptions(customerId, params = {}) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    const queryParams = { customer_id: customerId, ...params };
+    return this.makeRequest('GET', '/subscriptions', null, queryParams);
   }
 
   /**
@@ -263,10 +271,12 @@ export class RechargeClient {
   // Address methods
   /**
    * Get all customer addresses
+   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Addresses data
    */
-  async getAddresses() {
-    return this.makeRequest('GET', '/addresses');
+  async getAddresses(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('GET', '/addresses', null, { customer_id: customerId });
   }
 
   /**
@@ -281,13 +291,16 @@ export class RechargeClient {
 
   /**
    * Create a new address
+   * @param {string} customerId - Customer ID
    * @param {Object} addressData - Address data
    * @returns {Promise<Object>} Created address data
    */
-  async createAddress(addressData) {
+  async createAddress(customerId, addressData) {
+    validateRequiredParams({ customerId }, ['customerId']);
     const required = ['address1', 'city', 'province', 'zip', 'country', 'first_name', 'last_name'];
     validateRequiredParams(addressData, required);
-    return this.makeRequest('POST', '/addresses', addressData);
+    const dataWithCustomer = { ...addressData, customer_id: customerId };
+    return this.makeRequest('POST', '/addresses', dataWithCustomer);
   }
 
   /**
@@ -317,10 +330,12 @@ export class RechargeClient {
   // Payment method methods
   /**
    * Get customer payment methods
+   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Payment methods data
    */
-  async getPaymentMethods() {
-    return this.makeRequest('GET', '/payment_methods');
+  async getPaymentMethods(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('GET', '/payment_methods', null, { customer_id: customerId });
   }
 
   /**
@@ -350,10 +365,12 @@ export class RechargeClient {
   // Discount methods
   /**
    * Get customer discounts
+   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Discounts data
    */
-  async getDiscounts() {
-    return this.makeRequest('GET', '/discounts');
+  async getDiscounts(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('GET', '/discounts', null, { customer_id: customerId });
   }
 
   /**
@@ -409,10 +426,12 @@ export class RechargeClient {
   // One-time product methods
   /**
    * Get customer one-time products
+   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} One-time products data
    */
-  async getOnetimes() {
-    return this.makeRequest('GET', '/onetimes');
+  async getOnetimes(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('GET', '/onetimes', null, { customer_id: customerId });
   }
 
   /**
@@ -427,13 +446,16 @@ export class RechargeClient {
 
   /**
    * Create a one-time product
+   * @param {string} customerId - Customer ID
    * @param {Object} onetimeData - One-time product data
    * @returns {Promise<Object>} Created one-time product data
    */
-  async createOnetime(onetimeData) {
+  async createOnetime(customerId, onetimeData) {
+    validateRequiredParams({ customerId }, ['customerId']);
     const required = ['variant_id', 'quantity', 'next_charge_scheduled_at'];
     validateRequiredParams(onetimeData, required);
-    return this.makeRequest('POST', '/onetimes', onetimeData);
+    const dataWithCustomer = { ...onetimeData, customer_id: customerId };
+    return this.makeRequest('POST', '/onetimes', dataWithCustomer);
   }
 
   /**
@@ -463,10 +485,12 @@ export class RechargeClient {
   // Bundle selection methods
   /**
    * Get customer bundle selections
+   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Bundle selections data
    */
-  async getBundleSelections() {
-    return this.makeRequest('GET', '/bundle_selections');
+  async getBundleSelections(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('GET', '/bundle_selections', null, { customer_id: customerId });
   }
 
   /**
@@ -481,13 +505,16 @@ export class RechargeClient {
 
   /**
    * Create a bundle selection
+   * @param {string} customerId - Customer ID
    * @param {Object} bundleSelectionData - Bundle selection data
    * @returns {Promise<Object>} Created bundle selection data
    */
-  async createBundleSelection(bundleSelectionData) {
+  async createBundleSelection(customerId, bundleSelectionData) {
+    validateRequiredParams({ customerId }, ['customerId']);
     const required = ['bundle_id', 'variant_selections'];
     validateRequiredParams(bundleSelectionData, required);
-    return this.makeRequest('POST', '/bundle_selections', bundleSelectionData);
+    const dataWithCustomer = { ...bundleSelectionData, customer_id: customerId };
+    return this.makeRequest('POST', '/bundle_selections', dataWithCustomer);
   }
 
   /**
@@ -529,55 +556,63 @@ export class RechargeClient {
    * @returns {Promise<Object>} Store data
    */
   async getStore() {
-    return this.makeRequest('GET', '/store');
+    return this.makeRequest('GET', '/shop');
   }
 
   // Settings methods
   /**
    * Get customer settings and preferences
+   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Settings data
    */
-  async getSettings() {
-    return this.makeRequest('GET', '/settings');
+  async getSettings(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('GET', `/customers/${customerId}/delivery_schedule`);
   }
 
   /**
    * Update customer settings and preferences
+   * @param {string} customerId - Customer ID
    * @param {Object} settingsData - Updated settings data
    * @returns {Promise<Object>} Updated settings data
    */
-  async updateSettings(settingsData) {
+  async updateSettings(customerId, settingsData) {
+    validateRequiredParams({ customerId }, ['customerId']);
     if (!settingsData || Object.keys(settingsData).length === 0) {
       throw new Error('Settings update data is required');
     }
-    return this.makeRequest('PUT', '/settings', settingsData);
+    return this.makeRequest('PUT', `/customers/${customerId}`, settingsData);
   }
 
   // Session methods
   /**
-   * Create a customer session
+   * Get customers (for finding customer by email)
    * @param {string} email - Customer email address
-   * @returns {Promise<Object>} Session data
+   * @returns {Promise<Object>} Customer search results
    */
-  async createSession(email) {
+  async findCustomerByEmail(email) {
     validateRequiredParams({ email }, ['email']);
-    return this.makeRequest('POST', '/sessions', { email });
+    return this.makeRequest('GET', '/customers', null, { email });
   }
 
   /**
-   * Validate the current session
-   * @returns {Promise<Object>} Session validation data
+   * Get all customers
+   * @param {Object} params - Query parameters
+   * @returns {Promise<Object>} Customers data
    */
-  async validateSession() {
-    return this.makeRequest('GET', '/sessions/validate');
+  async getCustomers(params = {}) {
+    return this.makeRequest('GET', '/customers', null, params);
   }
 
   /**
-   * Destroy the current session (logout)
-   * @returns {Promise<Object>} Session destruction result
+   * Create a new customer
+   * @param {Object} customerData - Customer data
+   * @returns {Promise<Object>} Created customer data
    */
-  async destroySession() {
-    return this.makeRequest('DELETE', '/sessions');
+  async createCustomer(customerData) {
+    const required = ['email', 'first_name', 'last_name'];
+    validateRequiredParams(customerData, required);
+    return this.makeRequest('POST', '/customers', customerData);
   }
 
   // Async batch methods
@@ -625,10 +660,12 @@ export class RechargeClient {
   // Notification methods
   /**
    * Get customer notifications
+   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Notifications data
    */
-  async getNotifications() {
-    return this.makeRequest('GET', '/notifications');
+  async getNotifications(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('GET', '/notifications', null, { customer_id: customerId });
   }
 
   /**
@@ -654,11 +691,14 @@ export class RechargeClient {
   // Order methods
   /**
    * Get customer orders with optional filtering
+   * @param {string} customerId - Customer ID
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Orders data
    */
-  async getOrders(params = {}) {
-    return this.makeRequest('GET', '/orders', null, params);
+  async getOrders(customerId, params = {}) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    const queryParams = { customer_id: customerId, ...params };
+    return this.makeRequest('GET', '/orders', null, queryParams);
   }
 
   /**
@@ -674,11 +714,14 @@ export class RechargeClient {
   // Charge methods
   /**
    * Get customer charges with optional filtering
+   * @param {string} customerId - Customer ID
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Charges data
    */
-  async getCharges(params = {}) {
-    return this.makeRequest('GET', '/charges', null, params);
+  async getCharges(customerId, params = {}) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    const queryParams = { customer_id: customerId, ...params };
+    return this.makeRequest('GET', '/charges', null, queryParams);
   }
 
   /**
