@@ -584,4 +584,161 @@ export class RechargeClient {
     validateRequiredParams({ discountId }, ['discountId']);
     return this.makeRequest('DELETE', `/discounts/${discountId}`);
   }
+
+  // Notification methods
+  /**
+   * Get customer notifications
+   * @param {string} customerId - Customer ID
+   * @param {Object} params - Query parameters
+   * @returns {Promise<Object>} Notifications data
+   */
+  async getNotifications(customerId, params = {}) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    const queryParams = { ...params, customer_id: customerId };
+    return this.makeRequest('GET', '/notifications', null, queryParams);
+  }
+
+  /**
+   * Get detailed information about a specific notification
+   * @param {string} notificationId - The notification ID
+   * @returns {Promise<Object>} Notification data
+   */
+  async getNotification(notificationId) {
+    validateRequiredParams({ notificationId }, ['notificationId']);
+    return this.makeRequest('GET', `/notifications/${notificationId}`);
+  }
+
+  /**
+   * Mark a notification as read
+   * @param {string} notificationId - The notification ID
+   * @returns {Promise<Object>} Update result
+   */
+  async markNotificationRead(notificationId) {
+    validateRequiredParams({ notificationId }, ['notificationId']);
+    return this.makeRequest('PUT', `/notifications/${notificationId}`, { read: true });
+  }
+
+  // Session methods
+  /**
+   * Create a customer session for portal access
+   * @param {string} customerId - Customer ID
+   * @param {Object} sessionData - Session configuration
+   * @returns {Promise<Object>} Session data with URL
+   */
+  async createCustomerSession(customerId, sessionData = {}) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    const dataWithCustomer = { ...sessionData, customer_id: customerId };
+    return this.makeRequest('POST', '/sessions', dataWithCustomer);
+  }
+
+  /**
+   * Get session information
+   * @param {string} sessionId - The session ID
+   * @returns {Promise<Object>} Session data
+   */
+  async getSession(sessionId) {
+    validateRequiredParams({ sessionId }, ['sessionId']);
+    return this.makeRequest('GET', `/sessions/${sessionId}`);
+  }
+
+  // Store configuration methods
+  /**
+   * Get store settings and configuration
+   * @returns {Promise<Object>} Store settings data
+   */
+  async getStoreSettings() {
+    return this.makeRequest('GET', '/store');
+  }
+
+  /**
+   * Get available delivery schedules
+   * @returns {Promise<Object>} Delivery schedules data
+   */
+  async getDeliverySchedules() {
+    return this.makeRequest('GET', '/delivery_schedules');
+  }
+
+  /**
+   * Get detailed information about a specific delivery schedule
+   * @param {string} deliveryScheduleId - The delivery schedule ID
+   * @returns {Promise<Object>} Delivery schedule data
+   */
+  async getDeliverySchedule(deliveryScheduleId) {
+    validateRequiredParams({ deliveryScheduleId }, ['deliveryScheduleId']);
+    return this.makeRequest('GET', `/delivery_schedules/${deliveryScheduleId}`);
+  }
+
+  // Async batch processing methods
+  /**
+   * Create an async batch operation
+   * @param {Object} batchData - Batch operation data
+   * @returns {Promise<Object>} Created batch data
+   */
+  async createAsyncBatch(batchData) {
+    const required = ['batch_type', 'object_ids'];
+    validateRequiredParams(batchData, required);
+    return this.makeRequest('POST', '/async_batches', batchData);
+  }
+
+  /**
+   * Get list of async batch operations
+   * @param {Object} params - Query parameters
+   * @returns {Promise<Object>} Async batches data
+   */
+  async getAsyncBatches(params = {}) {
+    return this.makeRequest('GET', '/async_batches', null, params);
+  }
+
+  /**
+   * Get detailed information about a specific async batch
+   * @param {string} batchId - The batch ID
+   * @returns {Promise<Object>} Batch data
+   */
+  async getAsyncBatch(batchId) {
+    validateRequiredParams({ batchId }, ['batchId']);
+    return this.makeRequest('GET', `/async_batches/${batchId}`);
+  }
+
+  /**
+   * Get tasks for a specific async batch
+   * @param {string} batchId - The batch ID
+   * @returns {Promise<Object>} Batch tasks data
+   */
+  async getAsyncBatchTasks(batchId) {
+    validateRequiredParams({ batchId }, ['batchId']);
+    return this.makeRequest('GET', `/async_batches/${batchId}/tasks`);
+  }
+
+  // Shopify connector methods
+  /**
+   * Get Shopify connector configurations
+   * @returns {Promise<Object>} Connectors data
+   */
+  async getShopifyConnectors() {
+    return this.makeRequest('GET', '/shopify_connectors');
+  }
+
+  /**
+   * Get detailed information about a specific Shopify connector
+   * @param {string} connectorId - The connector ID
+   * @returns {Promise<Object>} Connector data
+   */
+  async getShopifyConnector(connectorId) {
+    validateRequiredParams({ connectorId }, ['connectorId']);
+    return this.makeRequest('GET', `/shopify_connectors/${connectorId}`);
+  }
+
+  /**
+   * Update Shopify connector configuration
+   * @param {string} connectorId - The connector ID
+   * @param {Object} connectorData - Updated connector data
+   * @returns {Promise<Object>} Updated connector data
+   */
+  async updateShopifyConnector(connectorId, connectorData) {
+    validateRequiredParams({ connectorId }, ['connectorId']);
+    if (!connectorData || Object.keys(connectorData).length === 0) {
+      throw new Error('Connector update data is required');
+    }
+    return this.makeRequest('PUT', `/shopify_connectors/${connectorId}`, connectorData);
+  }
 }

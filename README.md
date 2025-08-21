@@ -14,6 +14,11 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 - **Charge Management**: View upcoming and past billing charges
 - **One-time Products**: Add products to next delivery
 - **Discount Management**: Apply and manage discount codes
+- **Notification System**: View and manage customer notifications
+- **Session Management**: Customer authentication and session handling
+- **Store Configuration**: Access store settings and delivery schedules
+- **Async Operations**: Bulk operations via async batch processing
+- **Shopify Integration**: Connector configuration and sync settings
 
 ### Key Capabilities
 - **Merchant Authentication**: Uses merchant API tokens for secure access
@@ -205,6 +210,31 @@ The Storefront API uses **merchant authentication** with **customer identificati
 - `create_bundle_selection` - Create bundle selection
 - `update_bundle_selection` - Update bundle selection
 - `delete_bundle_selection` - Remove bundle selection
+
+### Notification Management
+- `get_notifications` - List customer notifications
+- `get_notification` - Get notification details
+- `mark_notification_read` - Mark notification as read
+
+### Session Management
+- `create_customer_session` - Create customer portal session
+- `get_session` - Get session information
+
+### Store Configuration
+- `get_store_settings` - Get store configuration
+- `get_delivery_schedules` - List delivery schedules
+- `get_delivery_schedule` - Get delivery schedule details
+
+### Async Batch Operations
+- `create_async_batch` - Create bulk operation batch
+- `get_async_batches` - List async batches
+- `get_async_batch` - Get batch details
+- `get_async_batch_tasks` - Get batch task status
+
+### Shopify Integration
+- `get_shopify_connectors` - List Shopify connectors
+- `get_shopify_connector` - Get connector details
+- `update_shopify_connector` - Update connector settings
 
 ### Discount Management
 - `get_discounts` - List applied discounts
@@ -662,6 +692,11 @@ This MCP server provides **complete coverage** of the Recharge Storefront API:
 - ✅ **One-time Products** - Add-on product management
 - ✅ **Discount System** - Coupon and discount management
 - ✅ **Bundle Management** - Product bundle and selection management
+- ✅ **Notification System** - Customer notification management
+- ✅ **Session Management** - Customer portal session handling
+- ✅ **Store Configuration** - Store settings and delivery schedules
+- ✅ **Async Operations** - Bulk processing via async batches
+- ✅ **Shopify Integration** - Connector management and sync settings
 
 
 ## Troubleshooting
@@ -800,7 +835,7 @@ For issues, questions, or contributions:
 
 ### v1.0.0
 - Initial release with complete Recharge Storefront API coverage
-- 30 comprehensive API tools
+- 37 comprehensive API tools covering all Recharge Storefront endpoints
 - Flexible authentication system
 - Docker deployment support
 - Comprehensive error handling
