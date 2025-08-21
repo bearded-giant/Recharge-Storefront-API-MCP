@@ -204,7 +204,13 @@ The Storefront API uses merchant authentication with customer identification. **
 
 ## Usage Examples
 
-### Finding and Using Customer IDs
+### Customer ID Usage Patterns
+
+The Recharge Storefront API requires customer IDs for most operations. Here are the main patterns for obtaining and using customer IDs:
+
+#### Pattern 1: Find Customer by Email (Most Common)
+
+When you only have a customer's email address, use this two-step process:
 
 **Step 1: Find Customer by Email**
 ```json
@@ -216,14 +222,15 @@ The Storefront API uses merchant authentication with customer identification. **
 }
 ```
 
-**Response will include customer ID:**
+**Response includes customer ID:**
 ```json
 {
   "customer": {
     "id": "123456",
     "email": "john.doe@example.com",
     "first_name": "John",
-    "last_name": "Doe"
+    "last_name": "Doe",
+    "created_at": "2024-01-15T10:30:00Z"
   }
 }
 ```
@@ -238,7 +245,246 @@ The Storefront API uses merchant authentication with customer identification. **
 }
 ```
 
-### Basic Subscription Management
+#### Pattern 2: Direct Customer ID Usage (When Known)
+
+If you already have the customer ID, use it directly:
+
+```json
+{
+  "name": "get_customer",
+  "arguments": {
+    "customer_id": "789012"
+  }
+}
+```
+
+#### Pattern 3: Customer ID from Previous Operations
+
+Customer IDs can be extracted from responses of other operations:
+
+```json
+// From subscription response
+{
+  "subscription": {
+    "id": "sub_123",
+    "customer_id": "456789",  // Use this ID for other operations
+    "status": "active"
+  }
+}
+```
+
+### Complete Use Case Examples
+
+#### Use Case 1: Customer Service - View All Customer Information
+
+**Scenario**: Customer calls support, you have their email
+
+```json
+// Step 1: Find customer
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "sarah.smith@example.com"
+  }
+}
+
+// Step 2: Get full customer details (using customer_id from step 1)
+{
+  "name": "get_customer",
+  "arguments": {
+    "customer_id": "345678"
+  }
+}
+
+// Step 3: Get their subscriptions
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "customer_id": "345678",
+    "status": "active"
+  }
+}
+
+// Step 4: Get their addresses
+{
+  "name": "get_addresses",
+  "arguments": {
+    "customer_id": "345678"
+  }
+}
+```
+
+#### Use Case 2: Subscription Management - Skip Next Delivery
+
+**Scenario**: Customer wants to skip their next delivery
+
+```json
+// Step 1: Find customer
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "mike.jones@example.com"
+  }
+}
+
+// Step 2: Get their active subscriptions
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "customer_id": "567890",
+    "status": "active"
+  }
+}
+
+// Step 3: Skip specific subscription (using subscription_id from step 2)
+{
+  "name": "skip_subscription",
+  "arguments": {
+    "subscription_id": "sub_456",
+    "date": "2024-02-15"
+  }
+}
+```
+
+#### Use Case 3: Order Management - Check Recent Orders
+
+**Scenario**: Customer asks about recent order status
+
+```json
+// Step 1: Find customer
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "lisa.brown@example.com"
+  }
+}
+
+// Step 2: Get recent orders
+{
+  "name": "get_orders",
+  "arguments": {
+    "customer_id": "678901",
+    "limit": 5
+  }
+}
+
+// Step 3: Get specific order details (using order_id from step 2)
+{
+  "name": "get_order",
+  "arguments": {
+    "order_id": "order_789"
+  }
+}
+```
+
+#### Use Case 4: Address Management - Update Shipping Address
+
+**Scenario**: Customer moved and needs to update their address
+
+```json
+// Step 1: Find customer
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "tom.wilson@example.com"
+  }
+}
+
+// Step 2: Get current addresses
+{
+  "name": "get_addresses",
+  "arguments": {
+    "customer_id": "789012"
+  }
+}
+
+// Step 3: Update existing address (using address_id from step 2)
+{
+  "name": "update_address",
+  "arguments": {
+    "address_id": "addr_123",
+    "address1": "456 New Street",
+    "city": "New City",
+    "zip": "54321"
+  }
+}
+```
+
+#### Use Case 5: Product Management - Add One-time Product
+
+**Scenario**: Customer wants to add a product to their next delivery
+
+```json
+// Step 1: Find customer
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "anna.davis@example.com"
+  }
+}
+
+// Step 2: Browse available products
+{
+  "name": "get_products",
+  "arguments": {
+    "limit": 20
+  }
+}
+
+// Step 3: Add one-time product (using variant_id from step 2)
+{
+  "name": "create_onetime",
+  "arguments": {
+    "variant_id": 12345,
+    "quantity": 1,
+    "next_charge_scheduled_at": "2024-02-01"
+  }
+}
+```
+
+### Customer ID Best Practices
+
+#### 1. **Always Validate Customer ID**
+```json
+// Good: Verify customer exists before other operations
+{
+  "name": "get_customer",
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+```
+
+#### 2. **Store Customer ID for Session**
+```javascript
+// In your application, store the customer ID for the session
+const customerId = "123456"; // From get_customer_by_email response
+
+// Use throughout the session
+const subscriptions = await callTool("get_subscriptions", { customer_id: customerId });
+const addresses = await callTool("get_addresses", { customer_id: customerId });
+```
+
+#### 3. **Handle Customer Not Found**
+```json
+// If customer doesn't exist, you'll get an error
+{
+  "error": "Customer not found with email: nonexistent@example.com"
+}
+```
+
+### Legacy vs Current Customer IDs
+
+**Important**: Customer IDs in Recharge are:
+- **Numeric strings** (e.g., "123456", "789012")
+- **Unique per store** 
+- **Persistent** (don't change over time)
+- **Different from Shopify customer IDs**
+
+### Basic Operations by Customer ID
+
+Once you have a customer ID, these are the most common operations:
+
 ```json
 {
   "name": "get_subscriptions",
@@ -250,37 +496,40 @@ The Storefront API uses merchant authentication with customer identification. **
 }
 ```
 
-### Update Subscription Frequency
 ```json
 {
-  "name": "update_subscription",
+  "name": "get_orders",
   "arguments": {
-    "subscription_id": "12345",
-    "order_interval_frequency": 2,
-    "order_interval_unit": "month"
+    "customer_id": "123456",
+    "limit": 5
   }
 }
 ```
 
-### Skip Next Delivery
 ```json
 {
-  "name": "skip_subscription",
+  "name": "get_charges",
   "arguments": {
-    "subscription_id": "12345",
-    "date": "2024-02-15"
+    "customer_id": "123456",
+    "status": "success"
   }
 }
 ```
 
-### Add One-time Product
 ```json
 {
-  "name": "create_onetime",
+  "name": "get_addresses",
   "arguments": {
-    "variant_id": 67890,
-    "quantity": 1,
-    "next_charge_scheduled_at": "2024-02-01"
+    "customer_id": "123456"
+  }
+}
+```
+
+```json
+{
+  "name": "get_payment_methods",
+  "arguments": {
+    "customer_id": "123456"
   }
 }
 ```
@@ -413,10 +662,54 @@ This MCP server provides **complete coverage** of the Recharge Storefront API:
 ```
 Error: Missing required parameters: customer_id
 ```
-**Solution**: Customer IDs are NOT environment variables. You must:
+**Solution**: Customer IDs are dynamic parameters, NOT configuration. You must:
 1. Use `get_customer_by_email` to find the customer ID first
 2. Then provide the `customer_id` parameter in subsequent tool calls
-3. Customer IDs are unique Recharge identifiers (e.g., "123456")
+3. Customer IDs are unique Recharge identifiers (e.g., "123456", "789012")
+
+**Example of correct workflow**:
+```json
+// Step 1: Find customer
+{"name": "get_customer_by_email", "arguments": {"email": "user@example.com"}}
+
+// Step 2: Use customer_id from response
+{"name": "get_subscriptions", "arguments": {"customer_id": "123456"}}
+```
+
+#### Invalid Customer ID Format
+```
+Error: Customer not found
+```
+**Solution**: Ensure you're using the correct customer ID format:
+- ✅ Correct: `"123456"` (string of numbers)
+- ❌ Wrong: `123456` (number)
+- ❌ Wrong: `"cust_123456"` (prefixed string)
+- ❌ Wrong: Shopify customer ID instead of Recharge customer ID
+
+#### Customer ID vs Other IDs
+```
+Error: Invalid customer reference
+```
+**Solution**: Don't confuse customer IDs with other ID types:
+- **Customer ID**: `"123456"` - for customer operations
+- **Subscription ID**: `"sub_789"` - for subscription operations  
+- **Order ID**: `"order_456"` - for order operations
+- **Address ID**: `"addr_123"` - for address operations
+
+**Correct usage by operation type**:
+```json
+// Customer operations - use customer_id
+{"name": "get_customer", "arguments": {"customer_id": "123456"}}
+{"name": "get_subscriptions", "arguments": {"customer_id": "123456"}}
+{"name": "get_orders", "arguments": {"customer_id": "123456"}}
+
+// Subscription operations - use subscription_id (no customer_id needed)
+{"name": "get_subscription", "arguments": {"subscription_id": "sub_789"}}
+{"name": "cancel_subscription", "arguments": {"subscription_id": "sub_789"}}
+
+// Order operations - use order_id (no customer_id needed)
+{"name": "get_order", "arguments": {"order_id": "order_456"}}
+```
 
 #### Missing API Token
 ```
