@@ -13,7 +13,7 @@
     "dev": "node --watch src/server.js",
     "dev:debug": "DEBUG=true node --watch src/server.js",
     "build": "npm run validate",
-    "coverage": "node -e \"import('./src/tools/index.js').then(m => { const tools = m.tools; console.log('🔧 API Coverage:', tools.length, 'comprehensive tools'); console.log('📋 Categories covered:'); const categories = {}; tools.forEach(t => { const category = t.name.split('_')[1] || 'general'; categories[category] = (categories[category] || 0) + 1; }); Object.entries(categories).forEach(([cat, count]) => console.log('   ' + cat + ': ' + count + ' tools')); console.log('\\\\n✅ Complete Recharge Storefront API coverage'); });\"",
+    "coverage": "node scripts/coverage.js",
     "docker:build": "docker build -t recharge-storefront-api-mcp:$(npm run version --silent) . && docker tag recharge-storefront-api-mcp:$(npm run version --silent) recharge-storefront-api-mcp:latest",
     "docker:run": "docker compose up -d --build",
     "docker:stop": "docker compose down",
