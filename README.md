@@ -949,6 +949,12 @@ User: "Show me my customer information"
 AI Assistant: I'll retrieve your customer information from Recharge.
 
 Tool Call: get_customer
+### Testing Token Logic
+```bash
+# Test the API key precedence logic
+npm run test:api-keys
+```
+
 Parameters: {}
 
 Response: Customer Information:

@@ -54,22 +54,23 @@ class RechargeMCPServer {
 
   /**
    * Get or create a Recharge client with the appropriate access token
-   * @param {string|undefined} toolAccessToken - Access token from tool call (takes precedence)
+   * @param {string|undefined} toolAccessToken - Access token from tool call (optional, takes precedence over env)
    * @returns {RechargeClient} Configured Recharge client
    * @throws {Error} If no access token is available
    */
   getRechargeClient(toolAccessToken) {
+    // Token precedence: tool parameter > environment variable
     const accessToken = toolAccessToken || this.defaultAccessToken;
     
     if (!accessToken) {
       throw new Error(
-        "No API access token available. Please provide an 'access_token' parameter in your tool call or set the RECHARGE_ACCESS_TOKEN environment variable."
+        "No API access token available. Please provide an 'access_token' parameter in your tool call or set RECHARGE_ACCESS_TOKEN in your environment variables."
       );
     }
 
     if (process.env.DEBUG === 'true') {
       const tokenSource = toolAccessToken ? 'tool parameter' : 'environment variable';
-      console.error(`[DEBUG] Using access token from: ${tokenSource}`);
+      console.error(`[DEBUG] Using access token from: ${tokenSource} (${accessToken.substring(0, 8)}...)`);
     }
 
     // Create a new client instance with the appropriate token
@@ -111,7 +112,7 @@ class RechargeMCPServer {
         const { access_token, ...toolArgs } = validatedArgs;
         
         if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] Tool '${name}' called with access_token: ${access_token ? 'provided' : 'not provided'}`);
+          console.error(`[DEBUG] Tool '${name}' called with access_token: ${access_token ? 'provided' : 'using environment default'}`);
         }
         
         // Get client with token precedence: tool parameter > environment variable

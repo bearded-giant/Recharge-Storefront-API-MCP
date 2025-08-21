@@ -28,7 +28,8 @@
     "clean": "rm -rf node_modules package-lock.json && npm install",
     "health": "node -e \"console.log('Server health check passed')\"",
     "version": "node -p \"require('./package.json').version\"",
-    "mcp:test": "echo '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}' | npm start"
+    "mcp:test": "echo '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}' | npm start",
+    "test:api-keys": "node scripts/test-api-key-logic.js"
   },
   "keywords": [
     "mcp",
