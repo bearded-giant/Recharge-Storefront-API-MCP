@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Optional Recharge API access token (takes precedence over environment variable)'),
 });
 
 const updateCustomerSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Optional Recharge API access token (takes precedence over environment variable)'),
   email: z.string().email().optional().describe('Customer email'),
   first_name: z.string().optional().describe('Customer first name'),
   last_name: z.string().optional().describe('Customer last name'),

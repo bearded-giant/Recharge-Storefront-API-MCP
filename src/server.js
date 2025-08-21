@@ -54,17 +54,22 @@ class RechargeMCPServer {
 
   /**
    * Get or create a Recharge client with the appropriate access token
-   * @param {string|null} toolAccessToken - Access token from tool call (takes precedence)
+   * @param {string|undefined} toolAccessToken - Access token from tool call (takes precedence)
    * @returns {RechargeClient} Configured Recharge client
    * @throws {Error} If no access token is available
    */
-  getRechargeClient(toolAccessToken = null) {
+  getRechargeClient(toolAccessToken) {
     const accessToken = toolAccessToken || this.defaultAccessToken;
     
     if (!accessToken) {
       throw new Error(
-        "No API access token available. Please provide an access_token parameter or set RECHARGE_ACCESS_TOKEN environment variable."
+        "No API access token available. Please provide an 'access_token' parameter in your tool call or set the RECHARGE_ACCESS_TOKEN environment variable."
       );
+    }
+
+    if (process.env.DEBUG === 'true') {
+      const tokenSource = toolAccessToken ? 'tool parameter' : 'environment variable';
+      console.error(`[DEBUG] Using access token from: ${tokenSource}`);
     }
 
     // Create a new client instance with the appropriate token
@@ -102,8 +107,14 @@ class RechargeMCPServer {
         // Validate arguments against schema
         const validatedArgs = tool.inputSchema.parse(args || {});
         
-        // Extract access_token if provided and get appropriate client
+        // Extract access_token from validated args (undefined if not provided)
         const { access_token, ...toolArgs } = validatedArgs;
+        
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Tool '${name}' called with access_token: ${access_token ? 'provided' : 'not provided'}`);
+        }
+        
+        // Get client with token precedence: tool parameter > environment variable
         const rechargeClient = this.getRechargeClient(access_token);
         
         const result = await tool.execute(rechargeClient, toolArgs);
