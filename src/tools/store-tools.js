@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
 });
 
 export const storeTools = [

@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
 });
 
 const markAsReadSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   notificationId: z.string().describe('The notification ID to mark as read'),
 });
 
 const notificationSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   notificationId: z.string().describe('The notification ID'),
 });
 

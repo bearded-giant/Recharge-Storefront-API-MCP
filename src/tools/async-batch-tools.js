@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
 });
 
 const batchSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   batchId: z.string().describe('The async batch ID'),
 });
 
 const createBatchSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   operations: z.array(z.object({
     method: z.enum(['POST', 'PUT', 'DELETE']).describe('HTTP method'),
     path: z.string().describe('API endpoint path'),

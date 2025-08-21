@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
 const onetimeListSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
 });
 
 const onetimeSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   onetimeId: z.string().describe('The one-time product ID'),
 });
 
 const createOnetimeSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   variant_id: z.number().describe('Variant ID'),
   quantity: z.number().describe('Quantity'),
   next_charge_scheduled_at: z.string().describe('When to add this to next charge (YYYY-MM-DD format)'),
@@ -22,7 +22,7 @@ const createOnetimeSchema = z.object({
 });
 
 const updateOnetimeSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   onetimeId: z.string().describe('The one-time product ID'),
   next_charge_scheduled_at: z.string().optional().describe('When to add this to next charge (YYYY-MM-DD format)'),
   quantity: z.number().optional().describe('Quantity'),

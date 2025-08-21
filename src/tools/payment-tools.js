@@ -1,15 +1,15 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
 });
 
 const paymentMethodListSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
 });
 
 const updatePaymentMethodSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   paymentMethodId: z.string().describe('The payment method ID'),
   billing_address1: z.string().optional().describe('Billing address line 1'),
   billing_address2: z.string().optional().describe('Billing address line 2'),
@@ -20,7 +20,7 @@ const updatePaymentMethodSchema = z.object({
 });
 
 const paymentMethodSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   paymentMethodId: z.string().describe('The payment method ID'),
 });
 
