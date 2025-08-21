@@ -186,15 +186,6 @@ export class RechargeClient {
   }
 
   /**
-   * Delete a customer
-   * @returns {Promise<Object>} Deletion result
-   */
-  async deleteCustomer() {
-    return this.makeRequest('DELETE', `/customer`);
-  }
-
-  // Subscription methods
-  /**
    * Get subscriptions with optional filtering
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Subscriptions data
@@ -211,6 +202,17 @@ export class RechargeClient {
   async getSubscription(subscriptionId) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
     return this.makeRequest('GET', `/subscriptions/${subscriptionId}`);
+  }
+
+  /**
+   * Create a new subscription
+   * @param {Object} subscriptionData - Subscription data
+   * @returns {Promise<Object>} Created subscription data
+   */
+  async createSubscription(subscriptionData) {
+    const required = ['address_id', 'next_charge_scheduled_at', 'order_interval_frequency', 'order_interval_unit', 'quantity', 'variant_id'];
+    validateRequiredParams(subscriptionData, required);
+    return this.makeRequest('POST', '/subscriptions', subscriptionData);
   }
 
   /**
@@ -246,16 +248,6 @@ export class RechargeClient {
   async activateSubscription(subscriptionId) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
     return this.makeRequest('POST', `/subscriptions/${subscriptionId}/activate`);
-  }
-
-  /**
-   * Delete a subscription permanently
-   * @param {string} subscriptionId - The subscription ID
-   * @returns {Promise<Object>} Deletion result
-   */
-  async deleteSubscription(subscriptionId) {
-    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('DELETE', `/subscriptions/${subscriptionId}`);
   }
 
   /**

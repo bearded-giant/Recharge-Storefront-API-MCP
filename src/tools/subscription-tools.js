@@ -102,7 +102,16 @@ const createSubscriptionSchema = z.object({
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
+  address_id: z.string().describe('The address ID for the subscription'),
+  next_charge_scheduled_at: z.string().describe('Next charge date (YYYY-MM-DD format)'),
+  order_interval_frequency: z.number().describe('Order interval frequency (e.g., 1, 2, 3)'),
+  order_interval_unit: z.enum(['day', 'week', 'month']).describe('Order interval unit'),
+  quantity: z.number().describe('Subscription quantity'),
+  variant_id: z.number().describe('Product variant ID'),
+  properties: z.array(z.object({
+    name: z.string(),
+    value: z.string(),
+  })).optional().describe('Product properties'),
 });
 
 export const subscriptionTools = [
@@ -123,17 +132,17 @@ export const subscriptionTools = [
     },
   },
   {
-    name: 'delete_subscription',
-    description: 'Delete a subscription permanently',
+    name: 'create_subscription',
+    description: 'Create a new subscription',
     inputSchema: createSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id } = args;
-      const result = await client.deleteSubscription(subscription_id);
+      const { customer_id, session_token, merchant_token, store_url, ...subscriptionData } = args;
+      const subscription = await client.createSubscription(subscriptionData);
       return {
         content: [
           {
             type: 'text',
-            text: `Deleted Subscription:\n${JSON.stringify(result, null, 2)}`,
+            text: `Created Subscription:\n${JSON.stringify(subscription, null, 2)}`,
           },
         ],
       };

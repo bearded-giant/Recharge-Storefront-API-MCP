@@ -242,7 +242,7 @@ The MCP server **automatically creates session tokens** when you provide a `cust
 - `get_customer_by_email` - Find customer by email address
 
 ### Subscription Management
-- `delete_subscription` - Delete a subscription permanently
+- `create_subscription` - Create a new subscription
 - `get_subscriptions` - List customer subscriptions
 - `get_subscription` - Get detailed subscription information
 - `update_subscription` - Modify subscription details
@@ -813,7 +813,7 @@ docker compose logs --tail=100 recharge-storefront-api-mcp
 
 This MCP server provides **complete coverage** of the Recharge Storefront API with **37 tools**:
 
-- ✅ **Customer Management** - Current customer profile operations (4 tools)
+- ✅ **Customer Management** - Current customer profile operations (3 tools)
 - ✅ **Subscription Lifecycle** - Complete subscription management (get, update, cancel, delete)
 - ✅ **Address Management** - Shipping and billing addresses
 - ✅ **Payment Methods** - Payment method management

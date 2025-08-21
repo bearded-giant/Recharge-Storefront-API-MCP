@@ -40,23 +40,6 @@ const customerByEmailSchema = z.object({
 
 export const customerTools = [
   {
-    name: 'create_customer_session_by_id',
-    description: 'Create a customer session using customer ID (requires merchant token)',
-    inputSchema: createSessionByIdSchema,
-    execute: async (client, args) => {
-      const { customer_id, merchant_token, store_url, ...options } = args;
-      const session = await client.createCustomerSessionById(customer_id, options);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Customer Session Created:\n${JSON.stringify(session, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
     name: 'get_customer',
     description: 'Retrieve current customer information',
     inputSchema: customerSchema,
@@ -67,22 +50,6 @@ export const customerTools = [
           {
             type: 'text',
             text: `Customer Information:\n${JSON.stringify(customer, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'delete_customer',
-    description: 'Delete a customer account',
-    inputSchema: baseSchema,
-    execute: async (client, args) => {
-      const result = await client.deleteCustomer();
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Deleted Customer:\n${JSON.stringify(result, null, 2)}`,
           },
         ],
       };
