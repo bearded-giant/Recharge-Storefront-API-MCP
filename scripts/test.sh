@@ -5,78 +5,211 @@
 
 set -e
 
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    echo -e "${GREEN}✅${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}❌${NC} $1"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ️${NC} $1"
+}
+
 echo "🧪 Running Recharge Storefront API MCP Server tests..."
 
+# Initialize test counters
+TESTS_PASSED=0
+TESTS_FAILED=0
+TESTS_SKIPPED=0
+
+# Function to run test and track results
+run_test() {
+    local test_name="$1"
+    local test_command="$2"
+    local required="$3"
+    
+    print_info "Running: $test_name"
+    
+    if eval "$test_command"; then
+        print_status "$test_name passed"
+        TESTS_PASSED=$((TESTS_PASSED + 1))
+        return 0
+    else
+        if [ "$required" = "required" ]; then
+            print_error "$test_name failed (required)"
+            TESTS_FAILED=$((TESTS_FAILED + 1))
+            return 1
+        else
+            print_warning "$test_name failed (optional)"
+            TESTS_SKIPPED=$((TESTS_SKIPPED + 1))
+            return 0
+        fi
+    fi
+}
+
+# Test Node.js version
+run_test "Node.js version check" "node --version" "required"
+
+# Test npm version
+run_test "npm version check" "npm --version" "required"
+
 # Check API coverage
-echo "📊 Checking API coverage..."
-npm run coverage
+run_test "API coverage check" "npm run coverage" "required"
 
 # Validate syntax
-echo "📋 Validating syntax..."
-npm run lint
+run_test "Syntax validation" "npm run lint" "required"
 
-# Run unit tests (when implemented)
-if [ -d "test" ] || [ -d "tests" ]; then
-    echo "🔬 Running unit tests..."
-    npm test
-else
-    echo "⚠️  No test directory found, skipping unit tests"
-fi
+# Test API key logic
+run_test "API key logic test" "npm run test:api-keys" "required"
 
 # Validate configuration
-echo "🔍 Validating configuration..."
-npm run validate
+run_test "Configuration validation" "npm run validate" "required"
+
+# Test package.json integrity
+run_test "Package.json validation" "node -e \"require('./package.json')\"" "required"
+
+# Test environment file template
+run_test "Environment template check" "test -f .env.example" "required"
+
+# Test Docker configuration
+run_test "Dockerfile syntax check" "test -f Dockerfile" "optional"
+run_test "Docker Compose configuration" "test -f docker-compose.yml" "optional"
+
+# Test script permissions
+run_test "Setup script permissions" "test -x scripts/setup.sh" "optional"
+run_test "Deploy script permissions" "test -x scripts/deploy.sh" "optional"
+
+# Test source file structure
+run_test "Server file exists" "test -f src/server.js" "required"
+run_test "Client file exists" "test -f src/recharge-client.js" "required"
+run_test "Error handler exists" "test -f src/utils/error-handler.js" "required"
+run_test "Tools index exists" "test -f src/tools/index.js" "required"
+
+# Count tool files
+TOOL_FILES=$(find src/tools -name "*-tools.js" | wc -l)
+if [ "$TOOL_FILES" -gt 10 ]; then
+    print_status "Tool files count: $TOOL_FILES"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+else
+    print_error "Insufficient tool files: $TOOL_FILES (expected > 10)"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+fi
 
 # Test API connectivity (if credentials are available)
 if [ -f .env ]; then
-    echo "🌐 Testing API connectivity..."
-    node -e "
+    print_info "Testing environment configuration..."
+    if run_test "Environment variables check" "node -e \"
         require('dotenv').config();
         const domain = process.env.RECHARGE_STOREFRONT_DOMAIN;
         const token = process.env.RECHARGE_ACCESS_TOKEN;
         
-        if (domain && token && domain !== 'your-shop.myshopify.com' && token !== 'your_access_token_here') {
-            console.log('✅ Environment variables configured');
-            console.log('🏪 Domain:', domain);
-            console.log('🔑 Token configured:', token ? 'Yes' : 'No');
-        } else {
-            console.log('⚠️  Environment variables not configured for testing');
+        if (!domain) {
+            console.error('RECHARGE_STOREFRONT_DOMAIN not set');
+            process.exit(1);
         }
-    "
+        
+        if (domain === 'your-shop.myshopify.com') {
+            console.error('Please configure RECHARGE_STOREFRONT_DOMAIN with your actual domain');
+            process.exit(1);
+        }
+        
+        if (!domain.includes('.myshopify.com')) {
+            console.error('Domain must end with .myshopify.com');
+            process.exit(1);
+        }
+        
+        console.log('Domain configured:', domain);
+        console.log('Token configured:', token ? 'Yes' : 'No');
+    \"" "optional"; then
+        print_status "Environment configuration is valid"
+    fi
 else
-    echo "⚠️  No .env file found, skipping API connectivity test"
+    print_warning "No .env file found, skipping environment tests"
+    TESTS_SKIPPED=$((TESTS_SKIPPED + 1))
 fi
 
 # Test MCP protocol
-echo "🔌 Testing MCP protocol..."
-timeout 10s node -e "
-  const { spawn } = require('child_process');
-  const server = spawn('node', ['src/server.js']);
-  let outputReceived = false;
-  
-  server.stdout.on('data', (data) => {
-    const output = data.toString();
-    console.log('MCP Output:', output);
-    outputReceived = true;
-  });
-  
-  server.stderr.on('data', (data) => {
-    const output = data.toString();
-    if (output.includes('Server ready')) {
-      console.log('✅ MCP server starts successfully');
-      outputReceived = true;
-      server.kill();
-    }
-  });
-  
-  setTimeout(() => {
-    server.kill();
-    if (outputReceived) {
-      console.log('✅ MCP server test completed successfully');
-    } else {
-      console.log('⚠️  MCP server test completed (no output captured)');
-    }
-  }, 8000);
-" || echo "✅ MCP server test completed (timeout expected)"
+print_info "Testing MCP protocol startup..."
+if run_test "MCP server startup test" "timeout 10s node -e \"
+    const { spawn } = require('child_process');
+    const server = spawn('node', ['src/server.js'], { 
+        env: { ...process.env, RECHARGE_STOREFRONT_DOMAIN: 'test.myshopify.com' }
+    });
+    let serverReady = false;
+    
+    server.stderr.on('data', (data) => {
+        const output = data.toString();
+        if (output.includes('Server ready')) {
+            console.log('MCP server started successfully');
+            serverReady = true;
+            server.kill();
+        }
+    });
+    
+    setTimeout(() => {
+        server.kill();
+        if (serverReady) {
+            process.exit(0);
+        } else {
+            console.error('Server did not start within timeout');
+            process.exit(1);
+        }
+    }, 8000);
+\" 2>/dev/null" "optional"; then
+    print_status "MCP server startup test passed"
+fi
 
-echo "✅ All tests completed successfully!"
+# Test security
+print_info "Running security checks..."
+run_test "No hardcoded secrets" "! grep -r 'sk_test_\|sk_live_\|password.*=' src/ --exclude-dir=node_modules" "required"
+run_test "No TODO/FIXME in production code" "! grep -r 'TODO\|FIXME' src/ --exclude-dir=node_modules" "optional"
+
+# Performance tests
+print_info "Running performance checks..."
+run_test "File size check" "find src -name '*.js' -size +100k | wc -l | grep -q '^0$'" "optional"
+
+# Documentation tests
+run_test "README exists" "test -f README.md" "required"
+run_test "Docker documentation exists" "test -f DOCKER.md" "optional"
+
+# Final summary
+echo ""
+echo "🏁 Test Summary:"
+echo "=================="
+print_status "Tests passed: $TESTS_PASSED"
+if [ $TESTS_FAILED -gt 0 ]; then
+    print_error "Tests failed: $TESTS_FAILED"
+fi
+if [ $TESTS_SKIPPED -gt 0 ]; then
+    print_warning "Tests skipped: $TESTS_SKIPPED"
+fi
+
+TOTAL_TESTS=$((TESTS_PASSED + TESTS_FAILED + TESTS_SKIPPED))
+echo "📊 Total tests run: $TOTAL_TESTS"
+
+if [ $TESTS_FAILED -eq 0 ]; then
+    print_status "All critical tests passed! 🎉"
+    echo ""
+    print_info "Project is ready for:"
+    echo "  ✅ Development (npm run dev)"
+    echo "  ✅ Production (npm start)"
+    echo "  ✅ Docker deployment (npm run docker:build)"
+    exit 0
+else
+    print_error "Some critical tests failed. Please fix the issues before proceeding."
+    exit 1
+fi

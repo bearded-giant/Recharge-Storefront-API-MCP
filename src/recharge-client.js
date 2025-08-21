@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { handleAPIError } from './utils/error-handler.js';
+import { handleAPIError, validateRequiredParams } from './utils/error-handler.js';
 
 /**
  * Recharge Storefront API Client
@@ -18,9 +18,7 @@ export class RechargeClient {
    * @param {string} config.accessToken - Recharge Storefront API access token
    */
   constructor({ domain, accessToken }) {
-    if (!domain || !accessToken) {
-      throw new Error('Both domain and access token are required for RechargeClient initialization');
-    }
+    validateRequiredParams({ domain, accessToken }, ['domain', 'accessToken']);
 
     if (!domain.includes('.myshopify.com')) {
       throw new Error('Domain must be a valid Shopify domain ending with .myshopify.com (e.g., your-shop.myshopify.com)');
@@ -39,18 +37,29 @@ export class RechargeClient {
         'Accept': 'application/json',
         'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
       },
-      timeout: 30000,
+      timeout: 30000, // 30 seconds
+      maxRedirects: 5,
+      validateStatus: (status) => status < 500, // Don't throw for 4xx errors, let our handler deal with them
     });
 
     this.setupInterceptors();
   }
 
+  /**
+   * Setup axios interceptors for logging and error handling
+   */
   setupInterceptors() {
     // Request interceptor for logging
     this.client.interceptors.request.use(
       (config) => {
         if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] ${config.method?.toUpperCase()} ${config.url}`);
+          const sanitizedHeaders = { ...config.headers };
+          if (sanitizedHeaders['X-Recharge-Access-Token']) {
+            sanitizedHeaders['X-Recharge-Access-Token'] = '***';
+          }
+          
+          console.error(`[DEBUG] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+          console.error(`[DEBUG] Headers:`, sanitizedHeaders);
           if (config.data) {
             console.error(`[DEBUG] Request body:`, JSON.stringify(config.data, null, 2));
           }
@@ -64,7 +73,10 @@ export class RechargeClient {
     this.client.interceptors.response.use(
       (response) => {
         if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] Response ${response.status}:`, JSON.stringify(response.data, null, 2));
+          console.error(`[DEBUG] Response ${response.status} from ${response.config.method?.toUpperCase()} ${response.config.url}`);
+          if (response.data) {
+            console.error(`[DEBUG] Response body:`, JSON.stringify(response.data, null, 2));
+          }
         }
         return response;
       },
@@ -74,18 +86,44 @@ export class RechargeClient {
     );
   }
 
+  /**
+   * Make a safe API request with error handling
+   * @param {string} method - HTTP method
+   * @param {string} endpoint - API endpoint
+   * @param {Object} data - Request data
+   * @param {Object} params - Query parameters
+   * @returns {Promise<Object>} API response data
+   */
+  async makeRequest(method, endpoint, data = null, params = null) {
+    try {
+      const config = {
+        method: method.toLowerCase(),
+        url: endpoint,
+      };
+      
+      if (data) {
+        config.data = data;
+      }
+      
+      if (params) {
+        config.params = params;
+      }
+      
+      const response = await this.client.request(config);
+      return response.data;
+    } catch (error) {
+      // Error is already handled by interceptor
+      throw error;
+    }
+  }
+
   // Customer methods
   /**
    * Get current customer information
    * @returns {Promise<Object>} Customer data
    */
   async getCustomer() {
-    try {
-      const response = await this.client.get(`/customer`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/customer');
   }
 
   /**
@@ -94,12 +132,10 @@ export class RechargeClient {
    * @returns {Promise<Object>} Updated customer data
    */
   async updateCustomer(data) {
-    try {
-      const response = await this.client.put(`/customer`, data);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
+    if (!data || Object.keys(data).length === 0) {
+      throw new Error('Customer update data is required');
     }
+    return this.makeRequest('PUT', '/customer', data);
   }
 
   // Subscription methods
@@ -109,12 +145,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Subscriptions data
    */
   async getSubscriptions(params = {}) {
-    try {
-      const response = await this.client.get(`/subscriptions`, { params });
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/subscriptions', null, params);
   }
 
   /**
@@ -123,12 +154,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Subscription data
    */
   async getSubscription(subscriptionId) {
-    try {
-      const response = await this.client.get(`/subscriptions/${subscriptionId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+    return this.makeRequest('GET', `/subscriptions/${subscriptionId}`);
   }
 
   /**
@@ -138,12 +165,11 @@ export class RechargeClient {
    * @returns {Promise<Object>} Updated subscription data
    */
   async updateSubscription(subscriptionId, data) {
-    try {
-      const response = await this.client.put(`/subscriptions/${subscriptionId}`, data);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
+    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+    if (!data || Object.keys(data).length === 0) {
+      throw new Error('Subscription update data is required');
     }
+    return this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, data);
   }
 
   /**
@@ -153,12 +179,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Skip result
    */
   async skipSubscription(subscriptionId, date) {
-    try {
-      const response = await this.client.post(`/subscriptions/${subscriptionId}/skip`, { date });
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/skip`, { date });
   }
 
   /**
@@ -168,12 +190,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Unskip result
    */
   async unskipSubscription(subscriptionId, date) {
-    try {
-      const response = await this.client.post(`/subscriptions/${subscriptionId}/unskip`, { date });
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/unskip`, { date });
   }
 
   /**
@@ -183,12 +201,11 @@ export class RechargeClient {
    * @returns {Promise<Object>} Swap result
    */
   async swapSubscription(subscriptionId, data) {
-    try {
-      const response = await this.client.post(`/subscriptions/${subscriptionId}/swap`, data);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
+    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+    if (!data?.variant_id) {
+      throw new Error('variant_id is required for subscription swap');
     }
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/swap`, data);
   }
 
   /**
@@ -198,12 +215,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Cancellation result
    */
   async cancelSubscription(subscriptionId, data = {}) {
-    try {
-      const response = await this.client.post(`/subscriptions/${subscriptionId}/cancel`, data);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/cancel`, data);
   }
 
   /**
@@ -212,12 +225,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Activation result
    */
   async activateSubscription(subscriptionId) {
-    try {
-      const response = await this.client.post(`/subscriptions/${subscriptionId}/activate`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/activate`);
   }
 
   /**
@@ -227,12 +236,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Pause result
    */
   async pauseSubscription(subscriptionId, data = {}) {
-    try {
-      const response = await this.client.post(`/subscriptions/${subscriptionId}/pause`, data);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/pause`, data);
   }
 
   /**
@@ -241,12 +246,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Resume result
    */
   async resumeSubscription(subscriptionId) {
-    try {
-      const response = await this.client.post(`/subscriptions/${subscriptionId}/resume`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/resume`);
   }
 
   /**
@@ -256,12 +257,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Update result
    */
   async setNextChargeDate(subscriptionId, date) {
-    try {
-      const response = await this.client.post(`/subscriptions/${subscriptionId}/set_next_charge_date`, { date });
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/set_next_charge_date`, { date });
   }
 
   // Address methods
@@ -270,12 +267,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Addresses data
    */
   async getAddresses() {
-    try {
-      const response = await this.client.get(`/addresses`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/addresses');
   }
 
   /**
@@ -284,12 +276,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Address data
    */
   async getAddress(addressId) {
-    try {
-      const response = await this.client.get(`/addresses/${addressId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ addressId }, ['addressId']);
+    return this.makeRequest('GET', `/addresses/${addressId}`);
   }
 
   /**
@@ -298,11 +286,9 @@ export class RechargeClient {
    * @returns {Promise<Object>} Created address data
    */
   async createAddress(addressData) {
-    try {
-      const response = await this.client.post(`/addresses`, addressData);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
+    const required = ['address1', 'city', 'province', 'zip', 'country', 'first_name', 'last_name'];
+    validateRequiredParams(addressData, required);
+    return this.makeRequest('POST', '/addresses', addressData);
     }
   }
 
@@ -313,12 +299,11 @@ export class RechargeClient {
    * @returns {Promise<Object>} Updated address data
    */
   async updateAddress(addressId, addressData) {
-    try {
-      const response = await this.client.put(`/addresses/${addressId}`, addressData);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
+    validateRequiredParams({ addressId }, ['addressId']);
+    if (!addressData || Object.keys(addressData).length === 0) {
+      throw new Error('Address update data is required');
     }
+    return this.makeRequest('PUT', `/addresses/${addressId}`, addressData);
   }
 
   /**
@@ -327,12 +312,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Deletion result
    */
   async deleteAddress(addressId) {
-    try {
-      const response = await this.client.delete(`/addresses/${addressId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ addressId }, ['addressId']);
+    return this.makeRequest('DELETE', `/addresses/${addressId}`);
   }
 
   // Payment method methods
@@ -341,12 +322,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Payment methods data
    */
   async getPaymentMethods() {
-    try {
-      const response = await this.client.get(`/payment_methods`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/payment_methods');
   }
 
   /**
@@ -355,12 +331,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Payment method data
    */
   async getPaymentMethod(paymentMethodId) {
-    try {
-      const response = await this.client.get(`/payment_methods/${paymentMethodId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ paymentMethodId }, ['paymentMethodId']);
+    return this.makeRequest('GET', `/payment_methods/${paymentMethodId}`);
   }
 
   /**
@@ -370,12 +342,11 @@ export class RechargeClient {
    * @returns {Promise<Object>} Updated payment method data
    */
   async updatePaymentMethod(paymentMethodId, paymentData) {
-    try {
-      const response = await this.client.put(`/payment_methods/${paymentMethodId}`, paymentData);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
+    validateRequiredParams({ paymentMethodId }, ['paymentMethodId']);
+    if (!paymentData || Object.keys(paymentData).length === 0) {
+      throw new Error('Payment method update data is required');
     }
+    return this.makeRequest('PUT', `/payment_methods/${paymentMethodId}`, paymentData);
   }
 
   // Discount methods
@@ -384,12 +355,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Discounts data
    */
   async getDiscounts() {
-    try {
-      const response = await this.client.get(`/discounts`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/discounts');
   }
 
   /**
@@ -398,12 +364,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Discount data
    */
   async getDiscount(discountId) {
-    try {
-      const response = await this.client.get(`/discounts/${discountId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ discountId }, ['discountId']);
+    return this.makeRequest('GET', `/discounts/${discountId}`);
   }
 
   /**
@@ -412,12 +374,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Applied discount data
    */
   async applyDiscount(discountCode) {
-    try {
-      const response = await this.client.post(`/discounts`, { discount_code: discountCode });
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ discountCode }, ['discountCode']);
+    return this.makeRequest('POST', '/discounts', { discount_code: discountCode });
   }
 
   /**
@@ -426,12 +384,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Removal result
    */
   async removeDiscount(discountId) {
-    try {
-      const response = await this.client.delete(`/discounts/${discountId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ discountId }, ['discountId']);
+    return this.makeRequest('DELETE', `/discounts/${discountId}`);
   }
 
   // Product methods
@@ -441,12 +395,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Products data
    */
   async getProducts(params = {}) {
-    try {
-      const response = await this.client.get('/products', { params });
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/products', null, params);
   }
 
   /**
@@ -455,12 +404,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Product data
    */
   async getProduct(productId) {
-    try {
-      const response = await this.client.get(`/products/${productId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ productId }, ['productId']);
+    return this.makeRequest('GET', `/products/${productId}`);
   }
 
   // One-time product methods
@@ -469,12 +414,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} One-time products data
    */
   async getOnetimes() {
-    try {
-      const response = await this.client.get(`/onetimes`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/onetimes');
   }
 
   /**
@@ -483,12 +423,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} One-time product data
    */
   async getOnetime(onetimeId) {
-    try {
-      const response = await this.client.get(`/onetimes/${onetimeId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ onetimeId }, ['onetimeId']);
+    return this.makeRequest('GET', `/onetimes/${onetimeId}`);
   }
 
   /**
@@ -497,12 +433,9 @@ export class RechargeClient {
    * @returns {Promise<Object>} Created one-time product data
    */
   async createOnetime(onetimeData) {
-    try {
-      const response = await this.client.post(`/onetimes`, onetimeData);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    const required = ['variant_id', 'quantity', 'next_charge_scheduled_at'];
+    validateRequiredParams(onetimeData, required);
+    return this.makeRequest('POST', '/onetimes', onetimeData);
   }
 
   /**
@@ -512,12 +445,11 @@ export class RechargeClient {
    * @returns {Promise<Object>} Updated one-time product data
    */
   async updateOnetime(onetimeId, onetimeData) {
-    try {
-      const response = await this.client.put(`/onetimes/${onetimeId}`, onetimeData);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
+    validateRequiredParams({ onetimeId }, ['onetimeId']);
+    if (!onetimeData || Object.keys(onetimeData).length === 0) {
+      throw new Error('One-time product update data is required');
     }
+    return this.makeRequest('PUT', `/onetimes/${onetimeId}`, onetimeData);
   }
 
   /**
@@ -526,12 +458,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Deletion result
    */
   async deleteOnetime(onetimeId) {
-    try {
-      const response = await this.client.delete(`/onetimes/${onetimeId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ onetimeId }, ['onetimeId']);
+    return this.makeRequest('DELETE', `/onetimes/${onetimeId}`);
   }
 
   // Bundle selection methods
@@ -540,12 +468,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Bundle selections data
    */
   async getBundleSelections() {
-    try {
-      const response = await this.client.get(`/bundle_selections`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/bundle_selections');
   }
 
   /**
@@ -554,12 +477,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Bundle selection data
    */
   async getBundleSelection(bundleSelectionId) {
-    try {
-      const response = await this.client.get(`/bundle_selections/${bundleSelectionId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
+    return this.makeRequest('GET', `/bundle_selections/${bundleSelectionId}`);
   }
 
   /**
@@ -568,12 +487,9 @@ export class RechargeClient {
    * @returns {Promise<Object>} Created bundle selection data
    */
   async createBundleSelection(bundleSelectionData) {
-    try {
-      const response = await this.client.post(`/bundle_selections`, bundleSelectionData);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    const required = ['bundle_id', 'variant_selections'];
+    validateRequiredParams(bundleSelectionData, required);
+    return this.makeRequest('POST', '/bundle_selections', bundleSelectionData);
   }
 
   /**
@@ -583,12 +499,11 @@ export class RechargeClient {
    * @returns {Promise<Object>} Updated bundle selection data
    */
   async updateBundleSelection(bundleSelectionId, bundleSelectionData) {
-    try {
-      const response = await this.client.put(`/bundle_selections/${bundleSelectionId}`, bundleSelectionData);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
+    validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
+    if (!bundleSelectionData || Object.keys(bundleSelectionData).length === 0) {
+      throw new Error('Bundle selection update data is required');
     }
+    return this.makeRequest('PUT', `/bundle_selections/${bundleSelectionId}`, bundleSelectionData);
   }
 
   /**
@@ -597,12 +512,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Deletion result
    */
   async deleteBundleSelection(bundleSelectionId) {
-    try {
-      const response = await this.client.delete(`/bundle_selections/${bundleSelectionId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
+    return this.makeRequest('DELETE', `/bundle_selections/${bundleSelectionId}`);
   }
 
   // Delivery schedule methods
@@ -611,12 +522,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Delivery schedule data
    */
   async getDeliverySchedule() {
-    try {
-      const response = await this.client.get(`/delivery_schedule`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/delivery_schedule');
   }
 
   // Store methods
@@ -625,12 +531,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Store data
    */
   async getStore() {
-    try {
-      const response = await this.client.get(`/store`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/store');
   }
 
   // Settings methods
@@ -639,12 +540,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Settings data
    */
   async getSettings() {
-    try {
-      const response = await this.client.get(`/settings`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/settings');
   }
 
   /**
@@ -653,12 +549,10 @@ export class RechargeClient {
    * @returns {Promise<Object>} Updated settings data
    */
   async updateSettings(settingsData) {
-    try {
-      const response = await this.client.put(`/settings`, settingsData);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
+    if (!settingsData || Object.keys(settingsData).length === 0) {
+      throw new Error('Settings update data is required');
     }
+    return this.makeRequest('PUT', '/settings', settingsData);
   }
 
   // Session methods
@@ -668,12 +562,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Session data
    */
   async createSession(email) {
-    try {
-      const response = await this.client.post(`/sessions`, { email });
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ email }, ['email']);
+    return this.makeRequest('POST', '/sessions', { email });
   }
 
   /**
@@ -681,12 +571,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Session validation data
    */
   async validateSession() {
-    try {
-      const response = await this.client.get(`/sessions/validate`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/sessions/validate');
   }
 
   /**
@@ -694,12 +579,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Session destruction result
    */
   async destroySession() {
-    try {
-      const response = await this.client.delete(`/sessions`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('DELETE', '/sessions');
   }
 
   // Async batch methods
@@ -709,12 +589,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Batch data
    */
   async getAsyncBatch(batchId) {
-    try {
-      const response = await this.client.get(`/async_batches/${batchId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ batchId }, ['batchId']);
+    return this.makeRequest('GET', `/async_batches/${batchId}`);
   }
 
   /**
@@ -723,12 +599,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Created batch data
    */
   async createAsyncBatch(batchData) {
-    try {
-      const response = await this.client.post(`/async_batches`, batchData);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams(batchData, ['operations']);
+    return this.makeRequest('POST', '/async_batches', batchData);
   }
 
   // Shopify connector methods
@@ -737,12 +609,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Connector data
    */
   async getShopifyConnector() {
-    try {
-      const response = await this.client.get(`/shopify_connector`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/shopify_connector');
   }
 
   /**
@@ -751,12 +618,10 @@ export class RechargeClient {
    * @returns {Promise<Object>} Updated connector data
    */
   async updateShopifyConnector(connectorData) {
-    try {
-      const response = await this.client.put(`/shopify_connector`, connectorData);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
+    if (!connectorData || Object.keys(connectorData).length === 0) {
+      throw new Error('Shopify connector update data is required');
     }
+    return this.makeRequest('PUT', '/shopify_connector', connectorData);
   }
 
   // Notification methods
@@ -765,12 +630,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Notifications data
    */
   async getNotifications() {
-    try {
-      const response = await this.client.get(`/notifications`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/notifications');
   }
 
   /**
@@ -779,12 +639,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Notification data
    */
   async getNotification(notificationId) {
-    try {
-      const response = await this.client.get(`/notifications/${notificationId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ notificationId }, ['notificationId']);
+    return this.makeRequest('GET', `/notifications/${notificationId}`);
   }
 
   /**
@@ -793,12 +649,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Mark as read result
    */
   async markNotificationAsRead(notificationId) {
-    try {
-      const response = await this.client.put(`/notifications/${notificationId}/mark_as_read`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ notificationId }, ['notificationId']);
+    return this.makeRequest('PUT', `/notifications/${notificationId}/mark_as_read`);
   }
 
   // Order methods
@@ -808,12 +660,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Orders data
    */
   async getOrders(params = {}) {
-    try {
-      const response = await this.client.get(`/orders`, { params });
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/orders', null, params);
   }
 
   /**
@@ -822,12 +669,8 @@ export class RechargeClient {
    * @returns {Promise<Object>} Order data
    */
   async getOrder(orderId) {
-    try {
-      const response = await this.client.get(`/orders/${orderId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ orderId }, ['orderId']);
+    return this.makeRequest('GET', `/orders/${orderId}`);
   }
 
   // Charge methods
@@ -837,12 +680,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Charges data
    */
   async getCharges(params = {}) {
-    try {
-      const response = await this.client.get(`/charges`, { params });
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    return this.makeRequest('GET', '/charges', null, params);
   }
 
   /**
@@ -851,11 +689,7 @@ export class RechargeClient {
    * @returns {Promise<Object>} Charge data
    */
   async getCharge(chargeId) {
-    try {
-      const response = await this.client.get(`/charges/${chargeId}`);
-      return response.data;
-    } catch (error) {
-      handleAPIError(error);
-    }
+    validateRequiredParams({ chargeId }, ['chargeId']);
+    return this.makeRequest('GET', `/charges/${chargeId}`);
   }
 }
