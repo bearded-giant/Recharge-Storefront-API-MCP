@@ -38,6 +38,13 @@ const customerByEmailSchema = z.object({
   email: z.string().email().describe('Customer email address'),
 });
 
+const createSessionByIdSchema = z.object({
+  merchant_token: z.string().optional().describe('Recharge merchant token (required for session creation unless set in environment)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().describe('Customer ID'),
+  return_url: z.string().optional().describe('URL to redirect to after session creation'),
+});
+
 export const customerTools = [
   {
     name: 'get_customer',
@@ -84,6 +91,23 @@ export const customerTools = [
           {
             type: 'text',
             text: `Customer by Email:\n${JSON.stringify(customer, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'create_customer_session_by_id',
+    description: 'Create a customer session using customer ID (requires merchant token)',
+    inputSchema: createSessionByIdSchema,
+    execute: async (client, args) => {
+      const { customer_id, return_url } = args;
+      const session = await client.createCustomerSessionById(customer_id, { return_url });
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Created Customer Session:\n${JSON.stringify(session, null, 2)}`,
           },
         ],
       };

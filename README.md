@@ -235,7 +235,8 @@ The MCP server **automatically creates session tokens** when you provide a `cust
 ```
 
 ### Customer Management
-- `get_customer` - Retrieve current customer information  
+- `get_customer` - Retrieve current customer information
+- `create_customer_session_by_id` - Create customer session using customer ID (requires merchant token)
 - `update_customer` - Update current customer profile
 - `get_customer_by_email` - Find customer by email address
 
@@ -809,9 +810,9 @@ docker compose logs --tail=100 recharge-storefront-api-mcp
 
 ## API Coverage
 
-This MCP server provides **complete coverage** of the Recharge Storefront API with **32 tools**:
+This MCP server provides **complete coverage** of the Recharge Storefront API with **33 tools**:
 
-- ✅ **Customer Management** - Current customer profile operations (3 tools)
+- ✅ **Customer Management** - Current customer profile operations (4 tools)
 - ✅ **Subscription Lifecycle** - Complete subscription management (10 tools)
 - ✅ **Address Management** - Shipping and billing addresses (5 tools)
 - ✅ **Payment Methods** - Payment method management (3 tools)
