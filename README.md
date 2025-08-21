@@ -90,7 +90,9 @@ To use this MCP server, you need a Recharge API access token:
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
+**Note**: Customer IDs are NOT configured as environment variables. They are provided as parameters in individual tool calls.
 
+*Conditional: Required unless provided as parameters in individual tool calls.
 ### Authentication Configuration
 
 The server supports flexible authentication configuration:
@@ -100,37 +102,25 @@ The server supports flexible authentication configuration:
 
 ### Customer Identification
 
-The Storefront API uses merchant authentication with customer identification:
+The Storefront API uses merchant authentication with customer identification. **Customer IDs are NOT configured in environment variables** - they are provided as parameters in individual tool calls:
 
-1. **Merchant Authentication**: Use your API access token
-2. **Customer Identification**: Provide customer_id for customer-scoped operations
-3. **Find Customers**: Use email lookup to find customer IDs
+1. **Merchant Authentication**: Configure your API access token in environment variables or provide per-tool
+2. **Customer Identification**: Provide `customer_id` as a parameter in each tool call that requires it
+3. **Find Customers**: Use the `get_customer_by_email` tool to find customer IDs when you only have email addresses
 
-Example workflow:
+### Customer ID Workflow Examples
+
+**Step 1: Find Customer ID by Email**
 ```json
 {
   "name": "get_customer_by_email",
   "arguments": {
-    "store_url": "your-shop.myshopify.com",
-    "access_token": "your_access_token",
     "email": "customer@example.com"
   }
 }
 ```
 
-Then use the customer ID:
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "access_token": "your_access_token",
-    "customer_id": "123456",
-    "status": "active"
-  }
-}
-```
-
-Example using environment variables:
+**Step 2: Use Customer ID in Subsequent Calls**
 ```json
 {
   "name": "get_subscriptions",
@@ -141,6 +131,24 @@ Example using environment variables:
 }
 ```
 
+**Alternative: Direct Customer ID Usage (if known)**
+```json
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "customer_id": "123456",
+    "status": "active"
+  }
+}
+```
+
+### Important Notes About Customer IDs
+
+- **Customer IDs are NOT environment variables** - they are dynamic parameters
+- **Each customer operation requires a customer_id parameter**
+- **Customer IDs are unique identifiers** returned by Recharge (e.g., "123456", "789012")
+- **Use `get_customer_by_email` first** if you only have the customer's email address
+- **Customer IDs are different from Shopify customer IDs** - use Recharge's customer IDs
 ## Available Tools
 
 ### Customer Management
@@ -196,12 +204,45 @@ Example using environment variables:
 
 ## Usage Examples
 
+### Finding and Using Customer IDs
+
+**Step 1: Find Customer by Email**
+```json
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "john.doe@example.com"
+  }
+}
+```
+
+**Response will include customer ID:**
+```json
+{
+  "customer": {
+    "id": "123456",
+    "email": "john.doe@example.com",
+    "first_name": "John",
+    "last_name": "Doe"
+  }
+}
+```
+
+**Step 2: Use Customer ID in Other Operations**
+```json
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+```
+
 ### Basic Subscription Management
 ```json
 {
   "name": "get_subscriptions",
   "arguments": {
-    "access_token": "your_access_token",
     "customer_id": "123456",
     "status": "active",
     "limit": 10
@@ -214,7 +255,6 @@ Example using environment variables:
 {
   "name": "update_subscription",
   "arguments": {
-    "access_token": "your_access_token",
     "subscription_id": "12345",
     "order_interval_frequency": 2,
     "order_interval_unit": "month"
@@ -227,7 +267,6 @@ Example using environment variables:
 {
   "name": "skip_subscription",
   "arguments": {
-    "access_token": "your_access_token",
     "subscription_id": "12345",
     "date": "2024-02-15"
   }
@@ -239,7 +278,6 @@ Example using environment variables:
 {
   "name": "create_onetime",
   "arguments": {
-    "access_token": "your_access_token",
     "variant_id": 67890,
     "quantity": 1,
     "next_charge_scheduled_at": "2024-02-01"
@@ -370,6 +408,15 @@ This MCP server provides **complete coverage** of the Recharge Storefront API:
 ## Troubleshooting
 
 ### Common Issues
+
+#### Customer ID Confusion
+```
+Error: Missing required parameters: customer_id
+```
+**Solution**: Customer IDs are NOT environment variables. You must:
+1. Use `get_customer_by_email` to find the customer ID first
+2. Then provide the `customer_id` parameter in subsequent tool calls
+3. Customer IDs are unique Recharge identifiers (e.g., "123456")
 
 #### Missing API Token
 ```
