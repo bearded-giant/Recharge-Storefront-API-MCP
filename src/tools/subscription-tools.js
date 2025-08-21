@@ -78,6 +78,12 @@ const pauseSubscriptionSchema = z.object({
   pause_reason: z.string().optional().describe('Reason for pausing the subscription'),
 });
 
+const activateSubscriptionSchema = z.object({
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscriptionId: z.string().describe('The subscription ID'),
+});
+
 const resumeSubscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -206,7 +212,7 @@ export const subscriptionTools = [
   {
     name: 'activate_subscription',
     description: 'Activate a cancelled subscription',
-    inputSchema: subscriptionSchema,
+    inputSchema: activateSubscriptionSchema,
     execute: async (client, args) => {
       const { subscriptionId } = args;
       const activatedSubscription = await client.activateSubscription(subscriptionId);

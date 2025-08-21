@@ -68,11 +68,13 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `RECHARGE_STOREFRONT_DOMAIN` | Yes | Your Shopify domain | `shop.myshopify.com` |
+| `RECHARGE_STOREFRONT_DOMAIN` | No* | Your Shopify domain | `shop.myshopify.com` |
 | `RECHARGE_ACCESS_TOKEN` | No | Default API token | `sk_test_...` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
+
+*Required if not provided in individual tool calls
 
 ### Authentication Options
 

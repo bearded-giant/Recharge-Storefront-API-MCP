@@ -192,7 +192,9 @@ export function formatErrorResponse(error) {
  */
 export function validateRequiredParams(params, required) {
   const missing = required.filter(param => 
-    params[param] === undefined || params[param] === null || params[param] === ''
+    params[param] === undefined || 
+    params[param] === null || 
+    (typeof params[param] === 'string' && params[param].trim() === '')
   );
   
   if (missing.length > 0) {
