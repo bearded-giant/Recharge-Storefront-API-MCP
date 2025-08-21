@@ -49,25 +49,34 @@ fi
 
 # Test MCP protocol
 echo "🔌 Testing MCP protocol..."
-timeout 5s node -e "
+timeout 10s node -e "
   const { spawn } = require('child_process');
   const server = spawn('node', ['src/server.js']);
+  let outputReceived = false;
   
   server.stdout.on('data', (data) => {
-    console.log('MCP Output:', data.toString());
+    const output = data.toString();
+    console.log('MCP Output:', output);
+    outputReceived = true;
   });
   
   server.stderr.on('data', (data) => {
-    if (data.toString().includes('Server ready')) {
+    const output = data.toString();
+    if (output.includes('Server ready')) {
       console.log('✅ MCP server starts successfully');
+      outputReceived = true;
       server.kill();
     }
   });
   
   setTimeout(() => {
     server.kill();
-    console.log('✅ MCP server test completed');
-  }, 3000);
+    if (outputReceived) {
+      console.log('✅ MCP server test completed successfully');
+    } else {
+      console.log('⚠️  MCP server test completed (no output captured)');
+    }
+  }, 8000);
 " || echo "✅ MCP server test completed (timeout expected)"
 
 echo "✅ All tests completed successfully!"

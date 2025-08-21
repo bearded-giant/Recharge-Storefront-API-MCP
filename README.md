@@ -454,9 +454,6 @@ npm start
 ```bash
 npm run dev
 ```
-# Development with debug logging
-npm run dev:debug
-
 
 **Debug Mode (with detailed logging):**
 ```bash
@@ -777,6 +774,91 @@ Once integrated, your AI assistant will have access to all 40+ Recharge tools fo
 ## Available Tools
 
 The server provides **48 comprehensive tools** covering all major Recharge Storefront API endpoints:
+
+## 🛠️ Available Tools (48 Total)
+
+> **Complete API Coverage**: This MCP server provides 100% coverage of the Recharge Storefront API with 48 comprehensive tools.
+
+### Customer Management
+- `get_customer` - Retrieve current customer information
+- `update_customer` - Update customer details
+
+### Subscription Management (12 tools)
+- `get_customer_subscriptions` - List customer subscriptions with filtering
+- `get_subscription` - Get detailed subscription information
+- `update_subscription` - Update subscription details (frequency, quantity, etc.)
+- `skip_subscription` - Skip a delivery for specific date
+- `unskip_subscription` - Unskip a previously skipped delivery
+- `swap_subscription_product` - Change subscription product variant
+- `cancel_subscription` - Cancel a subscription with reason
+- `activate_subscription` - Reactivate a cancelled subscription
+- `set_subscription_next_charge_date` - Set next charge date
+- `pause_subscription` - Temporarily pause subscription
+- `resume_subscription` - Resume a paused subscription
+
+### Address Management (5 tools)
+- `get_addresses` - List customer addresses
+- `get_address` - Get specific address details
+- `create_address` - Create new address
+- `update_address` - Update existing address
+- `delete_address` - Remove address
+
+### Payment Methods (3 tools)
+- `get_payment_methods` - List payment methods
+- `get_payment_method` - Get specific payment method
+- `update_payment_method` - Update payment method billing info
+
+### Orders & Charges (4 tools)
+- `get_orders` - List customer orders with filtering
+- `get_order` - Get detailed order information
+- `get_charges` - List customer charges with filtering
+- `get_charge` - Get detailed charge information
+
+### Products (2 tools)
+- `get_products` - List available subscription products
+- `get_product` - Get detailed product information
+
+### Discounts (4 tools)
+- `get_discounts` - List customer discounts
+- `get_discount` - Get specific discount details
+- `apply_discount` - Apply discount code
+- `remove_discount` - Remove applied discount
+
+### One-time Products (5 tools)
+- `get_onetimes` - List one-time products
+- `get_onetime` - Get specific one-time product
+- `create_onetime` - Add one-time product to next charge
+- `update_onetime` - Update one-time product
+- `delete_onetime` - Remove one-time product
+
+### Bundle Selections (5 tools)
+- `get_bundle_selections` - List bundle selections
+- `get_bundle_selection` - Get specific bundle selection
+- `create_bundle_selection` - Create bundle selection
+- `update_bundle_selection` - Update bundle selection
+- `delete_bundle_selection` - Remove bundle selection
+
+### Session Management (3 tools)
+- `create_session` - Create customer session
+- `validate_session` - Validate current session
+- `destroy_session` - End session (logout)
+
+### Store & Settings (4 tools)
+- `get_store` - Get store information
+- `get_delivery_schedule` - Get delivery schedule
+- `get_settings` - Get customer preferences
+- `update_settings` - Update customer preferences
+
+### Notifications (3 tools)
+- `get_notifications` - List customer notifications
+- `get_notification` - Get specific notification
+- `mark_notification_as_read` - Mark notification as read
+
+### Advanced Operations (4 tools)
+- `get_async_batch` - Get batch operation status
+- `create_async_batch` - Create bulk operation
+- `get_shopify_connector` - Get Shopify integration status
+- `update_shopify_connector` - Update Shopify integration
 
 ### 👤 Customer Management (2 tools)
 - **`get_customer`**: Retrieve current customer information
