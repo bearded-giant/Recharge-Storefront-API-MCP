@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Recharge MCP Server Test Script
+# Recharge Storefront API MCP Server Test Script
 # This script runs comprehensive tests
 
 set -e
 
-echo "🧪 Running Recharge MCP Server tests..."
+echo "🧪 Running Recharge Storefront API MCP Server tests..."
 
 # Check API coverage
 echo "📊 Checking API coverage..."

@@ -2,7 +2,7 @@
 version: '3.8'
 
 services:
-  recharge-mcp-server:
+  recharge-storefront-api-mcp:
     build:
       context: .
       dockerfile: Dockerfile

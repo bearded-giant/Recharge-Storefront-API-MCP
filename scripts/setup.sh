@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Recharge MCP Server Setup Script
+# Recharge Storefront API MCP Server Setup Script
 # This script sets up the development environment
 
 set -e
 
-echo "🚀 Setting up Recharge MCP Server..."
+echo "🚀 Setting up Recharge Storefront API MCP Server..."
 
 # Check Node.js version
 echo "📋 Checking Node.js version..."

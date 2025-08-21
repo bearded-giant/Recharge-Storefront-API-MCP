@@ -15,7 +15,7 @@ import { tools } from "./tools/index.js";
 // Load environment variables
 dotenv.config();
 
-class RechargeMCPServer {
+class RechargeStorefrontAPIMCPServer {
   constructor() {
     // Validate required domain (always required)
     const domain = process.env.RECHARGE_STOREFRONT_DOMAIN;
@@ -35,7 +35,7 @@ class RechargeMCPServer {
 
     this.server = new Server(
       {
-        name: process.env.MCP_SERVER_NAME || "recharge-mcp-server",
+        name: process.env.MCP_SERVER_NAME || "recharge-storefront-api-mcp",
         version: process.env.MCP_SERVER_VERSION || "1.0.0",
       },
       {
@@ -162,7 +162,7 @@ class RechargeMCPServer {
     const hasDefaultToken = this.defaultAccessToken ? 'Yes' : 'No (will require token in tool calls)';
     const toolCount = tools.length;
     
-    console.error(`🚀 Recharge MCP Server v${version} running on stdio`);
+    console.error(`🚀 Recharge Storefront API MCP Server v${version} running on stdio`);
     console.error(`🏪 Connected to: ${this.domain}`);
     console.error(`🔑 Default token configured: ${hasDefaultToken}`);
     console.error(`🛠️  Available tools: ${toolCount}`);
@@ -176,5 +176,5 @@ class RechargeMCPServer {
   }
 }
 
-const server = new RechargeMCPServer();
+const server = new RechargeStorefrontAPIMCPServer();
 server.run().catch(console.error);

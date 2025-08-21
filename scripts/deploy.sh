@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Recharge MCP Server Deployment Script
+# Recharge Storefront API MCP Server Deployment Script
 # This script handles deployment to various environments
 
 set -e
@@ -8,7 +8,7 @@ set -e
 ENVIRONMENT=${1:-production}
 VERSION=$(node -p "require('./package.json').version")
 
-echo "🚀 Deploying Recharge MCP Server v$VERSION to $ENVIRONMENT..."
+echo "🚀 Deploying Recharge Storefront API MCP Server v$VERSION to $ENVIRONMENT..."
 
 # Validate environment
 case $ENVIRONMENT in
@@ -28,8 +28,8 @@ npm run validate
 
 # Build Docker image
 echo "🐳 Building Docker image..."
-docker build -t recharge-mcp-server:$VERSION .
-docker tag recharge-mcp-server:$VERSION recharge-mcp-server:latest
+docker build -t recharge-storefront-api-mcp:$VERSION .
+docker tag recharge-storefront-api-mcp:$VERSION recharge-storefront-api-mcp:latest
 
 # Deploy based on environment
 case $ENVIRONMENT in
@@ -53,6 +53,6 @@ docker-compose ps
 
 echo ""
 echo "🔗 Useful commands:"
-echo "  View logs: docker-compose logs -f recharge-mcp-server"
+echo "  View logs: docker-compose logs -f recharge-storefront-api-mcp"
 echo "  Stop: docker-compose down"
-echo "  Restart: docker-compose restart recharge-mcp-server"
+echo "  Restart: docker-compose restart recharge-storefront-api-mcp"

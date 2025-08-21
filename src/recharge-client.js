@@ -37,7 +37,7 @@ export class RechargeClient {
         'X-Recharge-Access-Token': accessToken,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': `Recharge-MCP-Server/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
+        'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
       },
       timeout: 30000,
     });
