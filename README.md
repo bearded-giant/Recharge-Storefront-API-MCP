@@ -320,7 +320,7 @@ docker build -t recharge-mcp-server .
 docker-compose up -d
 
 # View logs
-docker-compose logs -f recharge-mcp-server
+docker-compose logs -f recharge-storefront-api-mcp
 
 # Stop and remove containers
 docker-compose down

@@ -348,5 +348,3 @@ jobs:
           echo "${{ secrets.ENV_PROD }}" > .env
           ./scripts/deploy.sh production
 ```
-
-This comprehensive Docker deployment guide provides everything needed to deploy and manage the Recharge Storefront API MCP Server in containerized environments.

@@ -14,10 +14,10 @@
     "dev:debug": "DEBUG=true node --watch src/server.js",
     "build": "echo 'No build step required for Node.js project'",
     "coverage": "node -e \"const tools = require('./src/tools/index.js').tools; console.log('API Coverage:', tools.length, 'tools across all Recharge Storefront API endpoints'); console.log('Tools:', tools.map(t => t.name).join(', '));\"",
-    "docker:build": "docker build -t recharge-mcp-server .",
+    "docker:build": "docker build -t recharge-storefront-api-mcp .",
     "docker:run": "docker-compose up -d",
     "docker:stop": "docker-compose down",
-    "docker:logs": "docker-compose logs -f recharge-mcp-server",
+    "docker:logs": "docker-compose logs -f recharge-storefront-api-mcp",
     "setup": "chmod +x scripts/setup.sh && ./scripts/setup.sh",
     "deploy": "chmod +x scripts/deploy.sh && ./scripts/deploy.sh",
     "test": "echo 'Tests will be implemented in future version'",
@@ -59,4 +59,4 @@
   "bugs": {
     "url": "https://github.com/your-username/recharge-storefront-api-mcp/issues"
   },
-  "homepage": "https://github.com/your-username/recharge-mcp-server#readme"
+  "homepage": "https://github.com/your-username/recharge-storefront-api-mcp#readme"
