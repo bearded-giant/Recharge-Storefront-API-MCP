@@ -913,29 +913,35 @@ The server provides **48 comprehensive tools** covering all major Recharge Store
 
 ## 🔑 API Token Management
 
-All tools support flexible API token configuration:
+The server supports flexible token configuration with proper precedence:
 
-### **Token Precedence**
-1. **Tool-level token** (highest priority): `access_token` parameter in tool calls
-2. **Environment variable** (fallback): `RECHARGE_ACCESS_TOKEN` in `.env`
+1. **Tool-level tokens** (highest priority): Pass `access_token` parameter in individual tool calls - takes precedence over environment variable
+2. **Environment variable** (fallback): Set `RECHARGE_ACCESS_TOKEN` in your `.env` file - used when no tool-level token provided
+3. **Error handling**: Clear error message when no token is available from either source
 
-### **Usage Examples**
-
-**Environment Variable (Single-tenant)**:
+### Single-Tenant Setup (Recommended for development)
 ```env
 RECHARGE_ACCESS_TOKEN=sk_test_your_token_here
 ```
 
-**Tool-level Token (Multi-tenant)**:
+### Multi-Tenant Setup (Recommended for production)
 ```javascript
+// Each tool call includes its own token
 {
   "access_token": "sk_test_customer_specific_token",
   "subscriptionId": "12345"
 }
 ```
 
-**Error Handling**:
-- If no token is available in either location, tools return: "No API access token available. Please provide an access_token parameter or set RECHARGE_ACCESS_TOKEN environment variable."
+### Token Precedence Logic
+```javascript
+// The server uses this logic for token selection:
+const effectiveToken = toolCallToken || environmentToken;
+
+if (!effectiveToken) {
+  throw new Error("No API access token available. Please provide an 'access_token' parameter in your tool call or set the RECHARGE_ACCESS_TOKEN environment variable.");
+}
+```
 
 ## 📚 Sample Usage & Examples
 
@@ -949,12 +955,6 @@ User: "Show me my customer information"
 AI Assistant: I'll retrieve your customer information from Recharge.
 
 Tool Call: get_customer
-### Testing Token Logic
-```bash
-# Test the API key precedence logic
-npm run test:api-keys
-```
-
 Parameters: {}
 
 Response: Customer Information:
