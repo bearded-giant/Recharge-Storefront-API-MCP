@@ -913,35 +913,29 @@ The server provides **48 comprehensive tools** covering all major Recharge Store
 
 ## 🔑 API Token Management
 
-The server supports flexible token configuration with proper precedence:
+All tools support flexible API token configuration:
 
-1. **Tool-level tokens** (highest priority): Pass `access_token` parameter in individual tool calls - takes precedence over environment variable
-2. **Environment variable** (fallback): Set `RECHARGE_ACCESS_TOKEN` in your `.env` file - used when no tool-level token provided
-3. **Error handling**: Clear error message when no token is available from either source
+### **Token Precedence**
+1. **Tool-level token** (highest priority): `access_token` parameter in tool calls
+2. **Environment variable** (fallback): `RECHARGE_ACCESS_TOKEN` in `.env`
 
-### Single-Tenant Setup (Recommended for development)
+### **Usage Examples**
+
+**Environment Variable (Single-tenant)**:
 ```env
 RECHARGE_ACCESS_TOKEN=sk_test_your_token_here
 ```
 
-### Multi-Tenant Setup (Recommended for production)
+**Tool-level Token (Multi-tenant)**:
 ```javascript
-// Each tool call includes its own token
 {
   "access_token": "sk_test_customer_specific_token",
   "subscriptionId": "12345"
 }
 ```
 
-### Token Precedence Logic
-```javascript
-// The server uses this logic for token selection:
-const effectiveToken = toolCallToken || environmentToken;
-
-if (!effectiveToken) {
-  throw new Error("No API access token available. Please provide an 'access_token' parameter in your tool call or set the RECHARGE_ACCESS_TOKEN environment variable.");
-}
-```
+**Error Handling**:
+- If no token is available in either location, tools return: "No API access token available. Please provide an access_token parameter or set RECHARGE_ACCESS_TOKEN environment variable."
 
 ## 📚 Sample Usage & Examples
 
@@ -1626,10 +1620,17 @@ RECHARGE_STOREFRONT_DOMAIN=my-store
 
 **Solution**: Provide token via environment variable or tool call:
 ```bash
-# Option 1: Environment variable
-echo "RECHARGE_ACCESS_TOKEN=sk_test_your_token_here" >> .env
+# This error occurs when no token is provided via either method
 
-# Option 2: Per-tool call (see examples above)
+# Solution 1: Set environment variable (used as fallback)
+echo "RECHARGE_ACCESS_TOKEN=your_token_here" >> .env
+
+# Solution 2: Pass token in tool calls (takes precedence)
+# Include access_token parameter in your tool calls
+
+# Verify token precedence is working:
+DEBUG=true npm start
+# Look for: "[DEBUG] Using access token from: tool parameter" or "environment variable"
 ```
 
 **Error**: `API Error (401): Unauthorized`
@@ -1773,10 +1774,17 @@ console.log('Token configured:', !!process.env.RECHARGE_ACCESS_TOKEN);
 #### 4. Test API Connectivity
 
 ```bash
-# Test with curl (replace with your values)
+# Check if token is valid
 curl -H "X-Recharge-Access-Token: YOUR_TOKEN" \
-     -H "Content-Type: application/json" \
-     "https://YOUR_DOMAIN/tools/recurring/portal/customer"
+     "https://your-shop.myshopify.com/tools/recurring/portal/customer"
+
+# Test token precedence
+node -e "
+process.env.RECHARGE_ACCESS_TOKEN='env_token';
+const toolToken = 'tool_token';
+const effective = toolToken || process.env.RECHARGE_ACCESS_TOKEN;
+console.log('Effective token:', effective); // Should show 'tool_token'
+"
 ```
 
 #### 5. Check Tool Execution
