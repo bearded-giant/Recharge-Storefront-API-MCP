@@ -2,7 +2,7 @@
 FROM node:18-alpine
 
 # Install required system packages
-RUN apk add --no-cache grep findutils
+RUN apk add --no-cache grep findutils coreutils
 
 # Set working directory in container
 WORKDIR /app
