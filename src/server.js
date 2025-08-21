@@ -314,7 +314,7 @@ class RechargeStorefrontAPIMCPServer {
     }
     const hasDefaultToken = this.defaultAccessToken ? 'Yes' : 'No (will require access token in tool calls)';
     console.error(`🔑 Default access token: ${hasDefaultToken}`);
-    console.error(`🔑 Authentication: Merchant API tokens with customer identification`);
+    console.error(`🔑 Authentication: Merchant API tokens (no customer sessions required)`);
     console.error(`🛠️  Available tools: ${toolCount}`);
     console.error(`📊 API Coverage: Recharge Storefront API`);
     console.error(`🔌 Transport: stdio`);

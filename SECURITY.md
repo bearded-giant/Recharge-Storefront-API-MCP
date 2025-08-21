@@ -41,7 +41,7 @@ When using this MCP server:
 
 #### Environment Configuration
 - Keep `.env` files out of version control
-- Use different tokens for development and production
+- Use appropriate tokens for development and production environments
 - Implement proper access controls
 
 #### Network Security

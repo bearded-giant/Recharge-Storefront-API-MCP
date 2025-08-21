@@ -100,13 +100,14 @@ The server supports flexible authentication configuration:
 1. **Environment Variables**: Set `RECHARGE_STOREFRONT_DOMAIN` and `RECHARGE_ACCESS_TOKEN`
 2. **Per-Tool Parameters**: Provide `store_url` and `access_token` in individual tool calls if needed
 
-### Customer Identification
+### Authentication Model
 
-The Storefront API uses merchant authentication with customer identification. **Customer IDs are NOT configured in environment variables** - they are provided as parameters in individual tool calls:
+The Storefront API uses **merchant authentication** with **customer identification**:
 
-1. **Merchant Authentication**: Configure your API access token in environment variables or provide per-tool
-2. **Customer Identification**: Provide `customer_id` as a parameter in each tool call that requires it
-3. **Find Customers**: Use the `get_customer_by_email` tool to find customer IDs when you only have email addresses
+1. **Merchant Authentication**: Your API access token authenticates you as the merchant
+2. **Customer Scoping**: Operations are scoped to specific customers using `customer_id` parameters
+3. **No Customer Sessions**: No customer login or session tokens required
+4. **Find Customers**: Use `get_customer_by_email` to find customer IDs when you only have email addresses
 
 ### Customer ID Workflow Examples
 
@@ -608,14 +609,14 @@ DEBUG=true npm start
 ## Security
 
 ### Best Practices
-- **Session Security**: Handle customer session tokens securely
+- **API Token Security**: Keep your merchant API tokens secure
 - **Environment Variables**: Use `.env` files for sensitive data
-- **Access Control**: Implement proper access controls
+- **Customer Privacy**: Only access customer data you're authorized to view
 
 ### Production Security
 - Non-root container user
 - Resource limits and monitoring
-- Secure session token handling
+- Secure API token handling
 - Network isolation options
 
 ## Monitoring and Maintenance
@@ -715,7 +716,10 @@ Error: Invalid customer reference
 ```
 Error: No API access token available
 ```
-**Solution**: Get API token from Recharge merchant portal, then provide `access_token` in tool calls or set `RECHARGE_ACCESS_TOKEN` environment variable.
+**Solution**: 
+1. Get your merchant API token from Recharge merchant portal
+2. Either set `RECHARGE_ACCESS_TOKEN` environment variable
+3. Or provide `access_token` parameter in individual tool calls
 
 #### Invalid Domain
 ```
