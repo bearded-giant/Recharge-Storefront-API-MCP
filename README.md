@@ -83,46 +83,36 @@ Traditional method requiring portal integration:
 
 ### Authentication Configuration Options
 
-### Option 1: Direct Session Creation (Recommended)
+**Important**: Session tokens must be obtained from Recharge's customer portal authentication system before using the MCP server.
 
-Set merchant token in environment, create sessions as needed:
-
+**Option 1: Environment Variables (Recommended)**
 ```bash
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
+RECHARGE_SESSION_TOKEN=session_token_from_customer_portal
 ```
 
-Then create customer sessions:
-
-```json
-{
-  "name": "create_customer_session",
-  "arguments": {
-    "email": "customer@example.com",
-    "password": "customer_password"
-  }
-}
-```
-
-### Option 2: Pre-Generated Session Token
-
-Set session token directly in environment:
-
-```bash
-RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_SESSION_TOKEN=session_token_from_portal
-```
-
-### Option 3: Per-Tool Authentication
-
-Provide authentication in each tool call:
-
+**Option 2: Per-Tool Parameters**
 ```json
 {
   "name": "get_customer",
   "arguments": {
-    "merchant_token": "your_merchant_token",
-    "store_url": "your-shop.myshopify.com"
+    "store_url": "your-shop.myshopify.com",
+    "session_token": "session_token_from_customer_portal"
+  }
+}
+```
+
+**Option 3: Mixed (Environment + Override)**
+```bash
+# Set default in environment
+RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
+RECHARGE_SESSION_TOKEN=customer_a_session_token
+```
+```json
+{
+  "name": "get_customer",
+  "arguments": {
+    "session_token": "customer_b_session_token"
   }
 }
 ```
@@ -171,18 +161,10 @@ To work with multiple customers:
 }
 ```
 
-## Prerequisites and Limitations
+```
 
-### Requirements
-- **Shopify Store**: Must have a Shopify store
-- **Recharge Integration**: Recharge subscription app must be installed and configured
-- **Session Token**: Must have customer session token from Recharge portal login
-- **Server-Side**: This MCP server runs server-side, no browser required
+### Workflow 3: Multi-Customer Support
 
-### Limitations
-- **Session-Based**: All operations are scoped to the customer session
-- **Temporary Tokens**: Session tokens expire and need to be refreshed
-- **Shopify Integration**: Requires Shopify store with Recharge app installed
 
 ### Installation
 
