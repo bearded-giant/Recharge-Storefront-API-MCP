@@ -315,7 +315,6 @@ class RechargeStorefrontAPIMCPServer {
     
     if (process.env.DEBUG === 'true') {
       console.error(`🐛 Debug mode enabled`);
-      console.error(`🔑 Merchant API token authentication`);
       console.error(`📋 Tool list: ${tools.map(t => t.name).join(', ')}`);
       console.error(`📈 Statistics tracking enabled`);
     }

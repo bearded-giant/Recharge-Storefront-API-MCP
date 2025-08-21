@@ -378,7 +378,7 @@ This MCP server provides **complete coverage** of the Recharge Storefront API:
 - ✅ **One-time Products** - Add-on product management
 - ✅ **Discount System** - Coupon and discount management
 
-**Total Tools**: 30+ comprehensive API tools covering all Recharge Storefront endpoints.
+**Total Tools**: 30 comprehensive API tools covering all Recharge Storefront endpoints.
 
 ## Troubleshooting
 
@@ -460,7 +460,7 @@ For issues, questions, or contributions:
 
 ### v1.0.0
 - Initial release with complete Recharge Storefront API coverage
-- 30+ comprehensive API tools
+- 30 comprehensive API tools
 - Flexible authentication system
 - Docker deployment support
 - Comprehensive error handling
