@@ -394,60 +394,48 @@ Some list operations accept customer_id as an optional filter:
     "date": "2024-02-15"
   }
 }
-
-// Step 3: Skip specific subscription
-{
-  "name": "skip_subscription",
-  "arguments": {
-    "session_token": "generated_session_token",
-    "subscription_id": "sub_456",
-    "date": "2024-02-15"
-  }
-}
 ```
 
-#### Use Case 3: Automated Customer Operations
+#### Use Case 3: Order Management - Check Recent Orders
 
-**Scenario**: Automated system processes customer requests
+**Scenario**: Customer checks recent order status in portal
 
 ```json
-// Step 1: Create session for customer
-{
-  "name": "create_customer_session",
-  "arguments": {
-    "email": "customer@example.com",
-    "password": "customer_password"
-  }
-}
-
-// Step 2: Get recent orders
+// Step 1: Get recent orders (token identifies customer)
 {
   "name": "get_orders",
-  "arguments": {
-    "session_token": "generated_session_token"
-  }
-}
-```
-
-#### Use Case 4: Address Management - Update Shipping Address
-
-**Scenario**: Customer updates address in portal
-
-```json
-// Step 1: Get current addresses (token identifies customer)
-{
-  "name": "get_addresses",
   "arguments": {}
 }
 
-// Step 2: Update existing address (using address_id from step 1)
+// Step 2: Get specific order details (using order_id from step 1)
 {
-  "name": "update_address",
+  "name": "get_order",
   "arguments": {
-    "address_id": "addr_123",
-    "address1": "456 New Street",
-    "city": "New City",
-    "zip": "54321"
+    "order_id": "order_789"
+  }
+}
+
+// Step 3: Process orders automatically
+// (Additional logic based on order data)
+```
+
+#### Use Case 4: Multi-Customer Batch Operations
+
+**Scenario**: Process multiple customers with single merchant token
+
+```json
+// Process Customer A
+{
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "customer_a_id"
+  }
+}
+
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "session_token": "customer_a_session_token"
   }
 }
 ```
