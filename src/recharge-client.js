@@ -704,5 +704,3 @@ export class RechargeClient {
   async getCharge(chargeId) {
     validateRequiredParams({ chargeId }, ['chargeId']);
     return this.makeRequest('GET', `/charges/${chargeId}`);
-  }
-}
