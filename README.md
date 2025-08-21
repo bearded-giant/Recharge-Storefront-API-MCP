@@ -97,12 +97,11 @@ This MCP server uses **customer session tokens**, not admin API tokens. The auth
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_ACCESS_TOKEN` | Conditional* | Default API token | `sk_test_...` |
+| `RECHARGE_ACCESS_TOKEN` | Conditional* | Default session token | `session_token_...` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
-*Required unless provided as parameters in individual tool calls
 
 ### Authentication Options
 
