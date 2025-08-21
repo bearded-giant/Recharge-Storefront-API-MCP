@@ -454,6 +454,9 @@ npm start
 ```bash
 npm run dev
 ```
+# Development with debug logging
+npm run dev:debug
+
 
 **Debug Mode (with detailed logging):**
 ```bash
