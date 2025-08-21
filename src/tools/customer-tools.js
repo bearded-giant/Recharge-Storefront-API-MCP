@@ -6,14 +6,6 @@ const baseSchema = z.object({
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
-const createSessionSchema = z.object({
-  merchant_token: z.string().optional().describe('Recharge merchant token (required for session creation unless set in environment)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  email: z.string().email().describe('Customer email address'),
-  password: z.string().describe('Customer password'),
-  return_url: z.string().optional().describe('URL to redirect to after session creation'),
-});
-
 const createSessionByIdSchema = z.object({
   merchant_token: z.string().optional().describe('Recharge merchant token (required for session creation unless set in environment)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -45,23 +37,6 @@ const customerByEmailSchema = z.object({
 });
 
 export const customerTools = [
-  {
-    name: 'create_customer_session',
-    description: 'Create a customer session using email and password (requires merchant token)',
-    inputSchema: createSessionSchema,
-    execute: async (client, args) => {
-      const { merchant_token, store_url, ...credentials } = args;
-      const sessionToken = await client.createCustomerSession(credentials);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Customer Session Created:\nSession Token: ${sessionToken}\n\nYou can now use this token for subsequent API calls.`,
-          },
-        ],
-      };
-    },
-  },
   {
     name: 'create_customer_session_by_id',
     description: 'Create a customer session using customer ID (requires merchant token)',

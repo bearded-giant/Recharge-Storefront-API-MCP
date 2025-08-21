@@ -46,12 +46,12 @@ To use this MCP server, you need a Recharge Storefront API access token:
 
 The Recharge Storefront API supports **two authentication methods**:
 
-### Method 1: Direct Session Creation (Recommended)
+### Method 1: Direct Session Creation by Customer ID (Recommended)
 
-This method allows the MCP server to create customer sessions directly without portal dependency:
+This method allows the MCP server to create customer sessions using customer ID without portal dependency:
 
 1. **Merchant Authentication**: Use merchant token to authenticate with Recharge
-2. **Customer Credentials**: Provide customer email/password or customer ID
+2. **Customer ID**: Provide customer ID (from your customer database)
 3. **Session Creation**: MCP server creates customer session via API
 4. **Token Usage**: Use generated session token for subsequent operations
 5. **Automatic Scoping**: Token automatically scopes to the authenticated customer
@@ -69,7 +69,7 @@ Traditional method requiring portal integration:
 
 | Method | Token Type | Requirements | Portal Dependency | Use Case |
 |--------|------------|--------------|-------------------|----------|
-| **Direct Session** | Merchant + Customer credentials | Merchant token + email/password | ❌ No | Customer service, automation |
+| **Direct Session** | Merchant + Customer ID | Merchant token + customer ID | ❌ No | Customer service, automation |
 | **Portal Session** | Customer session token | Portal integration | ✅ Yes | Customer self-service portals |
 
 ## Getting Your Authentication Tokens
@@ -83,21 +83,22 @@ Traditional method requiring portal integration:
 
 ### Authentication Configuration Options
 
-**Important**: Session tokens must be obtained from Recharge's customer portal authentication system before using the MCP server.
+**Important**: Session tokens can be created directly using merchant token + customer ID, or obtained from Recharge's customer portal.
 
 **Option 1: Environment Variables (Recommended)**
 ```bash
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_SESSION_TOKEN=session_token_from_customer_portal
+RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
 ```
 
 **Option 2: Per-Tool Parameters**
 ```json
 {
-  "name": "get_customer",
+  "name": "create_customer_session_by_id",
   "arguments": {
     "store_url": "your-shop.myshopify.com",
-    "session_token": "session_token_from_customer_portal"
+    "merchant_token": "your_merchant_token_here",
+    "customer_id": "123456"
   }
 }
 ```
@@ -106,13 +107,13 @@ RECHARGE_SESSION_TOKEN=session_token_from_customer_portal
 ```bash
 # Set default in environment
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_SESSION_TOKEN=customer_a_session_token
+RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
 ```
 ```json
 {
-  "name": "get_customer",
+  "name": "create_customer_session_by_id",
   "arguments": {
-    "session_token": "customer_b_session_token"
+    "customer_id": "123456"
   }
 }
 ```
@@ -126,37 +127,37 @@ When you call any tool, the API automatically:
 
 **Example Flow:**
 ```json
-// Session token is automatically scoped to logged-in customer
+// Create session for specific customer
 {
-  "name": "get_subscriptions",
+  "name": "create_customer_session_by_id",
   "arguments": {
-    "session_token": "session_abc123_token"
+    "customer_id": "123456"
   }
 }
-// Returns only subscriptions for the customer who owns this session
+// Returns session token scoped to customer 123456
 ```
 
 ### Multi-Customer Support
 
 To work with multiple customers:
-- Each customer needs their own session token
-- Tokens are generated when customers log into the portal
+- Create session tokens for each customer using their customer ID
+- Use merchant token to create sessions for any customer
 - Switch tokens per customer operation
 
 ```json
-// Customer A's session
+// Create session for Customer A
 {
-  "name": "get_customer",
+  "name": "create_customer_session_by_id",
   "arguments": {
-    "session_token": "customer_a_session_token"
+    "customer_id": "customer_a_id"
   }
 }
 
-// Customer B's session
+// Create session for Customer B
 {
-  "name": "get_customer",
+  "name": "create_customer_session_by_id",
   "arguments": {
-    "session_token": "customer_b_session_token"
+    "customer_id": "customer_b_id"
   }
 }
 ```
@@ -166,11 +167,11 @@ To work with multiple customers:
 ### Requirements
 - **Shopify Store**: Must have a Shopify store
 - **Recharge Integration**: Recharge subscription app must be installed and configured
-- **Session Token**: Must have customer session token from Recharge portal login
+- **Merchant Token**: Must have merchant token with Storefront API permissions
 - **Server-Side**: This MCP server runs server-side, no browser required
 
 ### Limitations
-- **Session-Based**: All operations are scoped to the customer session
+- **Customer ID Required**: Need customer ID to create sessions
 - **Temporary Tokens**: Session tokens expire and need to be refreshed
 - **Shopify Integration**: Requires Shopify store with Recharge app installed
 
@@ -192,10 +193,10 @@ To work with multiple customers:
 3. **Required environment variables:**
    ```bash
    RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required
-   RECHARGE_SESSION_TOKEN=your_session_token_here      # Required*
+   RECHARGE_MERCHANT_TOKEN=your_merchant_token_here    # Required*
    ```
    
-   *Required unless you provide `session_token` parameter in each tool call
+   *Required unless you provide `merchant_token` parameter in each tool call
 
 4. **Start the server:**
    ```bash
@@ -209,7 +210,7 @@ To work with multiple customers:
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_SESSION_TOKEN` | Conditional* | Recharge customer session token | `your_session_token_here` |
+| `RECHARGE_MERCHANT_TOKEN` | Conditional* | Recharge merchant token | `your_merchant_token_here` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
@@ -221,9 +222,10 @@ To work with multiple customers:
 ## Available Tools
 
 ### Customer Management
-- `get_customer` - Retrieve current customer information
-- `delete_customer` - Delete current customer account
+- `create_customer_session_by_id` - Create customer session using customer ID
+- `get_customer` - Retrieve current customer information  
 - `update_customer` - Update current customer profile
+- `delete_customer` - Delete current customer account
 - `get_customer_by_email` - Find customer by email address
 
 ### Subscription Management
@@ -284,52 +286,65 @@ To work with multiple customers:
 
 ## Usage Examples
 
-### Customer ID Usage Patterns
+### Session Creation and Customer Operations
 
-**Important**: The Storefront API is customer-scoped, so you typically don't need customer IDs. However, some operations still use them for filtering or reference:
+**Important**: You need a customer ID to create sessions, but once you have a session token, operations are automatically scoped to that customer:
 
-#### Pattern 1: Get Current Customer (Most Common)
+#### Pattern 1: Create Session and Get Customer Data
 
-The token identifies the customer automatically:
+Create a session for a specific customer, then use the token:
 
 ```json
+// Step 1: Create session (requires customer ID)
+{
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+
+// Step 2: Use the returned session token
 {
   "name": "get_customer",
-  "arguments": {}
+  "arguments": {
+    "session_token": "returned_session_token"
+  }
 }
 ```
 
 **Response:**
 ```json
 {
-  "customer": {
-    "id": "123456",
-    "email": "customer@example.com",
-    "first_name": "John",
-    "last_name": "Doe"
+  "session": {
+    "token": "session_abc123",
+    "customer_id": "123456",
+    "expires_at": "2024-02-01T12:00:00Z"
   }
 }
 ```
 
-#### Pattern 2: Get Customer Data (No Customer ID Needed)
+#### Pattern 2: Use Session Token for Operations
 
-Most operations work without customer ID:
+Once you have a session token, operations are customer-scoped:
 
 ```json
 {
   "name": "get_subscriptions",
-  "arguments": {}
+  "arguments": {
+    "session_token": "session_abc123"
+  }
 }
 ```
 
 #### Pattern 3: Find Customer by Email (Alternative Method)
 
-If you need to verify customer identity:
+If you need to verify customer identity (requires existing session):
 
 ```json
 {
   "name": "get_customer_by_email",
   "arguments": {
+    "session_token": "session_abc123",
     "email": "customer@example.com"
   }
 }
@@ -337,12 +352,13 @@ If you need to verify customer identity:
 
 #### Pattern 4: Optional Customer ID Filtering
 
-Some list operations accept customer_id as an optional filter:
+Some list operations accept customer_id as an optional filter (rarely needed):
 
 ```json
 {
   "name": "get_subscriptions",
   "arguments": {
+    "session_token": "session_abc123",
     "customer_id": "123456",  // Optional filter
     "status": "active"
   }
@@ -351,45 +367,70 @@ Some list operations accept customer_id as an optional filter:
 
 ### Complete Use Case Examples
 
-#### Use Case 1: Customer Service - View All Customer Information
+#### Use Case 1: Customer Service - Create Session and View Information
 
-**Scenario**: Customer logs into portal, token identifies them automatically
+**Scenario**: Customer service agent helps customer using their customer ID
 
 ```json
-// Step 1: Get customer details (token identifies customer)
+// Step 1: Create session for customer
+{
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+
+// Step 2: Get customer details using session token
 {
   "name": "get_customer",
-  "arguments": {}
+  "arguments": {
+    "session_token": "returned_session_token"
+  }
 }
 
-// Step 2: Get their subscriptions
+// Step 3: Get their subscriptions
 {
   "name": "get_subscriptions",
-  "arguments": {}
+  "arguments": {
+    "session_token": "returned_session_token"
+  }
 }
 
-// Step 3: Get their addresses
+// Step 4: Get their addresses
 {
   "name": "get_addresses",
-  "arguments": {}
+  "arguments": {
+    "session_token": "returned_session_token"
+  }
 }
 ```
 
 #### Use Case 2: Subscription Management - Skip Next Delivery
 
-**Scenario**: Customer wants to skip their next delivery (token identifies customer)
+**Scenario**: Customer service helps customer skip delivery
 
 ```json
-// Step 1: Get their active subscriptions
+// Step 1: Create session for customer
 {
-  "name": "get_subscriptions",
-  "arguments": {}
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "123456"
+  }
 }
 
-// Step 2: Skip specific subscription (using subscription_id from step 1)
+// Step 2: Get their active subscriptions
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "session_token": "returned_session_token"
+  }
+}
+
+// Step 3: Skip specific subscription
 {
   "name": "skip_subscription",
   "arguments": {
+    "session_token": "returned_session_token",
     "subscription_id": "sub_456",
     "date": "2024-02-15"
   }
@@ -398,19 +439,30 @@ Some list operations accept customer_id as an optional filter:
 
 #### Use Case 3: Order Management - Check Recent Orders
 
-**Scenario**: Customer checks recent order status in portal
+**Scenario**: Check customer's recent orders
 
 ```json
-// Step 1: Get recent orders (token identifies customer)
+// Step 1: Create session for customer
 {
-  "name": "get_orders",
-  "arguments": {}
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "123456"
+  }
 }
 
-// Step 2: Get specific order details (using order_id from step 1)
+// Step 2: Get recent orders
+{
+  "name": "get_orders",
+  "arguments": {
+    "session_token": "returned_session_token"
+  }
+}
+
+// Step 3: Get specific order details
 {
   "name": "get_order",
   "arguments": {
+    "session_token": "returned_session_token",
     "order_id": "order_789"
   }
 }
@@ -418,19 +470,30 @@ Some list operations accept customer_id as an optional filter:
 
 #### Use Case 4: Address Management - Update Shipping Address
 
-**Scenario**: Customer updates address in portal
+**Scenario**: Update customer's shipping address
 
 ```json
-// Step 1: Get current addresses (token identifies customer)
+// Step 1: Create session for customer
 {
-  "name": "get_addresses",
-  "arguments": {}
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "123456"
+  }
 }
 
-// Step 2: Update existing address (using address_id from step 1)
+// Step 2: Get current addresses
+{
+  "name": "get_addresses",
+  "arguments": {
+    "session_token": "returned_session_token"
+  }
+}
+
+// Step 3: Update existing address
 {
   "name": "update_address",
   "arguments": {
+    "session_token": "returned_session_token",
     "address_id": "addr_123",
     "address1": "456 New Street",
     "city": "New City",
@@ -441,19 +504,30 @@ Some list operations accept customer_id as an optional filter:
 
 #### Use Case 5: Product Management - Add One-time Product
 
-**Scenario**: Customer adds product to next delivery
+**Scenario**: Add product to customer's next delivery
 
 ```json
-// Step 1: Browse available products
+// Step 1: Create session for customer
 {
-  "name": "get_products",
-  "arguments": {}
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "123456"
+  }
 }
 
-// Step 2: Add one-time product (using variant_id from step 1)
+// Step 2: Browse available products
+{
+  "name": "get_products",
+  "arguments": {
+    "session_token": "returned_session_token"
+  }
+}
+
+// Step 3: Add one-time product
 {
   "name": "create_onetime",
   "arguments": {
+    "session_token": "returned_session_token",
     "variant_id": 12345,
     "quantity": 1,
     "next_charge_scheduled_at": "2024-02-01"
@@ -463,75 +537,87 @@ Some list operations accept customer_id as an optional filter:
 
 ### Customer ID Best Practices
 
-#### 1. **Understand Token Scoping**
+#### 1. **Always Create Sessions First**
 ```json
-// Token automatically identifies customer - no ID needed
+// Always start with session creation
 {
-  "name": "get_customer",
-  "arguments": {}
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "123456"
+  }
 }
 ```
 
-#### 2. **Use Customer ID Only When Needed**
+#### 2. **Use Session Tokens for All Operations**
 ```javascript
-// Most operations don't need customer_id
-const customer = await callTool("get_customer", {});
-const subscriptions = await callTool("get_subscriptions", {});
-const addresses = await callTool("get_addresses", {});
+// Create session first, then use token
+const session = await callTool("create_customer_session_by_id", { customer_id: "123456" });
+const customer = await callTool("get_customer", { session_token: session.token });
+const subscriptions = await callTool("get_subscriptions", { session_token: session.token });
 ```
 
 #### 3. **Handle Authentication Errors**
 ```json
-// If token is invalid or expired
+// If session creation fails
 {
-  "error": "Unauthorized: Invalid or expired token"
+  "error": "Customer not found or invalid merchant token"
 }
 ```
 
 ### Token vs Customer ID Relationship
 
-**Important**: In Storefront API:
-- **Token identifies customer** automatically
-- **Customer ID** is returned in responses for reference
-- **No need to provide customer ID** in most requests
-- **Token scope** determines data access
+**Important**: In this implementation:
+- **Customer ID** is required to create sessions
+- **Session token** identifies customer automatically after creation
+- **Merchant token** is required for session creation
+- **Session scope** determines data access
 
 ### Basic Operations (No Customer ID Needed)
 
-These are the most common operations using customer-scoped tokens:
+These operations use customer-scoped session tokens (after session creation):
 
 ```json
 {
   "name": "get_subscriptions",
-  "arguments": {}
+  "arguments": {
+    "session_token": "session_abc123"
+  }
 }
 ```
 
 ```json
 {
   "name": "get_orders",
-  "arguments": {}
+  "arguments": {
+    "session_token": "session_abc123"
+  }
 }
 ```
 
 ```json
 {
   "name": "get_charges",
-  "arguments": {}
+  "arguments": {
+    "session_token": "session_abc123"
+  }
 }
 ```
 
 ```json
 {
   "name": "get_addresses",
-  "arguments": {}
+  "arguments": {
+    "session_token": "session_abc123"
+  }
 }
 ```
 
 ```json
 {
   "name": "get_payment_methods",
-  "arguments": {}
+  "arguments": {
+    "session_token": "session_abc123"
+  }
 }
 ```
 
@@ -656,63 +742,62 @@ This MCP server provides **complete coverage** of the Recharge Storefront API wi
 
 #### Authentication Confusion
 ```
-Error: Unauthorized access
+Error: Customer not found
 ```
-**Solution**: Ensure you're using a valid customer session token:
-1. Customer must be logged into the Recharge portal
-2. Session token is generated automatically during login
-3. Set `RECHARGE_SESSION_TOKEN` environment variable or provide in tool calls
-4. Token must not be expired
+**Solution**: Ensure you're using a valid customer ID and merchant token:
+1. Use a valid customer ID from your customer database
+2. Ensure merchant token has Storefront API permissions
+3. Set `RECHARGE_MERCHANT_TOKEN` environment variable or provide in tool calls
+4. Customer must exist in Recharge system
 
-**Example of correct authentication**:
+**Example of correct session creation**:
 ```json
-{"name": "get_customer", "arguments": {"session_token": "session_token_here"}}
+{"name": "create_customer_session_by_id", "arguments": {"customer_id": "123456"}}
 ```
 
 #### Invalid Token Type
 ```
-Error: Invalid token permissions
+Error: Invalid merchant token
 ```
-**Solution**: Ensure you're using the correct token type:
-- ✅ Correct: Customer session token (Bearer authentication)
-- ❌ Wrong: Admin API token (X-Recharge-Access-Token header)
-- ❌ Wrong: Expired or revoked token
+**Solution**: Ensure you're using the correct merchant token:
+- ✅ Correct: Merchant token with Storefront API permissions
+- ❌ Wrong: Admin API token without Storefront permissions
+- ❌ Wrong: Expired or revoked merchant token
 
 #### Resource Access Issues
 ```
 Error: Resource not found
 ```
-**Solution**: Ensure the resource belongs to the authenticated customer:
-- Storefront API only shows resources for the authenticated customer
+**Solution**: Ensure the resource belongs to the customer session:
+- Create session first using customer ID
+- Use session token for subsequent operations
 - Use correct resource IDs from previous API responses
-- Verify the customer has access to the requested resource
 
 **Correct usage examples**:
 ```json
-// Get current customer info
-{"name": "get_customer", "arguments": {}}
+// Create session first
+{"name": "create_customer_session_by_id", "arguments": {"customer_id": "123456"}}
+
+// Then use session token
+{"name": "get_customer", "arguments": {"session_token": "session_token_here"}}
 
 // Get customer subscriptions
-{"name": "get_subscriptions", "arguments": {}}
+{"name": "get_subscriptions", "arguments": {"session_token": "session_token_here"}}
 
 // Get specific subscription
-{"name": "get_subscription", "arguments": {"subscription_id": "sub_789"}}
-
-// Get specific order
-{"name": "get_order", "arguments": {"order_id": "order_456"}}
+{"name": "get_subscription", "arguments": {"session_token": "session_token_here", "subscription_id": "sub_789"}}
 ```
 
 #### Token Expiration
 ```
 Error: Session token expired
 ```
-**Solution**: Create a new session token:
+**Solution**: Create a new session token using the customer ID:
 ```json
 {
-  "name": "create_customer_session",
+  "name": "create_customer_session_by_id",
   "arguments": {
-    "email": "customer@example.com",
-    "password": "customer_password"
+    "customer_id": "123456"
   }
 }
 ```

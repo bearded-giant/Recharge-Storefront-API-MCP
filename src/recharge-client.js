@@ -56,45 +56,6 @@ export class RechargeClient {
   }
 
   /**
-   * Create a customer session using merchant token and customer credentials
-   * @param {Object} credentials - Customer credentials
-   * @param {string} credentials.email - Customer email
-   * @param {string} credentials.password - Customer password
-   * @returns {Promise<string>} Session token
-   */
-  async createCustomerSession(credentials) {
-    if (!this.merchantToken) {
-      throw new Error('Merchant token required for session creation');
-    }
-    
-    validateRequiredParams(credentials, ['email', 'password']);
-    
-    try {
-      const response = await this.makeRequest('POST', '/api/v1/sessions', {
-        email: credentials.email,
-        password: credentials.password,
-        return_url: credentials.return_url || null
-      });
-      
-      if (response.session && response.session.token) {
-        // Update client to use the new session token
-        this.sessionToken = response.session.token;
-        this.client.defaults.headers['Authorization'] = `Bearer ${this.sessionToken}`;
-        delete this.client.defaults.headers['X-Recharge-Access-Token'];
-        
-        return response.session.token;
-      }
-      
-      throw new Error('Session token not returned from API');
-    } catch (error) {
-      if (error.statusCode === 401) {
-        throw new Error('Invalid customer credentials');
-      }
-      throw error;
-    }
-  }
-  
-  /**
    * Create a customer session using customer ID (merchant token required)
    * @param {string} customerId - Customer ID
    * @param {Object} options - Session options
