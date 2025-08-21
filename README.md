@@ -148,25 +148,30 @@ When you call any tool, the API automatically:
 
 ### Multi-Customer Support
 
-To work with multiple customers:
-- Create session tokens for each customer using their customer ID
-- Use merchant token to create sessions for any customer
-- Switch tokens per customer operation
+To work with multiple customers, simply provide different customer identifiers:
 
 ```json
-// Create session for Customer A
+// Get data for Customer A
 {
-  "name": "create_customer_session_by_id",
+  "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "customer_a_id"
+    "customer_email": "customer-a@example.com"
   }
 }
 
-// Create session for Customer B
+// Get data for Customer B  
 {
-  "name": "create_customer_session_by_id",
+  "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "customer_b_id"
+    "customer_email": "customer-b@example.com"
+  }
+}
+
+// Or mix identification methods
+{
+  "name": "get_orders",
+  "arguments": {
+    "customer_id": "789012"
   }
 }
 ```
