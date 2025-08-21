@@ -21,7 +21,7 @@ yarn-error.log*
 lerna-debug.log*
 
 # Runtime data
-pids/
+pids
 *.pid
 *.seed
 *.pid.lock
@@ -31,7 +31,7 @@ coverage/
 *.lcov
 
 # nyc test coverage
-.nyc_output/
+.nyc_output
 
 # Dependency directories
 node_modules/
@@ -46,6 +46,12 @@ jspm_packages/
 # Optional eslint cache
 .eslintcache
 
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
 # Optional REPL history
 .node_repl_history
 
@@ -58,9 +64,6 @@ jspm_packages/
 # dotenv environment variables file
 .env
 .env.test
-.env.production
-.env.local
-.env.*.local
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -77,15 +80,22 @@ dist
 .cache/
 public
 
-# Storybook build outputs
-.out
-.storybook-out
+# Vuepress build output
+.vuepress/dist
 
-# Temporary folders
-tmp/
-temp/
+# Serverless directories
+.serverless/
 
-# Editor directories and files
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# IDE files
 .vscode/
 .idea/
 *.swp
@@ -104,65 +114,13 @@ Thumbs.db
 # Docker
 .dockerignore
 
-# Backup files
-*.backup
-*.bak
-*.tmp
-
-# Test files
-test-results/
-coverage/
+# Temporary files
+tmp/
+temp/
 
 # Build artifacts
 build/
 dist/
 
-# Local development
-.local/
-local/
-
-# Sensitive files
-*.pem
-*.key
-*.crt
-*.p12
-*.pfx
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Cache directories
-.cache/
-.parcel-cache/
-.next/
-.nuxt/
-
-# IDE files
-*.sublime-project
-*.sublime-workspace
-.vscode/settings.json
-.vscode/launch.json
-.vscode/extensions.json
-
-# MacOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-
-# Project specific
-recharge-*.log
-mcp-*.log
-debug-*.log
+# Bolt-specific files
+.bolt/

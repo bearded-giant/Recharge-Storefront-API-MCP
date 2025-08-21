@@ -6,13 +6,17 @@ This guide covers Docker deployment options for the Recharge Storefront API MCP 
 
 - Docker installed on your system
 - Docker Compose installed
-- `.env` file configured with your Recharge credentials
+- Environment variables configured (either in `.env` file or Docker environment)
 
 ## Quick Start
 
 ### 1. Build and Run with Docker Compose
 
 ```bash
+# Copy environment template
+cp .env.example .env
+# Edit .env with your credentials
+
 # Development environment
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 

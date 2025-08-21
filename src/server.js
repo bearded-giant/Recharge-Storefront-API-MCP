@@ -91,8 +91,8 @@ class RechargeStorefrontAPIMCPServer {
 
   /**
    * Get or create a Recharge client with the appropriate access token and store URL
-   * @param {string|undefined} toolAccessToken - Access token from tool call (optional, takes precedence over env)
-   * @param {string|undefined} toolStoreUrl - Store URL from tool call (optional, takes precedence over env)
+   * @param {string} [toolAccessToken] - Access token from tool call (optional, takes precedence over env)
+   * @param {string} [toolStoreUrl] - Store URL from tool call (optional, takes precedence over env)
    * @returns {RechargeClient} Configured Recharge client
    * @throws {Error} If no access token or store URL is available
    */

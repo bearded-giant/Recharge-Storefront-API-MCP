@@ -20,11 +20,12 @@ export class RechargeClient {
   constructor({ storeUrl, accessToken }) {
     validateRequiredParams({ storeUrl, accessToken }, ['storeUrl', 'accessToken']);
 
-    // Store URL should already be validated by server
+    // Store URL should already be validated by server, but ensure it's clean
     this.domain = storeUrl;
     this.storeUrl = storeUrl;
     this.accessToken = accessToken;
-    // Use the correct Recharge Storefront API base URL
+    
+    // Construct the correct Recharge Storefront API base URL
     this.baseURL = `https://${storeUrl}/tools/recurring/portal`;
     
     this.client = axios.create({

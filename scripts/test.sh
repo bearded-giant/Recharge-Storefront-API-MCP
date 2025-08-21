@@ -44,7 +44,7 @@ run_test() {
     
     print_info "Running: $test_name"
     
-    if eval "$test_command"; then
+    if eval "$test_command" >/dev/null 2>&1; then
         print_status "$test_name passed"
         TESTS_PASSED=$((TESTS_PASSED + 1))
         return 0
@@ -60,6 +60,17 @@ run_test() {
         fi
     fi
 }
+
+# Check if required commands exist
+if ! command -v node >/dev/null 2>&1; then
+    print_error "Node.js is not installed"
+    exit 1
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+    print_error "npm is not installed"
+    exit 1
+fi
 
 # Test Node.js version
 run_test "Node.js version check" "node --version" "required"

@@ -6,9 +6,20 @@
 set -e
 
 ENVIRONMENT=${1:-production}
-VERSION=$(node -p "require('./package.json').version")
+VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "1.0.0")
 
 echo "🚀 Deploying Recharge Storefront API MCP Server v$VERSION to $ENVIRONMENT..."
+
+# Check if required commands exist
+if ! command -v docker >/dev/null 2>&1; then
+    echo "❌ Docker is not installed. Please install Docker to continue."
+    exit 1
+fi
+
+if ! command -v docker-compose >/dev/null 2>&1; then
+    echo "❌ Docker Compose is not installed. Please install Docker Compose to continue."
+    exit 1
+fi
 
 # Validate environment
 case $ENVIRONMENT in
@@ -24,7 +35,14 @@ esac
 
 # Run pre-deployment checks
 echo "🔍 Running pre-deployment checks..."
-npm run validate
+if command -v npm >/dev/null 2>&1; then
+    npm run validate || {
+        echo "❌ Pre-deployment validation failed"
+        exit 1
+    }
+else
+    echo "⚠️ npm not available, skipping validation"
+fi
 
 # Build Docker image
 echo "🐳 Building Docker image..."

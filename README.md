@@ -97,13 +97,13 @@ Before you can use this MCP server, you need to obtain a Recharge Storefront API
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `RECHARGE_STOREFRONT_DOMAIN` | No* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_ACCESS_TOKEN` | No* | Default API token | `sk_test_...` |
+| `RECHARGE_STOREFRONT_DOMAIN` | Yes* | Your Shopify domain | `your-shop.myshopify.com` |
+| `RECHARGE_ACCESS_TOKEN` | Yes* | Default API token | `sk_test_...` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
-*At least one of environment variable or tool parameter must be provided
+*Required unless provided as tool parameters in each call
 
 ### Authentication Options
 
@@ -119,7 +119,7 @@ The server also supports flexible store URL configuration:
 2. **Per-Tool Store URL**: Provide `store_url` parameter in individual tool calls
 3. **Store URL Precedence**: Tool parameter > Environment variable
 
-**Important**: You must provide either environment variables OR tool parameters. The server will not start without at least one method of authentication and store identification.
+**Important**: You must provide either environment variables OR tool parameters for each call. At least one method of authentication and store identification is required.
 
 Example tool call with token:
 ```json

@@ -31,12 +31,30 @@ print_info() {
     echo -e "${BLUE}ℹ️${NC} $1"
 }
 
+# Check if running in supported environment
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+    print_warning "Windows detected. Some features may not work as expected."
+fi
+
 # Check Node.js version
 print_info "Checking Node.js version..."
-node_version=$(node -v | cut -d'v' -f2)
+if ! command -v node >/dev/null 2>&1; then
+    print_error "Node.js is not installed. Please install Node.js 18.0.0 or higher."
+    exit 1
+fi
+
+node_version=$(node -v | sed 's/v//')
 required_version="18.0.0"
 
-if [ "$(printf '%s\n' "$required_version" "$node_version" | sort -V | head -n1)" != "$required_version" ]; then
+# Simple version comparison
+if ! node -e "
+const current = process.version.slice(1).split('.').map(Number);
+const required = '$required_version'.split('.').map(Number);
+const isValid = current[0] > required[0] || 
+  (current[0] === required[0] && current[1] > required[1]) ||
+  (current[0] === required[0] && current[1] === required[1] && current[2] >= required[2]);
+if (!isValid) process.exit(1);
+" 2>/dev/null; then
     print_error "Node.js version $node_version is not supported. Please install Node.js $required_version or higher."
     exit 1
 fi
@@ -44,7 +62,12 @@ fi
 print_status "Node.js version $node_version is supported"
 
 # Check npm version
-npm_version=$(npm -v)
+if ! command -v npm >/dev/null 2>&1; then
+    print_error "npm is not installed. Please install npm."
+    exit 1
+fi
+
+npm_version=$(npm -v 2>/dev/null || echo "unknown")
 print_info "npm version: $npm_version"
 
 # Check if package.json exists
