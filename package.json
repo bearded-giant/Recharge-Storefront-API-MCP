@@ -11,8 +11,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "dev:debug": "DEBUG=true node --watch src/server.js",
     "build": "echo 'No build step required for Node.js project'",
-    "coverage": "echo 'API Coverage: 48 tools across all Recharge Storefront API endpoints'",
+    "coverage": "node -e \"const tools = require('./src/tools/index.js').tools; console.log('API Coverage:', tools.length, 'tools across all Recharge Storefront API endpoints'); console.log('Tools:', tools.map(t => t.name).join(', '));\"",
     "docker:build": "docker build -t recharge-mcp-server .",
     "docker:run": "docker-compose up -d",
     "docker:stop": "docker-compose down",
@@ -22,12 +23,12 @@
     "test": "echo 'Tests will be implemented in future version'",
     "test:full": "chmod +x scripts/test.sh && ./scripts/test.sh",
     "lint": "node --check src/**/*.js",
-    "validate": "npm run lint && node -c src/server.js && echo \"✅ All files validated successfully\"",
+    "validate": "npm run lint && node -c src/server.js && npm run coverage && echo \"✅ All files validated successfully\"",
     "debug": "DEBUG=true node src/server.js",
     "clean": "rm -rf node_modules package-lock.json && npm install",
     "health": "node -e \"console.log('Server health check passed')\"",
     "version": "node -p \"require('./package.json').version\"",
-    "mcp:test": "echo '{\"name\":\"test\",\"arguments\":{}}' | npm start"
+    "mcp:test": "echo '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}' | npm start"
   },
   "keywords": [
     "mcp",

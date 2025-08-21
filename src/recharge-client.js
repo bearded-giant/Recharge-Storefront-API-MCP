@@ -19,11 +19,11 @@ export class RechargeClient {
    */
   constructor({ domain, accessToken }) {
     if (!domain || !accessToken) {
-      throw new Error('Domain and access token are required');
+      throw new Error('Both domain and access token are required for RechargeClient initialization');
     }
 
     if (!domain.includes('.myshopify.com')) {
-      throw new Error('Domain must be a valid Shopify domain (e.g., your-shop.myshopify.com)');
+      throw new Error('Domain must be a valid Shopify domain ending with .myshopify.com (e.g., your-shop.myshopify.com)');
     }
     
     this.domain = domain;
@@ -37,7 +37,7 @@ export class RechargeClient {
         'X-Recharge-Access-Token': accessToken,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'Recharge-MCP-Server/1.0.0',
+        'User-Agent': `Recharge-MCP-Server/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
       },
       timeout: 30000,
     });
@@ -49,7 +49,7 @@ export class RechargeClient {
     // Request interceptor for logging
     this.client.interceptors.request.use(
       (config) => {
-        if (process.env.DEBUG) {
+        if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] ${config.method?.toUpperCase()} ${config.url}`);
           if (config.data) {
             console.error(`[DEBUG] Request body:`, JSON.stringify(config.data, null, 2));
@@ -63,7 +63,7 @@ export class RechargeClient {
     // Response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => {
-        if (process.env.DEBUG) {
+        if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] Response ${response.status}:`, JSON.stringify(response.data, null, 2));
         }
         return response;

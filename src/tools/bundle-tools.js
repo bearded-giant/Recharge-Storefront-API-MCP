@@ -1,8 +1,11 @@
 import { z } from 'zod';
 
-const bundleSelectionListSchema = z.object({});
+const bundleSelectionListSchema = z.object({
+  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
+});
 
 const bundleSelectionSchema = z.object({
+  access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
   bundleSelectionId: z.string().describe('The bundle selection ID'),
 });
 

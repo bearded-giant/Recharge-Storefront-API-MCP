@@ -29,7 +29,12 @@ export class RechargeAPIError extends Error {
 export function handleAPIError(error) {
   if (error.response) {
     const { status, data } = error.response;
-    const message = data?.message || data?.error || data?.errors?.[0]?.message || error.message;
+    const message = data?.message || 
+                   data?.error || 
+                   data?.errors?.[0]?.message || 
+                   data?.errors?.[0] || 
+                   `HTTP ${status} Error` || 
+                   error.message;
     const errorCode = data?.error_code || null;
     
     // Log detailed error information for debugging
@@ -44,10 +49,14 @@ export function handleAPIError(error) {
     
     throw new RechargeAPIError(message, status, errorCode);
   } else if (error.request) {
-    console.error('[ERROR] Network error - no response received:', error.message);
+    if (process.env.DEBUG) {
+      console.error('[ERROR] Network error - no response received:', error.message);
+    }
     throw new RechargeAPIError('Network error: No response received', 500);
   } else {
-    console.error('[ERROR] Request setup error:', error.message);
+    if (process.env.DEBUG) {
+      console.error('[ERROR] Request setup error:', error.message);
+    }
     throw new RechargeAPIError(`Request setup error: ${error.message}`, 500);
   }
 }

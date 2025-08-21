@@ -148,12 +148,19 @@ class RechargeMCPServer {
     // Log startup information to stderr (won't interfere with MCP protocol)
     const version = process.env.MCP_SERVER_VERSION || "1.0.0";
     const hasDefaultToken = this.defaultAccessToken ? 'Yes' : 'No (will require token in tool calls)';
+    const toolCount = tools.length;
     
     console.error(`🚀 Recharge MCP Server v${version} running on stdio`);
     console.error(`🏪 Connected to: ${this.domain}`);
     console.error(`🔑 Default token configured: ${hasDefaultToken}`);
-    console.error(`🛠️  Available tools: ${tools.length}`);
+    console.error(`🛠️  Available tools: ${toolCount}`);
+    console.error(`📊 API Coverage: Complete Recharge Storefront API`);
     console.error(`✅ Server ready for MCP connections`);
+    
+    if (process.env.DEBUG === 'true') {
+      console.error(`🐛 Debug mode enabled`);
+      console.error(`📋 Tool list: ${tools.map(t => t.name).join(', ')}`);
+    }
   }
 }
 

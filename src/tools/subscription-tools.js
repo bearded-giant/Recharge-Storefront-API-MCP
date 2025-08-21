@@ -20,7 +20,7 @@ const updateSubscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (overrides environment variable)'),
   subscriptionId: z.string().describe('The subscription ID'),
   next_charge_scheduled_at: z.string().optional().describe('Next charge date (ISO format)'),
-  order_interval_frequency: z.string().optional().describe('Order interval frequency'),
+  order_interval_frequency: z.number().optional().describe('Order interval frequency (e.g., 1, 2, 3)'),
   order_interval_unit: z.enum(['day', 'week', 'month']).optional().describe('Order interval unit'),
   quantity: z.number().optional().describe('Subscription quantity'),
   variant_id: z.number().optional().describe('Product variant ID'),
