@@ -53,7 +53,7 @@ export const customerTools = [
   {
     name: 'delete_customer',
     description: 'Delete a customer account',
-    inputSchema: deleteCustomerSchema,
+    inputSchema: baseSchema,
     execute: async (client, args) => {
       const result = await client.deleteCustomer();
       return {
