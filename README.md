@@ -45,35 +45,13 @@ To use this MCP server, you need a Recharge Storefront API access token:
 
 The Recharge Storefront API uses a **merchant token + customer ID authentication process**:
 
-### Step 1: Get Customer ID
+### How It Works: Super Simple Authentication
 You need a **customer ID** to create sessions. Here's how to get it:
 
 #### Option A: Lookup by Email (Most Common)
 ```json
 {
   "name": "get_customer_by_email",
-  "arguments": {
-    "email": "customer@example.com"
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "customer": {
-    "id": "123456",
-    "email": "customer@example.com",
-    "first_name": "John",
-    "last_name": "Doe"
-  }
-}
-```
-
-#### Option B: From Your Database
-- Use customer IDs from your existing customer database
-- Customer IDs from previous API responses
-- Customer IDs from Recharge webhooks
 
 ### Step 2: Automatic Session Creation
 The MCP server automatically creates session tokens when you provide a `customer_id`:
@@ -92,32 +70,22 @@ Merchant Token + Customer ID → Session Token → API Operations
 
 ### Authentication Examples
 
-**Option A: Automatic (Recommended)**
+**Option A: Using Email (Easiest)**
 ```json
-// Single call - session created automatically
 {
   "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "123456"
+    "customer_email": "customer@example.com"
   }
 }
 ```
 
-**Option B: Manual (Advanced)**
+**Option B: Using Customer ID**
 ```json
-// Step 1: Create session manually
-{
-  "name": "create_customer_session_by_id", 
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-
-// Step 2: Use returned session token
 {
   "name": "get_subscriptions",
   "arguments": {
-    "session_token": "session_abc123"
+    "customer_id": "123456"
   }
 }
 ```
@@ -266,12 +234,12 @@ To work with multiple customers:
 
 The MCP server **automatically creates session tokens** when you provide a `customer_id` parameter instead of a `session_token`. This eliminates the need for manual session creation in most cases.
 
-#### Automatic Mode (Recommended)
+**Option A: Using Customer Email (Easiest)**
 ```json
 {
   "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "123456"
+    "customer_email": "customer@example.com"
   }
 }
 ```
@@ -381,41 +349,26 @@ Create a session for a specific customer, then use the token:
   "name": "get_customer",
   "arguments": {
     "session_token": "returned_session_token"
+**Option B: Using Customer ID (If Known)**
+}
   }
 }
 ```
-
-**Response:**
-```json
-{
-  "session": {
-    "token": "session_abc123",
-    "customer_id": "123456",
-    "expires_at": "2024-02-01T12:00:00Z"
-  }
-}
-```
-
+    "customer_id": "123456"
 #### Pattern 2: Use Session Token for Operations
 
 Once you have a session token, operations are customer-scoped:
 
 ```json
 {
-  "name": "get_subscriptions",
+Merchant Token + Customer Email/ID → Session Token → API Operations
   "arguments": {
     "session_token": "session_abc123"
   }
-}
+2. **Customer Email/ID**: Identifies which customer to create session for
 ```
 
 #### Pattern 3: Find Customer by Email (Alternative Method)
-
-If you need to verify customer identity (requires existing session):
-
-```json
-{
-  "name": "get_customer_by_email",
   "arguments": {
     "session_token": "session_abc123",
     "email": "customer@example.com"
@@ -442,30 +395,22 @@ Some list operations accept customer_id as an optional filter (rarely needed):
 
 #### Use Case 1: Customer Service - Automatic Session (Recommended)
 
-**Scenario**: Customer service agent helps customer starting with their email
+**Scenario**: Customer service agent helps customer - just use their email!
 
 ```json
-// Step 1: Find customer by email
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "customer@example.com"
-  }
-}
-
-// Step 2: Get customer details (auto-creates session)
+// Get customer details (auto-looks up by email and creates session)
 {
   "name": "get_customer",
   "arguments": {
-    "customer_id": "123456"  // From step 1 response
+    "customer_email": "customer@example.com"
   }
 }
 
-// Step 3: Get their subscriptions (reuses session)
+// Get their subscriptions (reuses session automatically)
 {
   "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "123456"
+    "customer_email": "customer@example.com"
   }
 }
 ```

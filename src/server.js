@@ -97,16 +97,50 @@ class RechargeStorefrontAPIMCPServer {
    * @param {string} [toolSessionToken] - Session token from tool call (optional)
    * @param {string} [toolMerchantToken] - Merchant token from tool call (optional)
    * @param {string} [customerId] - Customer ID for automatic session creation (optional)
+   * @param {string} [customerEmail] - Customer email for automatic lookup and session creation (optional)
    * @returns {RechargeClient} Configured Recharge Storefront client
    * @throws {Error} If no store URL or authentication token is available
    */
-  async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId) {
+  async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId, customerEmail) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
     const sessionToken = toolSessionToken || this.defaultSessionToken;
     const merchantToken = toolMerchantToken || this.defaultMerchantToken;
     
     // Validate store URL
     const validatedDomain = this.validateStoreUrl(storeUrl);
+    
+    // If email provided but no customer ID, look up customer by email first
+    if (!sessionToken && !customerId && customerEmail && merchantToken) {
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Looking up customer by email: ${customerEmail}`);
+      }
+      
+      // Create temporary client with merchant token to look up customer
+      const tempClient = new RechargeClient({
+        storeUrl: validatedDomain,
+        merchantToken: merchantToken,
+      });
+      
+      try {
+        const customerResponse = await tempClient.getCustomerByEmail(customerEmail);
+        const foundCustomerId = customerResponse.customer?.id;
+        
+        if (foundCustomerId) {
+          if (process.env.DEBUG === 'true') {
+            console.error(`[DEBUG] Found customer ID ${foundCustomerId} for email ${customerEmail}`);
+          }
+          // Use the found customer ID for session creation
+          customerId = foundCustomerId;
+        } else {
+          throw new Error(`Customer not found with email address: ${customerEmail}`);
+        }
+      } catch (error) {
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Failed to lookup customer by email ${customerEmail}:`, error.message);
+        }
+        throw new Error(`Failed to find customer with email ${customerEmail}: ${error.message}`);
+      }
+    }
     
     // If no session token but we have merchant token and customer ID, create session automatically
     if (!sessionToken && merchantToken && customerId) {
@@ -269,7 +303,7 @@ class RechargeStorefrontAPIMCPServer {
         const validatedArgs = tool.inputSchema.parse(args || {});
         
         // Extract authentication parameters from validated args
-        const { store_url, session_token, merchant_token, customer_id, ...toolArgs } = validatedArgs;
+        const { store_url, session_token, merchant_token, customer_id, customer_email, ...toolArgs } = validatedArgs;
         
         if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] Tool '${name}' called`);
@@ -277,11 +311,12 @@ class RechargeStorefrontAPIMCPServer {
           console.error(`[DEBUG] Session token: ${session_token ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Merchant token: ${merchant_token ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Customer ID: ${customer_id ? 'provided for auto-session' : 'not provided'}`);
+          console.error(`[DEBUG] Customer email: ${customer_email ? 'provided for auto-lookup' : 'not provided'}`);
           console.error(`[DEBUG] Arguments:`, JSON.stringify(toolArgs, null, 2));
         }
         
         // Get client
-        const rechargeClient = await this.getRechargeClient(store_url, session_token, merchant_token, customer_id);
+        const rechargeClient = await this.getRechargeClient(store_url, session_token, merchant_token, customer_id, customer_email);
         
         const result = await tool.execute(rechargeClient, toolArgs);
         this.stats.successfulCalls++;
