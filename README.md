@@ -64,6 +64,20 @@ This MCP server uses **customer session tokens**, not admin API tokens. The auth
 
 #### Important Notes:
 
+## Prerequisites and Limitations
+
+### Requirements
+- **Shopify Store**: Must have a Shopify store
+- **Recharge Integration**: Recharge subscription app must be installed and configured
+- **Customer Portal**: Customers must have access to the Recharge customer portal
+- **Server-Side**: This MCP server runs server-side, no browser required
+
+### Limitations
+- **Shopify Only**: Only works with Shopify stores using Recharge
+- **Customer-Specific**: Each session token is tied to one customer
+- **Session Management**: Sessions may expire and need renewal
+- **Portal Dependency**: Relies on Recharge's customer portal being enabled
+
 ### Installation
 
 1. **Clone and setup:**
@@ -147,7 +161,7 @@ Example tool call using environment defaults:
 }
 ```
 
-Example tool call with mixed approach (environment session token, tool store URL):
+Example tool call with mixed approach (environment token, tool store URL):
 ```json
 {
   "name": "get_customer_subscriptions",
@@ -156,6 +170,7 @@ Example tool call with mixed approach (environment session token, tool store URL
     "status": "active"
   }
 }
+```
 ## Available Tools
 
 ### Customer Management
