@@ -369,68 +369,84 @@ Some list operations accept customer_id as an optional filter (rarely needed):
 
 #### Use Case 1: Customer Service - Create Session and View Information
 
-**Scenario**: Customer service agent helps customer using their customer ID
+**Scenario**: Customer service agent helps customer starting with their email
 
 ```json
-// Step 1: Create session for customer
+// Step 1: Find customer by email
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "customer@example.com"
+  }
+}
+
+// Step 2: Create session using customer ID from step 1
 {
   "name": "create_customer_session_by_id",
   "arguments": {
-    "customer_id": "123456"
+    "customer_id": "123456"  // From step 1 response
   }
 }
 
-// Step 2: Get customer details using session token
+// Step 3: Get customer details using session token
 {
   "name": "get_customer",
   "arguments": {
-    "session_token": "returned_session_token"
+    "session_token": "session_token_from_step_2"
   }
 }
 
-// Step 3: Get their subscriptions
+// Step 4: Get their subscriptions
 {
   "name": "get_subscriptions",
   "arguments": {
-    "session_token": "returned_session_token"
+    "session_token": "session_token_from_step_2"
   }
 }
 
-// Step 4: Get their addresses
+// Step 5: Get their addresses
 {
   "name": "get_addresses",
   "arguments": {
-    "session_token": "returned_session_token"
+    "session_token": "session_token_from_step_2"
   }
 }
 ```
 
 #### Use Case 2: Subscription Management - Skip Next Delivery
 
-**Scenario**: Customer service helps customer skip delivery
+**Scenario**: Customer emails asking to skip delivery
 
 ```json
-// Step 1: Create session for customer
+// Step 1: Find customer by email
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "customer@example.com"
+  }
+}
+
+// Step 2: Create session for customer
 {
   "name": "create_customer_session_by_id",
   "arguments": {
-    "customer_id": "123456"
+    "customer_id": "123456"  // From step 1
   }
 }
 
-// Step 2: Get their active subscriptions
+// Step 3: Get their active subscriptions
 {
   "name": "get_subscriptions",
   "arguments": {
-    "session_token": "returned_session_token"
+    "session_token": "session_token_from_step_2"
   }
 }
 
-// Step 3: Skip specific subscription
+// Step 4: Skip specific subscription
 {
   "name": "skip_subscription",
   "arguments": {
-    "session_token": "returned_session_token",
+    "session_token": "session_token_from_step_2",
     "subscription_id": "sub_456",
     "date": "2024-02-15"
   }
@@ -537,9 +553,28 @@ Some list operations accept customer_id as an optional filter (rarely needed):
 
 ### Customer ID Best Practices
 
-#### 1. **Always Create Sessions First**
+#### 1. **Email-First Workflow (Most Common)**
 ```json
-// Always start with session creation
+// Always start with email lookup if you don't have customer ID
+{
+  "name": "get_customer_by_email",
+  "arguments": {
+    "email": "customer@example.com"
+  }
+}
+
+// Then create session with returned customer ID
+{
+  "name": "create_customer_session_by_id",
+  "arguments": {
+    "customer_id": "returned_customer_id"
+  }
+}
+```
+
+#### 2. **Always Create Sessions Before Operations**
+```json
+// Create session first (after getting customer ID)
 {
   "name": "create_customer_session_by_id",
   "arguments": {
@@ -548,16 +583,22 @@ Some list operations accept customer_id as an optional filter (rarely needed):
 }
 ```
 
-#### 2. **Use Session Tokens for All Operations**
+#### 3. **Use Session Tokens for All Operations**
 ```javascript
-// Create session first, then use token
-const session = await callTool("create_customer_session_by_id", { customer_id: "123456" });
+// Email → Customer ID → Session → Operations
+const customer = await callTool("get_customer_by_email", { email: "customer@example.com" });
+const session = await callTool("create_customer_session_by_id", { customer_id: customer.id });
 const customer = await callTool("get_customer", { session_token: session.token });
 const subscriptions = await callTool("get_subscriptions", { session_token: session.token });
 ```
 
-#### 3. **Handle Authentication Errors**
+#### 4. **Handle Authentication Errors**
 ```json
+// If customer lookup fails
+{
+  "error": "Customer not found with email address"
+}
+
 // If session creation fails
 {
   "error": "Customer not found or invalid merchant token"

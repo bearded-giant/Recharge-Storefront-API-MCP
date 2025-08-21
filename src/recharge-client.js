@@ -148,6 +148,20 @@ export class RechargeClient {
     }
   }
 
+  /**
+   * Get customer by email address (requires merchant token)
+   * @param {string} email - Customer email address
+   * @returns {Promise<Object>} Customer data including customer ID
+   */
+  async getCustomerByEmail(email) {
+    if (!this.merchantToken) {
+      throw new Error('Merchant token required for customer lookup by email');
+    }
+    
+    validateRequiredParams({ email }, ['email']);
+    return this.makeRequest('GET', '/customers', null, { email });
+  }
+
   // Customer methods
   /**
    * Get customer information by customer ID

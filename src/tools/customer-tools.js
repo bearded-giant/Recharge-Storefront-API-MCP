@@ -30,8 +30,7 @@ const updateCustomerSchema = z.object({
 });
 
 const customerByEmailSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (required for customer lookup unless set in environment)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   email: z.string().email().describe('Customer email address'),
 });
@@ -105,7 +104,7 @@ export const customerTools = [
   },
   {
     name: 'get_customer_by_email',
-    description: 'Find customer by email address',
+    description: 'Find customer by email address to get customer ID (requires merchant token)',
     inputSchema: customerByEmailSchema,
     execute: async (client, args) => {
       const { email } = args;
