@@ -41,10 +41,9 @@ To use this MCP server, you need a Recharge Storefront API access token:
 3. **Create a new Storefront API token** (not Admin API)
 4. **Copy the token** (starts with your store prefix)
 
-
 ## Authentication Model
 
-The Recharge Storefront API uses a **two-step authentication process**:
+The Recharge Storefront API uses a **merchant token + customer ID authentication process**:
 
 ### Step 1: Get Customer ID
 You need a **customer ID** to create sessions. Get this by:
@@ -52,10 +51,10 @@ You need a **customer ID** to create sessions. Get this by:
 - Using your existing customer database
 - From previous API responses
 
-### Step 2: Create Customer Session
-Use the customer ID to create a session token:
-- **Automatic**: Provide `customer_id` in any tool call (recommended)
-- **Manual**: Call `create_customer_session_by_id` first, then use returned token
+### Step 2: Automatic Session Creation
+The MCP server automatically creates session tokens when you provide a `customer_id`:
+- Provide `customer_id` in any tool call (recommended)
+- Or manually call `create_customer_session_by_id` first, then use returned token
 
 ### How It Works
 ```
@@ -67,7 +66,7 @@ Merchant Token + Customer ID → Session Token → API Operations
 3. **Session Token**: Customer-scoped token for API operations
 4. **API Operations**: All operations automatically scoped to that customer
 
-### Authentication Flow Examples
+### Authentication Examples
 
 **Option A: Automatic (Recommended)**
 ```json
@@ -99,18 +98,9 @@ Merchant Token + Customer ID → Session Token → API Operations
 }
 ```
 
-## Getting Your Authentication Tokens
-
-### Authentication Types Comparison
-
-| API Type | Authentication | Use Case | Scope | Customer ID Required? |
-|----------|---------------|----------|-------|----------------------|
-| **Storefront API** | Bearer session token | Customer portals | Single customer session | ❌ No |
-| **Admin API** | X-Recharge-Access-Token | Merchant tools | All customers | ✅ Yes |
-
 ### Authentication Configuration Options
 
-**Important**: Session tokens can be created directly using merchant token + customer ID, or obtained from Recharge's customer portal.
+**Important**: Session tokens are created automatically using merchant token + customer ID.
 
 **Option 1: Environment Variables (Recommended)**
 ```bash
