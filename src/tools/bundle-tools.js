@@ -2,20 +2,24 @@ import { z } from 'zod';
 
 const bundleSelectionListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const bundleSelectionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   bundleSelectionId: z.string().describe('The bundle selection ID'),
 });
 
 const getBundleSelectionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   bundleSelectionId: z.string().describe('The bundle selection ID'),
 });
 
 const createBundleSelectionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   bundle_id: z.number().describe('The bundle ID'),
   variant_selections: z.array(z.object({
     variant_id: z.number().describe('Variant ID'),
@@ -25,6 +29,7 @@ const createBundleSelectionSchema = z.object({
 
 const updateBundleSelectionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   bundleSelectionId: z.string().describe('The bundle selection ID'),
   variant_selections: z.array(z.object({
     variant_id: z.number().describe('Variant ID'),
@@ -34,6 +39,7 @@ const updateBundleSelectionSchema = z.object({
 
 const deleteBundleSelectionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   bundleSelectionId: z.string().describe('The bundle selection ID'),
 });
 

@@ -2,24 +2,29 @@ import { z } from 'zod';
 
 const baseSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const discountListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const applyDiscountSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   discount_code: z.string().describe('The discount code to apply'),
 });
 
 const removeDiscountSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   discountId: z.string().describe('The discount ID to remove'),
 });
 
 const discountSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   discountId: z.string().describe('The discount ID'),
 });
 

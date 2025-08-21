@@ -2,10 +2,12 @@ import { z } from 'zod';
 
 const baseSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const orderListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   status: z.enum(['queued', 'processing', 'shipped', 'cancelled', 'refunded']).optional().describe('Filter by order status'),
   limit: z.number().max(250).default(50).describe('Number of orders to return'),
   page: z.number().default(1).describe('Page number for pagination'),
@@ -13,6 +15,7 @@ const orderListSchema = z.object({
 
 const orderSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   orderId: z.string().describe('The order ID'),
 });
 

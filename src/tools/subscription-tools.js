@@ -2,10 +2,12 @@ import { z } from 'zod';
 
 const baseSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const subscriptionListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   status: z.enum(['active', 'cancelled', 'expired']).optional().describe('Filter by subscription status'),
   limit: z.number().max(250).default(50).describe('Number of subscriptions to return'),
   page: z.number().default(1).describe('Page number for pagination'),
@@ -13,11 +15,13 @@ const subscriptionListSchema = z.object({
 
 const subscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   subscriptionId: z.string().describe('The subscription ID'),
 });
 
 const updateSubscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   subscriptionId: z.string().describe('The subscription ID'),
   next_charge_scheduled_at: z.string().optional().describe('Next charge date (ISO format)'),
   order_interval_frequency: z.number().optional().describe('Order interval frequency (e.g., 1, 2, 3)'),
@@ -32,18 +36,21 @@ const updateSubscriptionSchema = z.object({
 
 const skipSubscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   subscriptionId: z.string().describe('The subscription ID'),
   date: z.string().describe('Date to skip (YYYY-MM-DD format)'),
 });
 
 const unskipSubscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   subscriptionId: z.string().describe('The subscription ID'),
   date: z.string().describe('Date to unskip (YYYY-MM-DD format)'),
 });
 
 const swapSubscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   subscriptionId: z.string().describe('The subscription ID'),
   variant_id: z.number().describe('New variant ID to swap to'),
   quantity: z.number().optional().describe('New quantity'),
@@ -51,6 +58,7 @@ const swapSubscriptionSchema = z.object({
 
 const cancelSubscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   subscriptionId: z.string().describe('The subscription ID'),
   cancellation_reason: z.string().optional().describe('Reason for cancellation'),
   cancellation_reason_comments: z.string().optional().describe('Additional comments for cancellation'),
@@ -58,18 +66,21 @@ const cancelSubscriptionSchema = z.object({
 
 const setNextChargeDateSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   subscriptionId: z.string().describe('The subscription ID'),
   date: z.string().describe('Next charge date (YYYY-MM-DD format)'),
 });
 
 const pauseSubscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   subscriptionId: z.string().describe('The subscription ID'),
   pause_reason: z.string().optional().describe('Reason for pausing the subscription'),
 });
 
 const resumeSubscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   subscriptionId: z.string().describe('The subscription ID'),
 });
 

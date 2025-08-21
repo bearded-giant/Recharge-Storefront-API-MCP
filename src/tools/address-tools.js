@@ -2,14 +2,17 @@ import { z } from 'zod';
 
 const baseSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const addressListSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const createAddressSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   address1: z.string().describe('Street address line 1'),
   address2: z.string().optional().describe('Street address line 2'),
   city: z.string().describe('City'),
@@ -24,6 +27,7 @@ const createAddressSchema = z.object({
 
 const updateAddressSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   addressId: z.string().describe('The address ID'),
   address1: z.string().optional().describe('Street address line 1'),
   address2: z.string().optional().describe('Street address line 2'),
@@ -39,11 +43,13 @@ const updateAddressSchema = z.object({
 
 const deleteAddressSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   addressId: z.string().describe('The address ID'),
 });
 
 const addressSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   addressId: z.string().describe('The address ID'),
 });
 

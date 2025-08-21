@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const baseSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 export const storeTools = [

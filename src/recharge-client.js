@@ -14,17 +14,31 @@ export class RechargeClient {
    * Create a new RechargeClient instance
    * 
    * @param {Object} config - Configuration object
-   * @param {string} config.domain - Shopify domain (e.g., 'your-shop.myshopify.com')
+   * @param {string} config.storeUrl - Store URL (e.g., 'your-shop.myshopify.com' or full URL)
    * @param {string} config.accessToken - Recharge Storefront API access token
    */
-  constructor({ domain, accessToken }) {
-    validateRequiredParams({ domain, accessToken }, ['domain', 'accessToken']);
+  constructor({ storeUrl, accessToken }) {
+    validateRequiredParams({ storeUrl, accessToken }, ['storeUrl', 'accessToken']);
+
+    // Extract domain from URL if full URL is provided
+    let domain;
+    if (storeUrl.startsWith('http://') || storeUrl.startsWith('https://')) {
+      try {
+        const url = new URL(storeUrl);
+        domain = url.hostname;
+      } catch (error) {
+        throw new Error('Invalid store URL format. Please provide a valid URL or domain.');
+      }
+    } else {
+      domain = storeUrl;
+    }
 
     if (!domain.includes('.myshopify.com')) {
-      throw new Error('Domain must be a valid Shopify domain ending with .myshopify.com (e.g., your-shop.myshopify.com)');
+      throw new Error('Store URL must be a valid Shopify domain ending with .myshopify.com (e.g., your-shop.myshopify.com)');
     }
     
     this.domain = domain;
+    this.storeUrl = storeUrl;
     this.accessToken = accessToken;
     // Use the correct Recharge Storefront API base URL
     this.baseURL = `https://${domain}/tools/recurring/portal`;
