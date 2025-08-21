@@ -48,7 +48,27 @@ The Recharge Storefront API uses a **merchant token + customer ID authentication
 ### How It Works: Super Simple Authentication
 You need a **customer ID** to create sessions. Here's how to get it:
 
-#### Option A: Lookup by Email (Most Common)
+#### Getting Customer ID: Two Ways
+
+**Option A: Automatic Email Lookup (Recommended)**
+Just provide `customer_email` in any tool call - the system automatically:
+1. Looks up customer by email using `get_customer_by_email`
+2. Extracts the customer ID from the response
+3. Creates a session token using that customer ID
+4. Executes your requested operation
+
+```json
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "customer_email": "customer@example.com"
+  }
+}
+```
+*Behind the scenes: Email → Customer ID → Session Token → Your Data*
+
+**Option B: Manual Email Lookup (If Needed)**
+If you need the customer ID for other purposes:
 ```json
 {
   "name": "get_customer_by_email",
@@ -57,8 +77,9 @@ You need a **customer ID** to create sessions. Here's how to get it:
   }
 }
 ```
+*Returns customer data including the ID you can use later*
 
-### Step 2: Automatic Session Creation
+### Automatic Session Creation
 The MCP server automatically creates session tokens when you provide a `customer_id`:
 - Provide `customer_id` in any tool call (recommended)
 - Or manually call `create_customer_session_by_id` first, then use returned token
@@ -75,7 +96,7 @@ Merchant Token + Customer ID → Session Token → API Operations
 
 ### Authentication Examples
 
-**Option A: Using Email (Easiest)**
+**Option A: Using Email (Easiest - Fully Automatic)**
 ```json
 {
   "name": "get_subscriptions",
@@ -84,8 +105,9 @@ Merchant Token + Customer ID → Session Token → API Operations
   }
 }
 ```
+*The system automatically: looks up email → gets customer ID → creates session → returns subscriptions*
 
-**Option B: Using Customer ID**
+**Option B: Using Customer ID (If You Have It)**
 ```json
 {
   "name": "get_subscriptions",
@@ -94,6 +116,7 @@ Merchant Token + Customer ID → Session Token → API Operations
   }
 }
 ```
+*The system automatically: creates session for customer ID → returns subscriptions*
 
 ### Authentication Configuration Options
 
@@ -405,10 +428,14 @@ Some list operations accept customer_id as an optional filter (rarely needed):
 
 #### Use Case 1: Customer Service - Automatic Session (Recommended)
 
-**Scenario**: Customer service agent helps customer - just use their email!
+**Scenario**: Customer service agent helps customer - just use their email! Everything is automatic.
 
 ```json
-// Get customer details (auto-looks up by email and creates session)
+// Get customer details - system automatically:
+// 1. Looks up customer by email
+// 2. Gets customer ID  
+// 3. Creates session token
+// 4. Returns customer data
 {
   "name": "get_customer",
   "arguments": {
@@ -416,7 +443,10 @@ Some list operations accept customer_id as an optional filter (rarely needed):
   }
 }
 
-// Get their subscriptions (reuses session automatically)
+// Get their subscriptions - system automatically:
+// 1. Looks up customer by email (or reuses from cache)
+// 2. Uses existing session or creates new one
+// 3. Returns subscription data
 {
   "name": "get_subscriptions",
   "arguments": {
@@ -424,6 +454,10 @@ Some list operations accept customer_id as an optional filter (rarely needed):
   }
 }
 ```
+
+**What happens behind the scenes:**
+- First call: `customer@example.com` → lookup customer → get ID `123456` → create session → return data
+- Subsequent calls: Reuse session for same customer automatically
 
 #### Use Case 2: Customer Service - Manual Session (Advanced)
 
