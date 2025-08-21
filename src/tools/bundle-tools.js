@@ -1,34 +1,43 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
 });
 
 const bundleListSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().optional().describe('Customer ID (optional filter)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   subscription_id: z.string().optional().describe('Filter bundles by subscription ID'),
   limit: z.number().max(250).default(50).describe('Number of bundles to return'),
   page: z.number().default(1).describe('Page number for pagination'),
 });
 
 const bundleSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   bundle_id: z.string().describe('The bundle ID'),
 });
 
 const bundleSelectionSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   bundle_selection_id: z.string().describe('The bundle selection ID'),
 });
 
 const createBundleSelectionSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   bundle_id: z.string().describe('The bundle ID'),
   variant_id: z.number().describe('Selected variant ID'),
   quantity: z.number().describe('Quantity selected'),
@@ -36,8 +45,10 @@ const createBundleSelectionSchema = z.object({
 });
 
 const updateBundleSelectionSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   bundle_selection_id: z.string().describe('The bundle selection ID'),
   variant_id: z.number().optional().describe('New variant ID'),
   quantity: z.number().optional().describe('New quantity'),
@@ -45,8 +56,10 @@ const updateBundleSelectionSchema = z.object({
 });
 
 const bundleSelectionListSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   bundle_id: z.string().describe('The bundle ID'),
   limit: z.number().max(250).default(50).describe('Number of selections to return'),
 });
@@ -124,7 +137,7 @@ export const bundleTools = [
     description: 'Create a new bundle selection',
     inputSchema: createBundleSelectionSchema,
     execute: async (client, args) => {
-      const { access_token, store_url, ...selectionData } = args;
+      const { session_token, merchant_token, store_url, customer_id, ...selectionData } = args;
       const selection = await client.createBundleSelection(selectionData);
       return {
         content: [
@@ -141,7 +154,7 @@ export const bundleTools = [
     description: 'Update an existing bundle selection',
     inputSchema: updateBundleSelectionSchema,
     execute: async (client, args) => {
-      const { bundle_selection_id, access_token, store_url, ...updateData } = args;
+      const { bundle_selection_id, session_token, merchant_token, store_url, customer_id, ...updateData } = args;
       const updatedSelection = await client.updateBundleSelection(bundle_selection_id, updateData);
       return {
         content: [

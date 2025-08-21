@@ -1,21 +1,27 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
 });
 
 const productListSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   limit: z.number().max(250).default(50).describe('Number of products to return'),
   handle: z.string().optional().describe('Filter by product handle'),
   subscription_defaults: z.boolean().optional().describe('Include subscription defaults'),
 });
 
 const productSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   product_id: z.string().describe('The product ID'),
 });
 
@@ -25,7 +31,7 @@ export const productTools = [
     description: 'Get products available for subscription',
     inputSchema: productListSchema,
     execute: async (client, args) => {
-      const { access_token, store_url, ...params } = args;
+      const { session_token, merchant_token, store_url, customer_id, ...params } = args;
       const products = await client.getProducts(params);
       return {
         content: [

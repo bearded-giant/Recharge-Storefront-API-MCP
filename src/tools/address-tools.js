@@ -1,20 +1,24 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
 });
 
 const addressListSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().optional().describe('Customer ID (optional filter)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
 });
 
 const createAddressSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().describe('Customer ID'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   address1: z.string().describe('Street address line 1'),
   address2: z.string().optional().describe('Street address line 2'),
   city: z.string().describe('City'),
@@ -28,8 +32,10 @@ const createAddressSchema = z.object({
 });
 
 const updateAddressSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   address_id: z.string().describe('The address ID'),
   address1: z.string().optional().describe('Street address line 1'),
   address2: z.string().optional().describe('Street address line 2'),
@@ -44,14 +50,18 @@ const updateAddressSchema = z.object({
 });
 
 const deleteAddressSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   address_id: z.string().describe('The address ID'),
 });
 
 const addressSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   address_id: z.string().describe('The address ID'),
 });
 
@@ -94,7 +104,7 @@ export const addressTools = [
     description: 'Create a new address for a customer',
     inputSchema: createAddressSchema,
     execute: async (client, args) => {
-      const { access_token, store_url, ...addressData } = args;
+      const { session_token, merchant_token, store_url, customer_id, ...addressData } = args;
       const newAddress = await client.createAddress(addressData);
       return {
         content: [
@@ -111,7 +121,7 @@ export const addressTools = [
     description: 'Update an existing address',
     inputSchema: updateAddressSchema,
     execute: async (client, args) => {
-      const { address_id, access_token, store_url, ...addressData } = args;
+      const { address_id, session_token, merchant_token, store_url, customer_id, ...addressData } = args;
       const updatedAddress = await client.updateAddress(address_id, addressData);
       return {
         content: [

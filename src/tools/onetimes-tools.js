@@ -1,20 +1,25 @@
 import { z } from 'zod';
 
 const onetimeListSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().optional().describe('Customer ID (optional filter)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
 });
 
 const onetimeSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   onetime_id: z.string().describe('The one-time product ID'),
 });
 
 const createOnetimeSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   variant_id: z.number().describe('Variant ID'),
   quantity: z.number().describe('Quantity'),
   next_charge_scheduled_at: z.string().describe('When to add this to next charge (YYYY-MM-DD format)'),
@@ -26,8 +31,10 @@ const createOnetimeSchema = z.object({
 });
 
 const updateOnetimeSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   onetime_id: z.string().describe('The one-time product ID'),
   next_charge_scheduled_at: z.string().optional().describe('When to add this to next charge (YYYY-MM-DD format)'),
   quantity: z.number().optional().describe('Quantity'),
@@ -77,7 +84,7 @@ export const onetimeTools = [
     description: 'Create a new one-time product',
     inputSchema: createOnetimeSchema,
     execute: async (client, args) => {
-      const { access_token, store_url, ...onetimeData } = args;
+      const { session_token, merchant_token, store_url, customer_id, ...onetimeData } = args;
       const onetime = await client.createOnetime(onetimeData);
       return {
         content: [
@@ -94,7 +101,7 @@ export const onetimeTools = [
     description: 'Update a one-time product',
     inputSchema: updateOnetimeSchema,
     execute: async (client, args) => {
-      const { onetime_id, access_token, store_url, ...updateData } = args;
+      const { onetime_id, session_token, merchant_token, store_url, customer_id, ...updateData } = args;
       const updatedOnetime = await client.updateOnetime(onetime_id, updateData);
       return {
         content: [

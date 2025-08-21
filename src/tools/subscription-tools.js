@@ -2,14 +2,12 @@ import { z } from 'zod';
 
 const baseSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const subscriptionListSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
@@ -21,7 +19,6 @@ const subscriptionListSchema = z.object({
 
 const subscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -29,7 +26,6 @@ const subscriptionSchema = z.object({
 });
 
 const updateSubscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),

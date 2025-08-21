@@ -1,19 +1,24 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
 });
 
 const paymentMethodListSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().optional().describe('Customer ID (optional filter)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
 });
 
 const updatePaymentMethodSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   payment_method_id: z.string().describe('The payment method ID'),
   billing_address1: z.string().optional().describe('Billing address line 1'),
   billing_address2: z.string().optional().describe('Billing address line 2'),
@@ -24,8 +29,10 @@ const updatePaymentMethodSchema = z.object({
 });
 
 const paymentMethodSchema = z.object({
-  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   payment_method_id: z.string().describe('The payment method ID'),
 });
 
@@ -68,7 +75,7 @@ export const paymentTools = [
     description: 'Update payment method billing address',
     inputSchema: updatePaymentMethodSchema,
     execute: async (client, args) => {
-      const { payment_method_id, access_token, store_url, ...paymentData } = args;
+      const { payment_method_id, session_token, merchant_token, store_url, customer_id, ...paymentData } = args;
       const updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData);
       return {
         content: [

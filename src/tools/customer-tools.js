@@ -4,6 +4,7 @@ const baseSchema = z.object({
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
 });
 
 const createSessionByIdSchema = z.object({
@@ -17,12 +18,14 @@ const customerSchema = z.object({
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
 });
 
 const updateCustomerSchema = z.object({
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   email: z.string().email().optional().describe('Customer email'),
   first_name: z.string().optional().describe('Customer first name'),
   last_name: z.string().optional().describe('Customer last name'),
