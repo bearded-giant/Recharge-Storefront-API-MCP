@@ -177,11 +177,13 @@ To work with multiple customers:
 ### Requirements
 - **Shopify Store**: Must have a Shopify store
 - **Recharge Integration**: Recharge subscription app must be installed and configured
-- **Customer Portal Access**: Customers must be able to log into Recharge portal
-- **Session Token Extraction**: Method to extract session tokens from customer portal sessions
+- **Session Token**: Must have customer session token from Recharge portal login
 - **Server-Side**: This MCP server runs server-side, no browser required
 
 ### Limitations
+- **Session-Based**: All operations are scoped to the customer session
+- **Temporary Tokens**: Session tokens expire and need to be refreshed
+- **Shopify Integration**: Requires Shopify store with Recharge app installed
 
 ### Installation
 
@@ -713,14 +715,23 @@ Error: Resource not found
 
 #### Missing Session Token
 ```
-Error: No Storefront API session token available
+Error: No session token available
 ```
 **Solution**: 
-1. Ensure customer is logged into Recharge portal
-2. Get the session token from the customer session
-3. Either set `RECHARGE_SESSION_TOKEN` environment variable
+1. Customer must log into Recharge customer portal
+2. Extract session token from customer's authenticated portal session
+3. Provide token via `RECHARGE_SESSION_TOKEN` environment variable
 4. Or provide `session_token` parameter in individual tool calls
 
+#### Session Token Extraction
+```
+Error: Cannot create session token
+```
+**Solution**: 
+- MCP server cannot create session tokens directly
+- Tokens must be obtained from Recharge's customer portal authentication
+- Implement portal integration or browser session extraction
+- Consider using Recharge's session creation APIs if available
 #### Invalid Domain
 ```
 Error: Domain must be a valid Shopify domain
