@@ -30,10 +30,7 @@ const customerByEmailSchema = z.object({
 const createCustomerSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  email: z.string().email().describe('Customer email address'),
-  first_name: z.string().describe('Customer first name'),
-  last_name: z.string().describe('Customer last name'),
-  phone: z.string().optional().describe('Customer phone number'),
+  customer_id: z.string().describe('Customer ID'),
 });
 
 export const customerTools = [
@@ -55,17 +52,17 @@ export const customerTools = [
     },
   },
   {
-    name: 'create_customer',
-    description: 'Create a new customer',
+    name: 'delete_customer',
+    description: 'Delete a customer account',
     inputSchema: createCustomerSchema,
     execute: async (client, args) => {
-      const { access_token, store_url, ...customerData } = args;
-      const customer = await client.createCustomer(customerData);
+      const { customer_id } = args;
+      const result = await client.deleteCustomer(customer_id);
       return {
         content: [
           {
             type: 'text',
-            text: `Created Customer:\n${JSON.stringify(customer, null, 2)}`,
+            text: `Deleted Customer:\n${JSON.stringify(result, null, 2)}`,
           },
         ],
       };

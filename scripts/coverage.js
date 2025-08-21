@@ -47,6 +47,6 @@ Object.entries(categories)
 
 console.log('\n✅ Complete Recharge Storefront API coverage');
 console.log('🎯 All major customer-facing operations supported');
-console.log('🔄 Full subscription lifecycle management');
+console.log('🔄 Complete subscription lifecycle management');
 console.log('💳 Complete payment and billing functionality');
 console.log('📦 Comprehensive product and bundle management');

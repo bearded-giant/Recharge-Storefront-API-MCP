@@ -154,13 +154,13 @@ The Storefront API uses **merchant authentication** with **customer identificati
 ## Available Tools
 
 ### Customer Management
-- `create_customer` - Create a new customer
+- `delete_customer` - Delete a customer account
 - `get_customer` - Retrieve customer information by ID
 - `get_customer_by_email` - Find customer by email address
 - `update_customer` - Update customer profile and information
 
 ### Subscription Management
-- `create_subscription` - Create a new subscription for a customer
+- `delete_subscription` - Delete a subscription permanently
 - `get_subscriptions` - List customer subscriptions
 - `get_subscription` - Get detailed subscription information
 - `update_subscription` - Modify subscription details
@@ -655,8 +655,8 @@ docker compose logs --tail=100 recharge-storefront-api-mcp
 
 This MCP server provides **complete coverage** of the Recharge Storefront API:
 
-- ✅ **Customer Management** - Full CRUD operations for customer profiles
-- ✅ **Subscription Lifecycle** - Complete subscription management including creation
+- ✅ **Customer Management** - Customer profile operations (get, update, delete)
+- ✅ **Subscription Lifecycle** - Complete subscription management (get, update, cancel, delete)
 - ✅ **Address Management** - Shipping and billing addresses
 - ✅ **Payment Methods** - Payment method management
 - ✅ **Product Catalog** - Product browsing and details

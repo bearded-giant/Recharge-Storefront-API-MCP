@@ -81,17 +81,7 @@ const activateSubscriptionSchema = z.object({
 const createSubscriptionSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  customer_id: z.string().describe('Customer ID'),
-  address_id: z.string().describe('Address ID for shipping'),
-  variant_id: z.number().describe('Product variant ID'),
-  quantity: z.number().default(1).describe('Subscription quantity'),
-  order_interval_frequency: z.number().describe('Order interval frequency (e.g., 1, 2, 3)'),
-  order_interval_unit: z.enum(['day', 'week', 'month']).describe('Order interval unit'),
-  next_charge_scheduled_at: z.string().optional().describe('Next charge date (ISO format)'),
-  properties: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
-  })).optional().describe('Product properties'),
+  subscription_id: z.string().describe('The subscription ID'),
 });
 
 export const subscriptionTools = [
@@ -112,17 +102,17 @@ export const subscriptionTools = [
     },
   },
   {
-    name: 'create_subscription',
-    description: 'Create a new subscription for a customer',
+    name: 'delete_subscription',
+    description: 'Delete a subscription permanently',
     inputSchema: createSubscriptionSchema,
     execute: async (client, args) => {
-      const { access_token, store_url, ...subscriptionData } = args;
-      const subscription = await client.createSubscription(subscriptionData);
+      const { subscription_id } = args;
+      const result = await client.deleteSubscription(subscription_id);
       return {
         content: [
           {
             type: 'text',
-            text: `Created Subscription:\n${JSON.stringify(subscription, null, 2)}`,
+            text: `Deleted Subscription:\n${JSON.stringify(result, null, 2)}`,
           },
         ],
       };

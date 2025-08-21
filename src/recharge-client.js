@@ -110,17 +110,6 @@ export class RechargeClient {
 
   // Customer methods
   /**
-   * Create a new customer
-   * @param {Object} customerData - Customer data
-   * @returns {Promise<Object>} Created customer data
-   */
-  async createCustomer(customerData) {
-    const required = ['email', 'first_name', 'last_name'];
-    validateRequiredParams(customerData, required);
-    return this.makeRequest('POST', '/customers', customerData);
-  }
-
-  /**
    * Get customer information by customer ID
    * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Customer data
@@ -145,6 +134,16 @@ export class RechargeClient {
   }
 
   /**
+   * Delete a customer
+   * @param {string} customerId - Customer ID
+   * @returns {Promise<Object>} Deletion result
+   */
+  async deleteCustomer(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('DELETE', `/customers/${customerId}`);
+  }
+
+  /**
    * Get customer by email address
    * @param {string} email - Customer email address
    * @returns {Promise<Object>} Customer data
@@ -155,17 +154,6 @@ export class RechargeClient {
   }
 
   // Subscription methods
-  /**
-   * Create a new subscription
-   * @param {Object} subscriptionData - Subscription data
-   * @returns {Promise<Object>} Created subscription data
-   */
-  async createSubscription(subscriptionData) {
-    const required = ['customer_id', 'address_id', 'variant_id', 'order_interval_frequency', 'order_interval_unit'];
-    validateRequiredParams(subscriptionData, required);
-    return this.makeRequest('POST', '/subscriptions', subscriptionData);
-  }
-
   /**
    * Get subscriptions with optional filtering
    * @param {Object} params - Query parameters
@@ -218,6 +206,16 @@ export class RechargeClient {
   async activateSubscription(subscriptionId) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
     return this.makeRequest('POST', `/subscriptions/${subscriptionId}/activate`);
+  }
+
+  /**
+   * Delete a subscription permanently
+   * @param {string} subscriptionId - The subscription ID
+   * @returns {Promise<Object>} Deletion result
+   */
+  async deleteSubscription(subscriptionId) {
+    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+    return this.makeRequest('DELETE', `/subscriptions/${subscriptionId}`);
   }
 
   /**
