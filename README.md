@@ -282,10 +282,10 @@ npm run lint         # Check code syntax
 
 ### Docker Development
 ```bash
-npm run docker:build    # Build Docker image
-npm run docker:run      # Run with Docker Compose
-npm run docker:logs     # View container logs
-npm run docker:stop     # Stop containers
+npm run docker:build     # Build Docker image
+npm run docker:run       # Run with Docker Compose
+npm run docker:logs      # View container logs
+npm run docker:stop      # Stop containers
 ```
 
 ## Docker Deployment
@@ -293,10 +293,10 @@ npm run docker:stop     # Stop containers
 ### Quick Docker Setup
 ```bash
 # Development
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 # Production
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 ### Automated Deployment
@@ -354,13 +354,13 @@ DEBUG=true npm start
 ### Health Checks
 ```bash
 npm run health       # Basic health check
-docker-compose ps    # Container status
+docker compose ps    # Container status
 ```
 
 ### Log Management
 ```bash
 npm run docker:logs  # View container logs
-docker-compose logs --tail=100 recharge-storefront-api-mcp
+docker compose logs --tail=100 recharge-storefront-api-mcp
 ```
 
 ### Performance Monitoring

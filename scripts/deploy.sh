@@ -16,9 +16,17 @@ if ! command -v docker >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! command -v docker-compose >/dev/null 2>&1; then
-    echo "❌ Docker Compose is not installed. Please install Docker Compose to continue."
+# Check for Docker Compose (new or legacy)
+if ! (command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1) && ! command -v docker-compose >/dev/null 2>&1; then
+    echo "❌ Docker Compose is not available. Please install Docker Compose to continue."
     exit 1
+fi
+
+# Determine which Docker Compose command to use
+if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+    DOCKER_COMPOSE="docker compose"
+else
+    DOCKER_COMPOSE="docker-compose"
 fi
 
 # Validate environment
@@ -53,24 +61,21 @@ docker tag recharge-storefront-api-mcp:$VERSION recharge-storefront-api-mcp:late
 case $ENVIRONMENT in
     development)
         echo "🔧 Starting development deployment..."
-        docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+        $DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.dev.yml up -d
         ;;
     staging)
         echo "🧪 Starting staging deployment..."
-        docker-compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+        $DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.staging.yml up -d
         ;;
     production)
         echo "🏭 Starting production deployment..."
-        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+        $DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.prod.yml up -d
         ;;
 esac
 
 echo "✅ Deployment complete!"
 echo "📊 Container status:"
-docker-compose ps
+$DOCKER_COMPOSE ps
 
 echo ""
 echo "🔗 Useful commands:"
-echo "  View logs: docker-compose logs -f recharge-storefront-api-mcp"
-echo "  Stop: docker-compose down"
-echo "  Restart: docker-compose restart recharge-storefront-api-mcp"

@@ -18,10 +18,10 @@ cp .env.example .env
 # Edit .env with your credentials
 
 # Development environment
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 # Production environment
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 ### 2. Using NPM Scripts
@@ -84,26 +84,26 @@ MCP_SERVER_VERSION=1.0.0
 
 ```bash
 # Start development environment
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 # View logs
-docker-compose logs -f recharge-storefront-api-mcp
+docker compose logs -f recharge-storefront-api-mcp
 
 # Access container shell
-docker-compose exec recharge-storefront-api-mcp sh
+docker compose exec recharge-storefront-api-mcp sh
 ```
 
 ### Production Deployment
 
 ```bash
 # Start production environment
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Check status
-docker-compose ps
+docker compose ps
 
 # View logs (limited in production)
-docker-compose logs --tail=100 recharge-storefront-api-mcp
+docker compose logs --tail=100 recharge-storefront-api-mcp
 ```
 
 ## Using the Deploy Script
@@ -136,39 +136,39 @@ The container includes built-in health checks:
 
 ```bash
 # Check container health
-docker-compose ps
+docker compose ps
 
 # View health check logs
-docker inspect --format='{{json .State.Health}}' $(docker-compose ps -q recharge-storefront-api-mcp)
+docker inspect --format='{{json .State.Health}}' $(docker compose ps -q recharge-storefront-api-mcp)
 ```
 
 ### Log Management
 
 ```bash
 # View real-time logs
-docker-compose logs -f recharge-storefront-api-mcp
+docker compose logs -f recharge-storefront-api-mcp
 
 # View last 100 lines
-docker-compose logs --tail=100 recharge-storefront-api-mcp
+docker compose logs --tail=100 recharge-storefront-api-mcp
 
 # Export logs to file
-docker-compose logs recharge-storefront-api-mcp > server.log
+docker compose logs recharge-storefront-api-mcp > server.log
 ```
 
 ### Container Management
 
 ```bash
 # Restart the service
-docker-compose restart recharge-storefront-api-mcp
+docker compose restart recharge-storefront-api-mcp
 
 # Stop all services
-docker-compose down
+docker compose down
 
 # Stop and remove volumes
-docker-compose down -v
+docker compose down -v
 
 # Rebuild and restart
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ## Troubleshooting Docker Issues
@@ -177,7 +177,7 @@ docker-compose up -d --build
 
 1. **Check environment variables:**
    ```bash
-   docker-compose config
+   docker compose config
    ```
 
 2. **Verify .env file:**
@@ -187,14 +187,14 @@ docker-compose up -d --build
 
 3. **Check container logs:**
    ```bash
-   docker-compose logs recharge-storefront-api-mcp
+   docker compose logs recharge-storefront-api-mcp
    ```
 
 ### Environment Variables Not Loading
 
 1. **Ensure .env file exists in project root**
 2. **Check .env file format (no spaces around =)**
-3. **Verify docker-compose.yml environment section**
+3. **Verify compose file environment section**
 
 ### Permission Issues
 
@@ -203,7 +203,7 @@ docker-compose up -d --build
 sudo chown -R $USER:$USER .
 
 # Check container user
-docker-compose exec recharge-storefront-api-mcp whoami
+docker compose exec recharge-storefront-api-mcp whoami
 ```
 
 ### Network Issues
@@ -214,17 +214,17 @@ docker network ls
 docker network inspect recharge-storefront-network
 
 # Recreate network
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 ```
 
 ### Resource Issues
 
 ```bash
 # Check resource usage
-docker stats $(docker-compose ps -q recharge-storefront-api-mcp)
+docker stats $(docker compose ps -q recharge-storefront-api-mcp)
 
-# Adjust resource limits in docker-compose.prod.yml
+# Adjust resource limits in compose files
 ```
 
 ## Security Considerations
@@ -317,7 +317,7 @@ fi
 
 ```bash
 # Backup logs
-docker cp $(docker-compose ps -q recharge-storefront-api-mcp):/app/logs ./backup/logs-$(date +%Y%m%d)
+docker cp $(docker compose ps -q recharge-storefront-api-mcp):/app/logs ./backup/logs-$(date +%Y%m%d)
 
 # Backup configuration
 tar -czf backup/config-$(date +%Y%m%d).tar.gz .env docker-compose*.yml
@@ -327,9 +327,9 @@ tar -czf backup/config-$(date +%Y%m%d).tar.gz .env docker-compose*.yml
 
 ```bash
 # Restore from backup
-docker-compose down
+docker compose down
 # Restore configuration files
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Integration with CI/CD

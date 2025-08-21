@@ -141,9 +141,12 @@ if command -v docker >/dev/null 2>&1; then
     docker_version=$(docker --version | cut -d' ' -f3 | cut -d',' -f1)
     print_status "Docker available: $docker_version"
     
-    if command -v docker-compose >/dev/null 2>&1; then
-        compose_version=$(docker-compose --version | cut -d' ' -f3 | cut -d',' -f1)
+    if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+        compose_version=$(docker compose version --short 2>/dev/null || echo "unknown")
         print_status "Docker Compose available: $compose_version"
+    elif command -v docker-compose >/dev/null 2>&1; then
+        compose_version=$(docker-compose --version | cut -d' ' -f3 | cut -d',' -f1)
+        print_status "Docker Compose (legacy) available: $compose_version"
     else
         print_warning "Docker Compose not found (optional for containerized deployment)"
     fi

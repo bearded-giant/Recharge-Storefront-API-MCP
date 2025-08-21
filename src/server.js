@@ -135,16 +135,14 @@ class RechargeStorefrontAPIMCPServer {
     process.on('uncaughtException', (error) => {
       console.error('[FATAL] Uncaught Exception:', error);
       this.stats.errors++;
-      // Don't exit in production, log and continue
-      if (process.env.NODE_ENV !== 'production') {
-        process.exit(1);
-      }
+      process.exit(1);
     });
 
     // Handle unhandled promise rejections
     process.on('unhandledRejection', (reason, promise) => {
       console.error('[ERROR] Unhandled Rejection at:', promise, 'reason:', reason);
       this.stats.errors++;
+      process.exit(1);
     });
 
     // Graceful shutdown
