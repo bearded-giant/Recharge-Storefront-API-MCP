@@ -13,12 +13,8 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 - **Order History**: View past orders and delivery status
 - **Charge Management**: View upcoming and past billing charges
 - **One-time Products**: Add products to next delivery
+- **Bundle Management**: Product bundle and selection management
 - **Discount Management**: Apply and manage discount codes
-- **Notification System**: View and manage customer notifications
-- **Session Management**: Customer authentication and session handling
-- **Store Configuration**: Access store settings and delivery schedules
-- **Async Operations**: Bulk operations via async batch processing
-- **Shopify Integration**: Connector configuration and sync settings
 
 ### Key Capabilities
 - **Merchant Authentication**: Uses merchant API tokens for secure access
@@ -665,8 +661,8 @@ This MCP server provides **complete coverage** of the Recharge Storefront API:
 - ✅ **Order Management** - Order history and tracking
 - ✅ **Charge Management** - Billing and payment tracking
 - ✅ **One-time Products** - Add-on product management
-- ✅ **Discount System** - Coupon and discount management
 - ✅ **Bundle Management** - Product bundle and selection management
+- ✅ **Discount System** - Coupon and discount management
 
 #### Customer ID Confusion
 ```
@@ -800,7 +796,7 @@ For issues, questions, or contributions:
 
 ### v1.0.0
 - Initial release with complete Recharge Storefront API coverage
-- 37 comprehensive API tools covering all Recharge Storefront endpoints
+- 37 comprehensive API tools covering all Recharge Storefront API endpoints
 - Flexible authentication system
 - Docker deployment support
 - Comprehensive error handling
