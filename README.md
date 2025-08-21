@@ -1620,17 +1620,10 @@ RECHARGE_STOREFRONT_DOMAIN=my-store
 
 **Solution**: Provide token via environment variable or tool call:
 ```bash
-# This error occurs when no token is provided via either method
+# Option 1: Environment variable
+echo "RECHARGE_ACCESS_TOKEN=sk_test_your_token_here" >> .env
 
-# Solution 1: Set environment variable (used as fallback)
-echo "RECHARGE_ACCESS_TOKEN=your_token_here" >> .env
-
-# Solution 2: Pass token in tool calls (takes precedence)
-# Include access_token parameter in your tool calls
-
-# Verify token precedence is working:
-DEBUG=true npm start
-# Look for: "[DEBUG] Using access token from: tool parameter" or "environment variable"
+# Option 2: Per-tool call (see examples above)
 ```
 
 **Error**: `API Error (401): Unauthorized`
@@ -1774,17 +1767,10 @@ console.log('Token configured:', !!process.env.RECHARGE_ACCESS_TOKEN);
 #### 4. Test API Connectivity
 
 ```bash
-# Check if token is valid
+# Test with curl (replace with your values)
 curl -H "X-Recharge-Access-Token: YOUR_TOKEN" \
-     "https://your-shop.myshopify.com/tools/recurring/portal/customer"
-
-# Test token precedence
-node -e "
-process.env.RECHARGE_ACCESS_TOKEN='env_token';
-const toolToken = 'tool_token';
-const effective = toolToken || process.env.RECHARGE_ACCESS_TOKEN;
-console.log('Effective token:', effective); // Should show 'tool_token'
-"
+     -H "Content-Type: application/json" \
+     "https://YOUR_DOMAIN/tools/recurring/portal/customer"
 ```
 
 #### 5. Check Tool Execution
@@ -1876,6 +1862,35 @@ time curl -H "X-Recharge-Access-Token: YOUR_TOKEN" \
   - Product read
 - ✅ Ensure the domain is correctly formatted: `your-shop.myshopify.com`
 - ✅ Verify the token hasn't expired or been revoked
+
+### **Authentication Issues**
+
+**Error: "No API access token available"**
+```bash
+# Solution 1: Set environment variable
+echo "RECHARGE_ACCESS_TOKEN=your_token_here" >> .env
+
+# Solution 2: Pass token in tool call
+# Include "access_token": "your_token_here" in your tool parameters
+
+# Solution 3: Test token logic
+npm run test:api-keys
+
+# Verify token is working
+curl -H "X-Recharge-Access-Token: your_token_here" \
+     "https://your-shop.myshopify.com/tools/recurring/portal/customer"
+```
+
+**Error: "401 Unauthorized"**
+- Token is invalid or expired
+- Check token format (should start with `sk_test_` or `sk_live_`)
+- Verify token permissions in Recharge dashboard
+- Test with different token: `{"access_token": "new_token", ...}`
+
+**Error: "403 Forbidden"**
+- Token doesn't have required permissions
+- Check Recharge app permissions
+- Verify customer access scope
 
 #### 🌐 Network Errors
 
