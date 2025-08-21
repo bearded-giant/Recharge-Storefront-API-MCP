@@ -465,6 +465,85 @@ export class RechargeClient {
     return this.makeRequest('DELETE', `/onetimes/${onetimeId}`);
   }
 
+  // Bundle methods
+  /**
+   * Get customer bundles
+   * @param {string} customerId - Customer ID
+   * @param {Object} params - Query parameters
+   * @returns {Promise<Object>} Bundles data
+   */
+  async getBundles(customerId, params = {}) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    const queryParams = { ...params, customer_id: customerId };
+    return this.makeRequest('GET', '/bundles', null, queryParams);
+  }
+
+  /**
+   * Get detailed information about a specific bundle
+   * @param {string} bundleId - The bundle ID
+   * @returns {Promise<Object>} Bundle data
+   */
+  async getBundle(bundleId) {
+    validateRequiredParams({ bundleId }, ['bundleId']);
+    return this.makeRequest('GET', `/bundles/${bundleId}`);
+  }
+
+  /**
+   * Get bundle selections for a specific bundle
+   * @param {string} bundleId - The bundle ID
+   * @param {Object} params - Query parameters
+   * @returns {Promise<Object>} Bundle selections data
+   */
+  async getBundleSelections(bundleId, params = {}) {
+    validateRequiredParams({ bundleId }, ['bundleId']);
+    return this.makeRequest('GET', `/bundles/${bundleId}/bundle_selections`, null, params);
+  }
+
+  /**
+   * Get detailed information about a specific bundle selection
+   * @param {string} bundleSelectionId - The bundle selection ID
+   * @returns {Promise<Object>} Bundle selection data
+   */
+  async getBundleSelection(bundleSelectionId) {
+    validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
+    return this.makeRequest('GET', `/bundle_selections/${bundleSelectionId}`);
+  }
+
+  /**
+   * Create a bundle selection
+   * @param {Object} selectionData - Bundle selection data
+   * @returns {Promise<Object>} Created bundle selection data
+   */
+  async createBundleSelection(selectionData) {
+    const required = ['bundle_id', 'variant_id', 'quantity'];
+    validateRequiredParams(selectionData, required);
+    return this.makeRequest('POST', '/bundle_selections', selectionData);
+  }
+
+  /**
+   * Update a bundle selection
+   * @param {string} bundleSelectionId - The bundle selection ID
+   * @param {Object} selectionData - Updated bundle selection data
+   * @returns {Promise<Object>} Updated bundle selection data
+   */
+  async updateBundleSelection(bundleSelectionId, selectionData) {
+    validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
+    if (!selectionData || Object.keys(selectionData).length === 0) {
+      throw new Error('Bundle selection update data is required');
+    }
+    return this.makeRequest('PUT', `/bundle_selections/${bundleSelectionId}`, selectionData);
+  }
+
+  /**
+   * Delete a bundle selection
+   * @param {string} bundleSelectionId - The bundle selection ID
+   * @returns {Promise<Object>} Deletion result
+   */
+  async deleteBundleSelection(bundleSelectionId) {
+    validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
+    return this.makeRequest('DELETE', `/bundle_selections/${bundleSelectionId}`);
+  }
+
   // Discount methods
   /**
    * Get customer discounts

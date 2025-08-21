@@ -197,6 +197,15 @@ The Storefront API uses **merchant authentication** with **customer identificati
 - `update_onetime` - Modify one-time product
 - `delete_onetime` - Remove one-time product
 
+### Bundle Management
+- `get_bundles` - List customer bundles
+- `get_bundle` - Get bundle details
+- `get_bundle_selections` - List bundle selections
+- `get_bundle_selection` - Get bundle selection details
+- `create_bundle_selection` - Create bundle selection
+- `update_bundle_selection` - Update bundle selection
+- `delete_bundle_selection` - Remove bundle selection
+
 ### Discount Management
 - `get_discounts` - List applied discounts
 - `get_discount` - Get discount details
@@ -652,8 +661,8 @@ This MCP server provides **complete coverage** of the Recharge Storefront API:
 - ✅ **Charge Management** - Billing and payment tracking
 - ✅ **One-time Products** - Add-on product management
 - ✅ **Discount System** - Coupon and discount management
+- ✅ **Bundle Management** - Product bundle and selection management
 
-**Total Tools**: 30 comprehensive API tools covering all Recharge Storefront endpoints.
 
 ## Troubleshooting
 

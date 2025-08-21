@@ -7,6 +7,7 @@ import { productTools } from './product-tools.js';
 import { discountTools } from './discount-tools.js';
 import { chargeTools } from './charge-tools.js';
 import { onetimeTools } from './onetimes-tools.js';
+import { bundleTools } from './bundle-tools.js';
 
 export const tools = [
   ...customerTools,
@@ -18,4 +19,5 @@ export const tools = [
   ...discountTools,
   ...chargeTools,
   ...onetimeTools,
+  ...bundleTools,
 ];
