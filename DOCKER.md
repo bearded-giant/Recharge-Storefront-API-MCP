@@ -135,7 +135,7 @@ The container includes built-in health checks:
 docker-compose ps
 
 # View health check logs
-docker inspect --format='{{json .State.Health}}' recharge-storefront-api-mcp
+docker inspect --format='{{json .State.Health}}' recharge-storefront-api-mcp_recharge-storefront-api-mcp_1
 ```
 
 ### Log Management
@@ -218,7 +218,7 @@ docker-compose up -d
 
 ```bash
 # Check resource usage
-docker stats recharge-storefront-api-mcp
+docker stats $(docker-compose ps -q recharge-storefront-api-mcp)
 
 # Adjust resource limits in docker-compose.prod.yml
 ```
@@ -313,7 +313,7 @@ fi
 
 ```bash
 # Backup logs
-docker cp recharge-storefront-api-mcp:/app/logs ./backup/logs-$(date +%Y%m%d)
+docker cp $(docker-compose ps -q recharge-storefront-api-mcp):/app/logs ./backup/logs-$(date +%Y%m%d)
 
 # Backup configuration
 tar -czf backup/config-$(date +%Y%m%d).tar.gz .env docker-compose*.yml
