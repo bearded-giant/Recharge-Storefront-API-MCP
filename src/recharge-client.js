@@ -4,8 +4,8 @@ import { handleAPIError, validateRequiredParams } from './utils/error-handler.js
 /**
  * Recharge Storefront API Client
  * 
- * Provides methods for interacting with the Recharge Storefront API using customer sessions.
- * All methods handle session authentication, error handling, and response formatting.
+ * Provides methods for interacting with the Recharge Storefront API.
+ * Uses merchant API tokens for authentication and customer identification.
  * 
  * @class RechargeClient
  */
@@ -15,22 +15,24 @@ export class RechargeClient {
    * 
    * @param {Object} config - Configuration object
    * @param {string} config.storeUrl - Store URL (e.g., 'your-shop.myshopify.com' or full URL)
+   * @param {string} config.apiToken - Merchant API token for authentication
    */
-  constructor({ storeUrl }) {
+  constructor({ storeUrl, apiToken }) {
     validateRequiredParams({ storeUrl }, ['storeUrl']);
 
-    // Store URL should already be validated by server
+    this.apiToken = apiToken;
     this.domain = storeUrl;
     this.storeUrl = storeUrl;
     
     // Construct the correct Recharge Storefront API base URL
-    this.baseURL = `https://${storeUrl}/tools/recurring/portal`;
+    this.baseURL = `https://storefront-checkout.rechargepayments.com`;
     
     this.client = axios.create({
       baseURL: this.baseURL,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'X-Recharge-Access-Token': this.apiToken,
         'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
       },
       timeout: 30000, // 30 seconds
@@ -78,26 +80,22 @@ export class RechargeClient {
   }
 
   /**
-   * Make a safe API request with session token
+   * Make a safe API request
    * @param {string} method - HTTP method
    * @param {string} endpoint - API endpoint
    * @param {Object} data - Request data
    * @param {Object} params - Query parameters
-   * @param {string} sessionToken - Customer session token
    * @returns {Promise<Object>} API response data
    */
-  async makeRequest(method, endpoint, data = null, params = null, sessionToken = null) {
+  async makeRequest(method, endpoint, data = null, params = null) {
     try {
       const config = {
         method: method.toLowerCase(),
         url: endpoint,
-        headers: {}
+        headers: {
+          'X-Recharge-Domain': this.storeUrl
+        }
       };
-      
-      // Add session token if provided
-      if (sessionToken) {
-        config.headers['X-Recharge-Session-Token'] = sessionToken;
-      }
       
       if (data) {
         config.data = data;
@@ -115,98 +113,101 @@ export class RechargeClient {
     }
   }
 
-  // Session methods
+  // Authentication methods
   /**
-   * Create a customer session
+   * Authenticate a customer and get session token
    * @param {string} email - Customer email address
-   * @returns {Promise<Object>} Session data with token
+   * @param {string} password - Customer password
+   * @returns {Promise<Object>} Authentication response with session token
    */
-  async createSession(email) {
+  async authenticateCustomer(email, password) {
+    validateRequiredParams({ email, password }, ['email', 'password']);
+    return this.makeRequest('POST', '/auth', { 
+      email, 
+      password 
+    });
+  }
+
+  /**
+   * Get customer by email (for authentication purposes)
+   * @param {string} email - Customer email address
+   * @returns {Promise<Object>} Customer data
+   */
+  async getCustomerByEmail(email) {
     validateRequiredParams({ email }, ['email']);
-    return this.makeRequest('POST', '/session', { email });
+    return this.makeRequest('GET', '/customers', null, { email });
   }
 
   /**
-   * Validate current session
-   * @param {string} sessionToken - Session token
-   * @returns {Promise<Object>} Session validation result
+   * Create customer session token
+   * @param {string} customerId - Customer ID
+   * @returns {Promise<Object>} Session token response
    */
-  async validateSession(sessionToken) {
-    validateRequiredParams({ sessionToken }, ['sessionToken']);
-    return this.makeRequest('GET', '/session', null, null, sessionToken);
-  }
-
-  /**
-   * Destroy current session (logout)
-   * @param {string} sessionToken - Session token
-   * @returns {Promise<Object>} Destruction result
-   */
-  async destroySession(sessionToken) {
-    validateRequiredParams({ sessionToken }, ['sessionToken']);
-    return this.makeRequest('DELETE', '/session', null, null, sessionToken);
+  async createCustomerToken(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('POST', `/customers/${customerId}/session_token`);
   }
 
   // Customer methods
   /**
-   * Get current customer information
-   * @param {string} sessionToken - Session token
+   * Get customer information
+   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Customer data
    */
-  async getCustomer(sessionToken) {
-    validateRequiredParams({ sessionToken }, ['sessionToken']);
-    return this.makeRequest('GET', '/customer', null, null, sessionToken);
+  async getCustomer(customerId) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('GET', `/customers/${customerId}`);
   }
 
   /**
    * Update customer information
-   * @param {string} sessionToken - Session token
+   * @param {string} customerId - Customer ID
    * @param {Object} data - Customer update data
    * @returns {Promise<Object>} Updated customer data
    */
-  async updateCustomer(sessionToken, data) {
-    validateRequiredParams({ sessionToken }, ['sessionToken']);
+  async updateCustomer(customerId, data) {
+    validateRequiredParams({ customerId }, ['customerId']);
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Customer update data is required');
     }
-    return this.makeRequest('PUT', '/customer', data, null, sessionToken);
+    return this.makeRequest('PUT', `/customers/${customerId}`, data);
   }
 
   // Subscription methods
   /**
    * Get customer subscriptions with optional filtering
-   * @param {string} sessionToken - Session token
+   * @param {string} customerId - Customer ID
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Subscriptions data
    */
-  async getSubscriptions(sessionToken, params = {}) {
-    validateRequiredParams({ sessionToken }, ['sessionToken']);
-    return this.makeRequest('GET', '/subscriptions', null, params, sessionToken);
+  async getSubscriptions(customerId, params = {}) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    const queryParams = { ...params, customer_id: customerId };
+    return this.makeRequest('GET', '/subscriptions', null, queryParams);
   }
 
   /**
    * Get detailed information about a specific subscription
-   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @returns {Promise<Object>} Subscription data
    */
-  async getSubscription(sessionToken, subscriptionId) {
-    validateRequiredParams({ sessionToken, subscriptionId }, ['sessionToken', 'subscriptionId']);
-    return this.makeRequest('GET', `/subscriptions/${subscriptionId}`, null, null, sessionToken);
+  async getSubscription(subscriptionId) {
+    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
+    return this.makeRequest('GET', `/subscriptions/${subscriptionId}`);
   }
 
   /**
    * Update subscription details
-   * @param {string} sessionToken - Session token
    * @param {string} subscriptionId - The subscription ID
    * @param {Object} data - Update data
    * @returns {Promise<Object>} Updated subscription data
    */
-  async updateSubscription(sessionToken, subscriptionId, data) {
-    validateRequiredParams({ sessionToken, subscriptionId }, ['sessionToken', 'subscriptionId']);
+  async updateSubscription(subscriptionId, data) {
+    validateRequiredParams({ subscriptionId }, ['subscriptionId']);
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Subscription update data is required');
     }
-    return this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, data, null, sessionToken);
+    return this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, data);
   }
 
   /**

@@ -1,26 +1,28 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const subscriptionListSchema = z.object({
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  session_token: z.string().describe('Customer session token'),
+  customer_id: z.string().describe('Customer ID'),
   status: z.enum(['active', 'cancelled', 'expired']).optional().describe('Filter by subscription status'),
   limit: z.number().max(250).default(50).describe('Number of subscriptions to return'),
   page: z.number().default(1).describe('Page number for pagination'),
 });
 
 const subscriptionSchema = z.object({
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  session_token: z.string().describe('Customer session token'),
   subscriptionId: z.string().describe('The subscription ID'),
 });
 
 const updateSubscriptionSchema = z.object({
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  session_token: z.string().describe('Customer session token'),
   subscriptionId: z.string().describe('The subscription ID'),
   next_charge_scheduled_at: z.string().optional().describe('Next charge date (ISO format)'),
   order_interval_frequency: z.number().optional().describe('Order interval frequency (e.g., 1, 2, 3)'),
@@ -92,11 +94,11 @@ const resumeSubscriptionSchema = z.object({
 export const subscriptionTools = [
   {
     name: 'get_subscriptions',
-    description: 'Get subscriptions for the current customer session',
+    description: 'Get subscriptions for a specific customer',
     inputSchema: subscriptionListSchema,
     execute: async (client, args) => {
-      const { session_token, ...params } = args;
-      const subscriptions = await client.getSubscriptions(session_token, params);
+      const { customer_id, ...params } = args;
+      const subscriptions = await client.getSubscriptions(customer_id, params);
       return {
         content: [
           {
@@ -112,8 +114,8 @@ export const subscriptionTools = [
     description: 'Get detailed information about a specific subscription',
     inputSchema: subscriptionSchema,
     execute: async (client, args) => {
-      const { session_token, subscriptionId } = args;
-      const subscription = await client.getSubscription(session_token, subscriptionId);
+      const { subscriptionId } = args;
+      const subscription = await client.getSubscription(subscriptionId);
       return {
         content: [
           {
@@ -129,8 +131,8 @@ export const subscriptionTools = [
     description: 'Update subscription details like frequency, quantity, or next charge date',
     inputSchema: updateSubscriptionSchema,
     execute: async (client, args) => {
-      const { session_token, subscriptionId, ...updateData } = args;
-      const updatedSubscription = await client.updateSubscription(session_token, subscriptionId, updateData);
+      const { subscriptionId, ...updateData } = args;
+      const updatedSubscription = await client.updateSubscription(subscriptionId, updateData);
       return {
         content: [
           {

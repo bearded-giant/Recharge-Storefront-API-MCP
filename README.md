@@ -33,22 +33,21 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 
 ### Getting Your API Access Token
 
-To use this MCP server, you need to understand the Recharge Storefront API authentication:
+To use this MCP server, you need a Recharge Storefront API access token:
 
-#### Storefront API Authentication
+#### Getting Your Token
 
-The Recharge Storefront API uses **customer session tokens**, not merchant API keys:
+1. **Log into your Recharge merchant portal**
+2. **Navigate to Apps & integrations > API tokens**
+3. **Create a new Storefront API token**
+4. **Copy the token** (starts with `sk_test_` for sandbox or `sk_live_` for production)
 
-1. **Customer Sessions**: Each customer gets a unique session token
-2. **Session Creation**: Sessions are created by providing customer email
-3. **Token Usage**: Session tokens are used for all subsequent API calls
-4. **Customer Context**: All operations are automatically scoped to the authenticated customer
+#### Authentication Method
 
-#### How It Works
-1. Create a session using customer email: `create_session`
-2. Use the returned session token for all other operations
-3. All API calls are automatically scoped to that customer
-4. Sessions can be validated and destroyed as needed
+The Storefront API uses merchant API tokens with customer identification:
+- **API Token**: Your merchant token for authentication
+- **Customer ID**: Specify which customer to operate on
+- **Store Domain**: Your Shopify store domain
 
 ## Prerequisites and Limitations
 
@@ -80,7 +79,7 @@ The Recharge Storefront API uses **customer session tokens**, not merchant API k
 3. **Required environment variables:**
    ```bash
    RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required OR provide per-tool
-   # Note: No API token needed - uses customer sessions
+   RECHARGE_ACCESS_TOKEN=sk_test_your_token_here       # Required OR provide per-tool
    ```
 
 4. **Start the server:**
@@ -95,56 +94,58 @@ The Recharge Storefront API uses **customer session tokens**, not merchant API k
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
+| `RECHARGE_ACCESS_TOKEN` | Conditional* | Your Storefront API token | `sk_test_abc123...` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
-*Required unless provided as store_url parameter in individual tool calls
+*Required unless provided as parameters in individual tool calls
 
-### Store URL Configuration
+### Authentication Configuration
 
-The server supports flexible store URL configuration:
+The server supports flexible authentication configuration:
 
-1. **Environment Variable (Default)**: Set `RECHARGE_STOREFRONT_DOMAIN` in your environment
-2. **Per-Tool Store URL**: Provide `store_url` parameter in individual tool calls
-3. **Store URL Precedence**: Tool parameter > Environment variable
+1. **Environment Variables (Default)**: Set `RECHARGE_STOREFRONT_DOMAIN` and `RECHARGE_ACCESS_TOKEN`
+2. **Per-Tool Parameters**: Provide `store_url` and `access_token` in individual tool calls
+3. **Precedence**: Tool parameter > Environment variable
 
-### Customer Authentication
+### Customer Identification
 
-The Storefront API uses customer sessions:
+The Storefront API requires customer identification for most operations:
 
-1. **Create Session**: Use `create_session` with customer email
-2. **Use Session Token**: Include the returned token in subsequent calls
-3. **Session Management**: Validate and destroy sessions as needed
+1. **Find Customer**: Use `get_customer_by_email` to find customer by email
+2. **Get Customer ID**: Extract the customer ID from the response
+3. **Use Customer ID**: Include `customer_id` in subsequent API calls
 
-Example session workflow:
+Example workflow:
 ```json
 {
-  "name": "create_session",
+  "name": "get_customer_by_email",
   "arguments": {
     "store_url": "your-shop.myshopify.com",
+    "access_token": "sk_test_your_token_here",
     "email": "customer@example.com"
   }
 }
 ```
 
-Then use the returned session token:
+Then use the customer ID:
 ```json
 {
   "name": "get_subscriptions",
   "arguments": {
-    "session_token": "returned_session_token_here",
+    "customer_id": "123456",
     "status": "active"
   }
 }
 ```
 
-Example using environment store URL:
+Example using environment variables:
 ```json
 {
   "name": "get_subscriptions",
   "arguments": {
-    "session_token": "session_token_here",
+    "customer_id": "123456",
     "status": "active"
   }
 }
@@ -152,8 +153,11 @@ Example using environment store URL:
 ## Available Tools
 
 ### Customer Management
-- `get_customer` - Retrieve customer information for current session
+- `get_customer` - Retrieve customer information by ID
+- `get_customer_by_email` - Find customer by email address
 - `update_customer` - Update customer profile and preferences
+- `authenticate_customer` - Authenticate customer with email/password
+- `create_customer_token` - Create session token for customer
 
 ### Subscription Management
 - `get_subscriptions` - List customer subscriptions
@@ -227,7 +231,8 @@ Example using environment store URL:
 {
   "name": "get_subscriptions",
   "arguments": {
-    "session_token": "customer_session_token_here",
+    "access_token": "sk_test_your_token_here",
+    "customer_id": "123456",
     "status": "active",
     "limit": 10
   }
@@ -239,7 +244,7 @@ Example using environment store URL:
 {
   "name": "update_subscription",
   "arguments": {
-    "session_token": "customer_session_token_here",
+    "access_token": "sk_test_your_token_here",
     "subscriptionId": "12345",
     "order_interval_frequency": 2,
     "order_interval_unit": "month"
@@ -252,7 +257,7 @@ Example using environment store URL:
 {
   "name": "skip_subscription",
   "arguments": {
-    "session_token": "customer_session_token_here",
+    "access_token": "sk_test_your_token_here",
     "subscriptionId": "12345",
     "date": "2024-02-15"
   }
@@ -264,7 +269,7 @@ Example using environment store URL:
 {
   "name": "create_onetime",
   "arguments": {
-    "session_token": "customer_session_token_here",
+    "access_token": "sk_test_your_token_here",
     "variant_id": 67890,
     "quantity": 1,
     "next_charge_scheduled_at": "2024-02-01"
