@@ -289,7 +289,6 @@ export class RechargeClient {
     const required = ['address1', 'city', 'province', 'zip', 'country', 'first_name', 'last_name'];
     validateRequiredParams(addressData, required);
     return this.makeRequest('POST', '/addresses', addressData);
-    }
   }
 
   /**
