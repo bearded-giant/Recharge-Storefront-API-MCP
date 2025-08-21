@@ -1,0 +1,17 @@
+# Development environment overrides
+version: '3.8'
+
+services:
+  recharge-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - DEBUG=true
+    volumes:
+      - ./src:/app/src:ro
+      - ./logs:/app/logs
+    command: npm run dev
+    ports:
+      - "3000:3000"
