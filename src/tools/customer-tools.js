@@ -2,16 +2,19 @@ import { z } from 'zod';
 
 const baseSchema = z.object({
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
 const customerSchema = z.object({
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   customer_id: z.string().describe('Customer ID'),
 });
 
 const updateCustomerSchema = z.object({
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   customer_id: z.string().describe('Customer ID'),
@@ -22,6 +25,7 @@ const updateCustomerSchema = z.object({
 });
 
 const customerByEmailSchema = z.object({
+  access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   access_token: z.string().optional().describe('Recharge API access token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   email: z.string().email().describe('Customer email address'),

@@ -5,7 +5,7 @@ import { handleAPIError, validateRequiredParams } from './utils/error-handler.js
  * Recharge Storefront API Client
  * 
  * Provides methods for interacting with the Recharge Storefront API.
- * Uses merchant API tokens for authentication and customer identification.
+ * Uses merchant API tokens for authentication with customer identification.
  * 
  * @class RechargeClient
  */
@@ -16,10 +16,12 @@ export class RechargeClient {
    * @param {Object} config - Configuration object
    * @param {string} config.storeUrl - Store URL (e.g., 'your-shop.myshopify.com')
    * @param {string} config.apiToken - Merchant API token for authentication
+   * @param {string} config.apiToken - Merchant API token for authentication
    */
   constructor({ storeUrl, apiToken }) {
+  constructor({ storeUrl, apiToken }) {
     validateRequiredParams({ storeUrl, apiToken }, ['storeUrl', 'apiToken']);
-
+    this.apiToken = apiToken;
     this.apiToken = apiToken;
     this.storeUrl = storeUrl;
     
@@ -31,6 +33,7 @@ export class RechargeClient {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'X-Recharge-Access-Token': this.apiToken,
         'X-Recharge-Access-Token': this.apiToken,
         'X-Recharge-Domain': this.storeUrl,
         'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
