@@ -16,11 +16,11 @@ COPY .env.example ./
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs
-RUN adduser -S recharge-storefront -u 1001
+RUN adduser -S recharge-storefront-api-mcp -u 1001
 
 # Change ownership of app directory
-RUN chown -R recharge-storefront:nodejs /app
-USER recharge-storefront
+RUN chown -R recharge-storefront-api-mcp:nodejs /app
+USER recharge-storefront-api-mcp
 
 # Expose port (if needed for health checks)
 EXPOSE 3000

@@ -78,7 +78,7 @@ A comprehensive Model Context Protocol (MCP) server that provides tools for inte
 
 ## API Compliance
 
-This MCP server is built to comply with the official **Recharge Storefront API** specification:
+This MCP server is built to comply with the official **Recharge Storefront API v2021-11** specification:
 
 ✅ **Correct Base URL**: Uses the proper Recharge Storefront portal endpoint  
 ✅ **Proper Authentication**: Implements X-Recharge-Access-Token header authentication  
@@ -89,7 +89,7 @@ This MCP server is built to comply with the official **Recharge Storefront API**
 ✅ **Consistent Response Format**: All tools return standardized MCP response format  
 ✅ **Rate Limiting**: Respects API rate limits with proper timeout handling  
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Automated Setup
 ```bash
@@ -320,7 +320,7 @@ docker build -t recharge-mcp-server .
 docker-compose up -d
 
 # View logs
-docker-compose logs -f recharge-storefront-api-mcp
+docker-compose logs -f recharge-mcp-server
 
 # Stop and remove containers
 docker-compose down
@@ -771,7 +771,7 @@ This server follows the MCP protocol and can be integrated with any MCP-compatib
 
 Once integrated, your AI assistant will have access to all 40+ Recharge tools for comprehensive subscription commerce management.
 
-## Available Tools
+## 🛠️ Available Tools
 
 The server provides **48 comprehensive tools** covering all major Recharge Storefront API endpoints:
 
@@ -1363,6 +1363,31 @@ Human-friendly Response: "Your next delivery is scheduled for February 15th, 202
 ```
 
 These examples demonstrate the full capabilities of the Recharge MCP Server and show how AI assistants can provide natural, conversational interfaces for complex subscription management tasks.
+
+## 🧪 Testing & Validation
+
+### Quick Validation
+```bash
+# Validate all components
+npm run validate
+
+# Test API connectivity
+npm run test:api-keys
+```
+
+## 🐳 Docker Deployment
+
+For comprehensive Docker deployment instructions, see [DOCKER.md](DOCKER.md).
+
+Quick start:
+```bash
+# Development
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# Production
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
 ## Architecture
 
 The server follows a clean, modular architecture designed for maintainability and extensibility:
