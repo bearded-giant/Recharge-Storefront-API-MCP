@@ -1559,73 +1559,293 @@ When adding new tools or endpoints:
 - 🛡️ Error handling tests for various failure scenarios
 - 📊 Performance tests for bulk operations
 
-## Troubleshooting
+## 🔧 Development
 
-### Common Issues
+### Running in Development Mode
 
-**Server won't start**
 ```bash
-# Check Node.js version
-node --version  # Should be 18+
+# Start with file watching
+npm run dev
 
+# Start with debug logging
+npm run dev:debug
+```
+
+### Testing the Server
+
+```bash
 # Validate configuration
 npm run validate
 
-# Check environment variables
-cat .env
-```
-
-**API authentication errors**
-```bash
-# Test with debug mode
-DEBUG=true npm start
-
-# Verify token format
-echo $RECHARGE_ACCESS_TOKEN
-```
-
-**MCP client connection issues**
-```bash
 # Test MCP protocol
 npm run mcp:test
 
-# Check client configuration
-# Ensure absolute paths are used
+# Run comprehensive tests
+npm run test:full
 ```
 
-**Tool execution errors**
+## 🚨 Troubleshooting
+
+### Common Issues
+
+#### 1. Server Won't Start
+
+**Error**: `Missing required RECHARGE_STOREFRONT_DOMAIN environment variable`
+
+**Solution**:
 ```bash
-# Enable debug logging
+# Copy the example environment file
+cp .env.example .env
+
+# Edit with your domain
+echo "RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com" >> .env
+```
+
+**Error**: `Domain must be a valid Shopify domain ending with .myshopify.com`
+
+**Solution**: Ensure your domain follows the correct format:
+```bash
+# ✅ Correct format
+RECHARGE_STOREFRONT_DOMAIN=my-store.myshopify.com
+
+# ❌ Incorrect formats
+RECHARGE_STOREFRONT_DOMAIN=my-store.com
+RECHARGE_STOREFRONT_DOMAIN=https://my-store.myshopify.com
+RECHARGE_STOREFRONT_DOMAIN=my-store
+```
+
+#### 2. Authentication Issues
+
+**Error**: `No API access token available`
+
+**Solution**: Provide token via environment variable or tool call:
+```bash
+# Option 1: Environment variable
+echo "RECHARGE_ACCESS_TOKEN=sk_test_your_token_here" >> .env
+
+# Option 2: Per-tool call (see examples above)
+```
+
+**Error**: `API Error (401): Unauthorized`
+
+**Solutions**:
+- Verify your access token is correct and active
+- Check token permissions in Recharge dashboard
+- Ensure token matches the correct store domain
+- Try regenerating the token if it's expired
+
+**Error**: `API Error (403): Forbidden`
+
+**Solutions**:
+- Verify your token has the required permissions
+- Check if your Recharge plan supports the API endpoint
+- Ensure the customer exists and is accessible with your token
+
+#### 3. MCP Client Integration Issues
+
+**Error**: Client can't find the server
+
+**Solutions**:
+```json
+// Ensure absolute paths in client config
+{
+  "mcpServers": {
+    "recharge": {
+      "command": "node",
+      "args": ["/absolute/path/to/recharge-mcp-server/src/server.js"]
+    }
+  }
+}
+```
+
+**Error**: Server starts but tools don't work
+
+**Solutions**:
+- Check server logs for startup errors
+- Verify environment variables are loaded
+- Test with `npm run mcp:test`
+- Enable debug mode: `DEBUG=true` in environment
+
+#### 4. API Request Failures
+
+**Error**: `Network error: No response received`
+
+**Solutions**:
+- Check internet connectivity
+- Verify Recharge API status
+- Check firewall/proxy settings
+- Try increasing timeout in client configuration
+
+**Error**: `API Error (404): Not Found`
+
+**Solutions**:
+- Verify the resource ID exists (subscription, address, etc.)
+- Check if the resource belongs to the authenticated customer
+- Ensure the resource hasn't been deleted
+
+**Error**: `API Error (422): Unprocessable Entity`
+
+**Solutions**:
+- Check required fields are provided
+- Validate data formats (dates, emails, etc.)
+- Review field constraints in API documentation
+- Check for conflicting data (e.g., duplicate emails)
+
+#### 5. Docker Issues
+
+**Error**: Docker container won't start
+
+**Solutions**:
+```bash
+# Check container logs
+docker-compose logs recharge-mcp-server
+
+# Rebuild container
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+
+# Check environment file
+ls -la .env
+```
+
+**Error**: Environment variables not loaded in Docker
+
+**Solutions**:
+```yaml
+# Ensure .env file exists and is readable
+services:
+  recharge-mcp-server:
+    env_file:
+      - .env
+    # OR specify directly
+    environment:
+      - RECHARGE_STOREFRONT_DOMAIN=${RECHARGE_STOREFRONT_DOMAIN}
+      - RECHARGE_ACCESS_TOKEN=${RECHARGE_ACCESS_TOKEN}
+```
+
+### Debugging Steps
+
+#### 1. Enable Debug Mode
+
+```bash
+# Method 1: Environment variable
+echo "DEBUG=true" >> .env
+npm start
+
+# Method 2: Inline
 DEBUG=true npm start
 
-# Check API coverage
-npm run coverage
+# Method 3: Development mode
+npm run dev:debug
+```
 
-# Validate all tools are loaded
+#### 2. Test MCP Protocol
+
+```bash
+# Test basic MCP communication
+npm run mcp:test
+
+# Manual test with curl (if server exposes HTTP)
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | npm start
+```
+
+#### 3. Validate Configuration
+
+```bash
+# Check all configuration
 npm run validate
+
+# Check environment variables
+node -e "
+require('dotenv').config();
+console.log('Domain:', process.env.RECHARGE_STOREFRONT_DOMAIN);
+console.log('Token configured:', !!process.env.RECHARGE_ACCESS_TOKEN);
+"
 ```
 
-### Debug Mode
+#### 4. Test API Connectivity
 
-Enable detailed logging:
 ```bash
-DEBUG=true npm start
+# Test with curl (replace with your values)
+curl -H "X-Recharge-Access-Token: YOUR_TOKEN" \
+     -H "Content-Type: application/json" \
+     "https://YOUR_DOMAIN/tools/recurring/portal/customer"
 ```
 
-This will show:
-- HTTP requests and responses
-- API endpoint calls
-- Error details and stack traces
-- Tool loading and validation
-- MCP protocol messages
+#### 5. Check Tool Execution
+
+Enable debug mode and watch for:
+- Tool parameter validation
+- API request/response details
+- Error stack traces
+- Client creation and configuration
 
 ### Getting Help
 
-1. **Check the logs**: Enable debug mode for detailed information
-2. **Validate setup**: Run `npm run validate` to check configuration
-3. **Test connectivity**: Use `npm run mcp:test` to verify MCP protocol
-4. **Review examples**: Check the sample usage section for proper syntax
-5. **API Coverage**: Run `npm run coverage` to see all available tools
+#### 1. Check Logs
+
+```bash
+# Server logs (if using Docker)
+docker-compose logs -f recharge-mcp-server
+
+# Enable debug logging
+DEBUG=true npm start 2>&1 | tee debug.log
+```
+
+#### 2. Validate Setup
+
+```bash
+# Run full validation
+npm run test:full
+
+# Check specific components
+npm run lint
+npm run validate
+npm run coverage
+```
+
+#### 3. Test Individual Components
+
+```bash
+# Test client creation
+node -e "
+const { RechargeClient } = require('./src/recharge-client.js');
+const client = new RechargeClient({
+  domain: 'your-shop.myshopify.com',
+  accessToken: 'your_token'
+});
+console.log('Client created successfully');
+"
+```
+
+#### 4. Common Debug Information to Collect
+
+When reporting issues, include:
+- Node.js version (`node --version`)
+- Package versions (`npm list`)
+- Environment variables (without sensitive values)
+- Full error messages and stack traces
+- MCP client configuration
+- Steps to reproduce the issue
+
+#### 5. Performance Issues
+
+If experiencing slow responses:
+- Check network latency to Recharge API
+- Monitor API rate limits
+- Consider implementing request caching
+- Review timeout settings
+
+```bash
+# Test API response time
+time curl -H "X-Recharge-Access-Token: YOUR_TOKEN" \
+          "https://YOUR_DOMAIN/tools/recurring/portal/customer"
+```
+
+## 📚 Sample Usage and Examples
+
+### Common Issues
 
 #### 🔐 Authentication Errors
 
@@ -1732,6 +1952,16 @@ curl -H "X-Recharge-Access-Token: your_token" \
 - 📊 Monitor API rate limits and implement backoff strategies
 - 🔄 Use async batch operations for bulk updates
 - 📈 Profile memory usage for long-running processes
+
+### Getting Help
+
+1. **📚 Check Documentation**: Review this README and inline code documentation
+2. **🐛 Enable Debug Mode**: Use `DEBUG=true` to get detailed logging
+3. **✅ Run Validation**: Use `npm run validate` to check configuration
+4. **🧪 Run Tests**: Use `npm run test:full` for comprehensive testing
+5. **🔍 Check Logs**: Review error messages and stack traces
+6. **🐳 Check Docker**: If using Docker, check container logs with `npm run docker:logs`
+7. **📞 Contact Support**: Reach out with specific error messages and configuration details
 
 ### Build & Deployment Issues
 
