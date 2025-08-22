@@ -379,7 +379,7 @@ The MCP server **automatically creates session tokens** when you provide a `cust
 
 #### Pattern 1: Create Session and Get Customer Data
 
-Create a session for a specific customer, then use the token:
+**Manual Session Creation (Advanced Users Only)**
 
 ```json
 // Step 1: Create session (requires customer ID)
@@ -395,12 +395,34 @@ Create a session for a specific customer, then use the token:
   "name": "get_customer",
   "arguments": {
     "session_token": "returned_session_token"
-**Option B: Using Customer ID (If Known)**
-}
   }
 }
 ```
+
+#### Pattern 2: Automatic Session Creation (Recommended)
+
+**Using Customer Email (Fully Automatic)**
+```json
+{
+  "name": "get_customer",
+  "arguments": {
+    "customer_email": "customer@example.com"
+  }
+}
+```
+*Behind the scenes: Email → Customer ID → Session Token → Customer Data*
+
+**Using Customer ID (If Known)**
+```json
+{
+  "name": "get_customer", 
+  "arguments": {
     "customer_id": "123456"
+  }
+}
+```
+*Behind the scenes: Customer ID → Session Token → Customer Data*
+
 #### Pattern 2: Use Session Token for Operations
 
 Once you have a session token, operations are customer-scoped:
