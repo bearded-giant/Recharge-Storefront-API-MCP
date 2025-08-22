@@ -132,27 +132,37 @@ Merchant Token + Customer ID → Session Token → API Operations
 
 ### Authentication Configuration Options
 
-**Important**: Session tokens are created automatically using merchant token + customer ID.
+**Important**: The system supports multiple authentication patterns to handle different scenarios.
 
 **Option 1: Environment Variables (Recommended)**
 ```bash
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_MERCHANT_TOKEN=your_merchant_token_here  # Required for session creation
+RECHARGE_MERCHANT_TOKEN=your_merchant_token_here  # Required for auto session creation
+RECHARGE_SESSION_TOKEN=existing_session_token     # Optional: if you have a pre-existing session
 ```
 
-**Option 2: Per-Tool Parameters**
+**Option 2: Per-Tool Parameters (Customer-Specific)**
 ```json
 {
-  "name": "create_customer_session_by_id",
+  "name": "get_subscriptions",
   "arguments": {
     "store_url": "your-shop.myshopify.com",
-    "merchant_token": "your_merchant_token_here",  // Required for this tool
-    "customer_id": "123456"
+    "customer_email": "customer@example.com"  // Auto-creates session
   }
 }
 ```
 
-**Option 3: Mixed (Environment + Override)**
+**Option 3: Direct Session Token (Advanced)**
+```json
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "session_token": "existing_session_token_here"
+  }
+}
+```
+
+**Option 4: Mixed (Environment + Override)**
 ```bash
 # Set default in environment
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
@@ -160,9 +170,9 @@ RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
 ```
 ```json
 {
-  "name": "create_customer_session_by_id",
+  "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "123456"
+    "customer_email": "customer@example.com"  // Uses env merchant token
   }
 }
 ```
@@ -928,6 +938,44 @@ This MCP server provides **complete coverage** of the Recharge Storefront API wi
 - ✅ **Charge Management** - Billing and payment tracking (2 tools)
 - ✅ **One-time Products** - Add-on product management (5 tools)
 - ✅ **Bundle Management** - Product bundle and selection management (7 tools)
+### Tools Without Customer Identification
+
+**Scenario**: Using tools without specifying `customer_id`, `customer_email`, or `session_token`
+
+```json
+{
+  "name": "get_subscriptions",
+  "arguments": {}  // No customer identification
+}
+```
+
+**Solutions**:
+
+1. **Set Default Session Token** (if you have one):
+   ```bash
+   RECHARGE_SESSION_TOKEN=your_existing_session_token
+   ```
+
+2. **Provide Customer Identification** (recommended):
+   ```json
+   {
+     "name": "get_subscriptions",
+     "arguments": {
+       "customer_email": "customer@example.com"
+     }
+   }
+   ```
+
+3. **Use Explicit Session Token**:
+   ```json
+   {
+     "name": "get_subscriptions",
+     "arguments": {
+       "session_token": "session_token_here"
+     }
+   }
+   ```
+
 - ✅ **Discount System** - Coupon and discount management (4 tools)
 
 #### Authentication Confusion

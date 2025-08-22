@@ -107,11 +107,24 @@ class RechargeStorefrontAPIMCPServer {
    */
   async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId, customerEmail) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
-    const sessionToken = toolSessionToken || this.defaultSessionToken;
+    let sessionToken = toolSessionToken || this.defaultSessionToken;
     const merchantToken = toolMerchantToken || this.defaultMerchantToken;
     
     // Validate store URL
     const validatedDomain = this.validateStoreUrl(storeUrl);
+    
+    // If no session token provided but we have a default session token from environment,
+    // we can use it directly (this handles tools that don't specify customer info)
+    if (sessionToken && !customerId && !customerEmail) {
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Using default session token from environment`);
+      }
+      
+      return new RechargeClient({
+        storeUrl: validatedDomain,
+        sessionToken: sessionToken,
+      });
+    }
     
     // If email provided but no customer ID, look up customer by email first
     if (!sessionToken && !customerId && customerEmail && merchantToken) {
@@ -186,13 +199,17 @@ class RechargeStorefrontAPIMCPServer {
     
     if (!sessionToken && !merchantToken) {
       throw new Error(
-        "No authentication token available. Please provide either 'session_token' or 'merchant_token' parameter in your tool call, or set RECHARGE_SESSION_TOKEN or RECHARGE_MERCHANT_TOKEN in your environment variables."
+        "No authentication token available. Please provide either:\n" +
+        "1. 'session_token' parameter in your tool call, or\n" +
+        "2. 'customer_id' or 'customer_email' parameter (requires merchant token), or\n" +
+        "3. Set RECHARGE_SESSION_TOKEN or RECHARGE_MERCHANT_TOKEN in your environment variables."
       );
     }
     
     if (process.env.DEBUG === 'true') {
       const storeUrlSource = toolStoreUrl ? 'tool parameter' : 'environment variable';
-      const sessionTokenSource = toolSessionToken ? 'tool parameter' : 'environment variable';
+      const sessionTokenSource = toolSessionToken ? 'tool parameter' : 
+                                 sessionToken === this.defaultSessionToken ? 'environment variable' : 'auto-created';
       const merchantTokenSource = toolMerchantToken ? 'tool parameter' : 'environment variable';
       console.error(`[DEBUG] Using store URL from: ${storeUrlSource} (${validatedDomain})`);
       if (sessionToken) {
