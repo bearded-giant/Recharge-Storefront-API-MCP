@@ -132,7 +132,7 @@ Merchant Token + Customer ID → Session Token → API Operations
 
 ### Authentication Configuration Options
 
-**Important**: Session tokens are created automatically and persist within the MCP session.
+**Important**: Session tokens are created automatically using merchant token + customer ID.
 
 **Option 1: Environment Variables (Recommended)**
 ```bash
@@ -160,11 +160,12 @@ RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
 ```
 ```json
 {
-  "name": "get_subscriptions",
+  "name": "create_customer_session_by_id",
   "arguments": {
-    "customer_email": "customer@example.com"
+    "customer_id": "123456"
   }
 }
+```
 
 ### How Customer Scoping Works
 
@@ -296,6 +297,50 @@ The MCP server **automatically creates session tokens** when you provide a `cust
   "name": "create_customer_session_by_id",
   "arguments": {
     "customer_id": "123456"
+### **Multi-Customer Session Management**
+
+The MCP server intelligently manages sessions for multiple customers:
+
+```json
+// Customer A - creates and caches session
+{
+  "name": "get_subscriptions",
+  "arguments": {
+    "customer_email": "alice@example.com"
+  }
+}
+
+// Customer B - creates and caches different session  
+{
+  "name": "get_orders",
+  "arguments": {
+    "customer_email": "bob@example.com"
+  }
+}
+
+// Back to Customer A - reuses cached session
+{
+  "name": "get_addresses",
+  "arguments": {
+    "customer_email": "alice@example.com"  // Uses cached session
+  }
+}
+
+// Customer C with known ID - creates and caches session
+{
+  "name": "get_customer",
+  "arguments": {
+    "customer_id": "123456"
+  }
+}
+```
+
+**Session Cache Benefits:**
+- ✅ **Performance**: No repeated session creation for same customer
+- ✅ **Multi-Customer**: Each customer gets isolated session
+- ✅ **Automatic**: No manual session management required
+- ✅ **Persistent**: Sessions last for entire MCP connection
+- ✅ **Efficient**: Email-to-customer-ID lookup cached too
   }
 }
 

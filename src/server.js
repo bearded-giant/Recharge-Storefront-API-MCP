@@ -425,6 +425,8 @@ class RechargeStorefrontAPIMCPServer {
       setInterval(() => {
         if (this.stats.toolCalls > 0) {
           this.logStats();
+          console.error(`🗂️  Cached sessions: ${this.sessionCache.size}`);
+          console.error(`📧 Cached customer IDs: ${this.emailToCustomerIdCache.size}`);
         }
       }, 60000); // Every minute
     }
