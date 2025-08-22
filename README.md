@@ -32,31 +32,35 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 - Recharge Storefront API access token
 - Shopify store with Recharge integration
 
-### Getting Your API Access Token
 
-To use this MCP server, you need a Recharge Storefront API access token:
+## Authentication & Setup
+
+### Getting Your API Token
+
+To use this MCP server, you need a **Recharge Merchant Token**:
 
 1. **Log into your Recharge merchant portal**
 2. **Navigate to Apps & integrations > API tokens**
 3. **Create a new Storefront API token** (not Admin API)
-4. **Copy the token** (starts with your store prefix)
+4. **Copy the token** - this is your merchant token
 
-## Authentication Model
+### How Authentication Works
 
-The Recharge Storefront API uses a **merchant token + customer ID authentication process**:
+The Recharge Storefront API uses a **two-step authentication process**:
 
-### How It Works: Super Simple Authentication
-You need a **customer ID** to create sessions. Here's how to get it:
+```
+Step 1: Merchant Token + Customer Identifier → Customer Session Token
+Step 2: Session Token → Access Customer Data
+```
 
-#### Getting Customer ID: Two Ways
+**Why this approach?**
+- **Security**: Each customer gets their own isolated session
+- **Scoping**: All operations are automatically limited to that customer's data
+- **Multi-tenant**: You can work with multiple customers safely
 
-**Option A: Automatic Email Lookup (Recommended)**
-Just provide `customer_email` in any tool call - the system automatically:
-1. Looks up customer by email using `get_customer_by_email`
-2. Extracts the customer ID from the response
-3. Creates a session token using that customer ID
-4. Executes your requested operation
+### Three Ways to Identify Customers
 
+**🎯 Option 1: Customer Email (Easiest)**
 ```json
 {
   "name": "get_subscriptions",
@@ -65,179 +69,80 @@ Just provide `customer_email` in any tool call - the system automatically:
   }
 }
 ```
-*Behind the scenes: Email → Customer ID → Session Token → Your Data*
+*System automatically: looks up customer → creates session → returns data*
 
-**Option B: Manual Email Lookup (If Needed)**
-If you need the customer ID for other purposes:
+**🎯 Option 2: Customer ID (If Known)**
 ```json
 {
-  "name": "get_customer_by_email",
+  "name": "get_subscriptions", 
   "arguments": {
-    "email": "customer@example.com"
+    "customer_id": "123456"
   }
 }
 ```
-*Returns customer data including the ID you can use later*
+*System automatically: creates session → returns data*
 
-**Important**: Both `get_customer_by_email` and `create_customer_session_by_id` require a **merchant token** (not a session token) because they operate at the merchant level to look up customers and create sessions.
-
-### API Endpoint Details
-
-**Different Endpoints for Different Operations:**
-- `get_customer_by_email` → `/api/v1/customers` (plural) - merchant-level customer lookup
-- `get_customer` → `/customer` (singular) - session-scoped current customer
-- `create_customer_session_by_id` → `/api/v1/customers/{id}/sessions`
-- All other operations → Various customer-scoped endpoints
-
-**Same Base URL**: All operations use `https://{store}.myshopify.com/tools/recurring/portal`
-
-### Automatic Session Creation
-The MCP server automatically creates session tokens when you provide a `customer_id`:
-- Provide `customer_id` in any tool call (recommended)
-- Or manually call `create_customer_session_by_id` first, then use returned token
-
-### How It Works
-```
-Merchant Token + Customer ID → Session Token → API Operations
-```
-
-1. **Merchant Token**: Authenticates you with Recharge (set in environment)
-2. **Customer ID**: Identifies which customer to create session for
-3. **Session Token**: Customer-scoped token for API operations
-4. **API Operations**: All operations automatically scoped to that customer
-
-### Authentication Examples
-
-**Option A: Using Email (Easiest - Fully Automatic)**
+**🎯 Option 3: Session Token (Advanced)**
 ```json
 {
   "name": "get_subscriptions",
   "arguments": {
+    "session_token": "existing_session_token"
+  }
+}
+```
+*Uses existing session directly*
+
+### Configuration Options
+
+**Environment Variables (Recommended)**
+```bash
+RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required
+RECHARGE_MERCHANT_TOKEN=your_merchant_token_here    # Required for auto-sessions
+```
+
+**Per-Tool Override (Optional)**
+```json
+{
+  "name": "get_customer",
+  "arguments": {
+    "store_url": "different-shop.myshopify.com",
+    "merchant_token": "different_token",
     "customer_email": "customer@example.com"
   }
 }
-```
-*The system automatically: looks up email → gets customer ID → creates session → returns subscriptions*
-
-**Option B: Using Customer ID (If You Have It)**
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-```
-*The system automatically: creates session for customer ID → returns subscriptions*
-
-### Authentication Configuration Options
-
-**Important**: The system supports multiple authentication patterns to handle different scenarios.
-
-**Option 1: Environment Variables (Recommended)**
-```bash
-RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_MERCHANT_TOKEN=your_merchant_token_here  # Required for auto session creation
-RECHARGE_SESSION_TOKEN=existing_session_token     # Optional: if you have a pre-existing session
-```
-
-**Option 2: Per-Tool Parameters (Customer-Specific)**
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "store_url": "your-shop.myshopify.com",
-    "customer_email": "customer@example.com"  // Auto-creates session
-  }
-}
-```
-
-**Option 3: Direct Session Token (Advanced)**
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "session_token": "existing_session_token_here"
-  }
-}
-```
-
-**Option 4: Mixed (Environment + Override)**
-```bash
-# Set default in environment
-RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
-```
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_email": "customer@example.com"  // Uses env merchant token
-  }
-}
-```
-
-### How Customer Scoping Works
-
-When you call any tool, the API automatically:
-1. Uses the provided token to identify the customer
-2. Returns only data for that specific customer
-3. Applies all operations to that customer's account
-
-**Example Flow:**
-```json
-// Create session for specific customer
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-// Returns session token scoped to customer 123456
 ```
 
 ### Multi-Customer Support
 
-To work with multiple customers, simply provide different customer identifiers:
+Work with multiple customers seamlessly - each gets their own session:
 
 ```json
-// Get data for Customer A
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_email": "customer-a@example.com"
-  }
-}
+// Customer A
+{"name": "get_subscriptions", "arguments": {"customer_email": "alice@example.com"}}
 
-// Get data for Customer B  
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_email": "customer-b@example.com"
-  }
-}
+// Customer B  
+{"name": "get_orders", "arguments": {"customer_email": "bob@example.com"}}
 
-// Or mix identification methods
-{
-  "name": "get_orders",
-  "arguments": {
-    "customer_id": "789012"
-  }
-}
+// Back to Customer A (reuses cached session)
+{"name": "get_addresses", "arguments": {"customer_email": "alice@example.com"}}
 ```
 
-## Prerequisites and Limitations
+### Security Features
 
-### Requirements
-- **Shopify Store**: Must have a Shopify store
-- **Recharge Integration**: Recharge subscription app must be installed and configured
-- **Merchant Token**: Must have merchant token with Storefront API permissions
-- **Server-Side**: This MCP server runs server-side, no browser required
+**🔒 Session Isolation**: Each customer gets their own session - no data mixing
 
-### Limitations
-- **Customer ID Required**: Need customer ID to create sessions
-- **Temporary Tokens**: Session tokens expire and need to be refreshed
-- **Shopify Integration**: Requires Shopify store with Recharge app installed
+**🛡️ Smart Defaults**: Default session tokens are blocked when customer sessions exist:
+```json
+// After working with a specific customer...
+{"name": "get_customer", "arguments": {"customer_email": "alice@example.com"}}
+
+// This would be blocked for security:
+{"name": "get_subscriptions", "arguments": {}}  // ❌ Which customer?
+
+// This is safe:
+{"name": "get_subscriptions", "arguments": {"customer_email": "alice@example.com"}}  // ✅
+```
 
 ### Installation
 
