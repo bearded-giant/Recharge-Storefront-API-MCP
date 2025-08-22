@@ -132,7 +132,7 @@ Merchant Token + Customer ID → Session Token → API Operations
 
 ### Authentication Configuration Options
 
-**Important**: Session tokens are created automatically using merchant token + customer ID.
+**Important**: Session tokens are created automatically and persist within the MCP session.
 
 **Option 1: Environment Variables (Recommended)**
 ```bash
@@ -160,12 +160,11 @@ RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
 ```
 ```json
 {
-  "name": "create_customer_session_by_id",
+  "name": "get_subscriptions",
   "arguments": {
-    "customer_id": "123456"
+    "customer_email": "customer@example.com"
   }
 }
-```
 
 ### How Customer Scoping Works
 
@@ -379,7 +378,7 @@ The MCP server **automatically creates session tokens** when you provide a `cust
 
 #### Pattern 1: Create Session and Get Customer Data
 
-**Manual Session Creation (Advanced Users Only)**
+Create a session for a specific customer, then use the token:
 
 ```json
 // Step 1: Create session (requires customer ID)
@@ -395,34 +394,12 @@ The MCP server **automatically creates session tokens** when you provide a `cust
   "name": "get_customer",
   "arguments": {
     "session_token": "returned_session_token"
+**Option B: Using Customer ID (If Known)**
+}
   }
 }
 ```
-
-#### Pattern 2: Automatic Session Creation (Recommended)
-
-**Using Customer Email (Fully Automatic)**
-```json
-{
-  "name": "get_customer",
-  "arguments": {
-    "customer_email": "customer@example.com"
-  }
-}
-```
-*Behind the scenes: Email → Customer ID → Session Token → Customer Data*
-
-**Using Customer ID (If Known)**
-```json
-{
-  "name": "get_customer", 
-  "arguments": {
     "customer_id": "123456"
-  }
-}
-```
-*Behind the scenes: Customer ID → Session Token → Customer Data*
-
 #### Pattern 2: Use Session Token for Operations
 
 Once you have a session token, operations are customer-scoped:
