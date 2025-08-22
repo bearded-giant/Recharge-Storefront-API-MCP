@@ -940,7 +940,7 @@ This MCP server provides **complete coverage** of the Recharge Storefront API wi
 - ✅ **Bundle Management** - Product bundle and selection management (7 tools)
 ### Tools Without Customer Identification
 
-**Scenario**: Using tools without specifying `customer_id`, `customer_email`, or `session_token`
+**⚠️ SECURITY WARNING**: Using tools without specifying `customer_id`, `customer_email`, or `session_token` can be dangerous!
 
 ```json
 {
@@ -949,12 +949,18 @@ This MCP server provides **complete coverage** of the Recharge Storefront API wi
 }
 ```
 
-**Solutions**:
+**🔒 Security Protection**: The system prevents wrong customer data exposure:
+- ✅ **Safe**: Default session token used ONLY when no customer sessions are cached
+- ❌ **Blocked**: Default session token blocked when customer sessions exist (prevents data leakage)
+- 🛡️ **Error**: Clear security error guides you to specify customer identification
+
+**✅ Safe Solutions**:
 
 1. **Set Default Session Token** (if you have one):
    ```bash
    RECHARGE_SESSION_TOKEN=your_existing_session_token
    ```
+   *Only works when no customer-specific sessions are active*
 
 2. **Provide Customer Identification** (recommended):
    ```json

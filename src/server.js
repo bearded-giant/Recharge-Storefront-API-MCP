@@ -107,17 +107,25 @@ class RechargeStorefrontAPIMCPServer {
    */
   async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId, customerEmail) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
-    let sessionToken = toolSessionToken || this.defaultSessionToken;
+    let sessionToken = toolSessionToken;
     const merchantToken = toolMerchantToken || this.defaultMerchantToken;
     
     // Validate store URL
     const validatedDomain = this.validateStoreUrl(storeUrl);
     
-    // If no session token provided but we have a default session token from environment,
-    // we can use it directly (this handles tools that don't specify customer info)
-    if (sessionToken && !customerId && !customerEmail) {
+    // SECURITY: Only use default session token if explicitly no customer identification provided
+    // AND no cached sessions exist (to prevent wrong customer data exposure)
+    if (!sessionToken && !customerId && !customerEmail && this.defaultSessionToken) {
+      if (this.sessionCache.size > 0) {
+        throw new Error(
+          "Security Error: Cannot use default session token when customer-specific sessions exist. " +
+          "Please specify 'customer_id', 'customer_email', or 'session_token' to ensure correct customer data access."
+        );
+      }
+      
+      sessionToken = this.defaultSessionToken;
       if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Using default session token from environment`);
+        console.error(`[DEBUG] Using default session token from environment (no customer sessions cached)`);
       }
       
       return new RechargeClient({
