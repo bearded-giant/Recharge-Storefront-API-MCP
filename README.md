@@ -84,9 +84,9 @@ If you need the customer ID for other purposes:
 ### API Endpoint Details
 
 **Different Endpoints for Different Operations:**
-- `get_customer_by_email` → `/customers` (plural) - merchant-level customer lookup
+- `get_customer_by_email` → `/api/v1/customers` (plural) - merchant-level customer lookup
 - `get_customer` → `/customer` (singular) - session-scoped current customer
-- `create_customer_session_by_id` → `/customers/{id}/sessions` - merchant-level session creation
+- `create_customer_session_by_id` → `/api/v1/customers/{id}/sessions`
 - All other operations → Various customer-scoped endpoints
 
 **Same Base URL**: All operations use `https://{store}.myshopify.com/tools/recurring/portal`

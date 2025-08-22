@@ -159,7 +159,7 @@ export class RechargeClient {
     }
     
     validateRequiredParams({ email }, ['email']);
-    return this.makeRequest('GET', '/customers', null, { email });
+    return this.makeRequest('GET', '/api/v1/customers', null, { email });
   }
 
   // Customer methods
