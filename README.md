@@ -81,6 +81,16 @@ If you need the customer ID for other purposes:
 
 **Important**: Both `get_customer_by_email` and `create_customer_session_by_id` require a **merchant token** (not a session token) because they operate at the merchant level to look up customers and create sessions.
 
+### API Endpoint Details
+
+**Different Endpoints for Different Operations:**
+- `get_customer_by_email` → `/customers` (plural) - merchant-level customer lookup
+- `get_customer` → `/customer` (singular) - session-scoped current customer
+- `create_customer_session_by_id` → `/customers/{id}/sessions` - merchant-level session creation
+- All other operations → Various customer-scoped endpoints
+
+**Same Base URL**: All operations use `https://{store}.myshopify.com/tools/recurring/portal`
+
 ### Automatic Session Creation
 The MCP server automatically creates session tokens when you provide a `customer_id`:
 - Provide `customer_id` in any tool call (recommended)
