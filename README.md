@@ -284,13 +284,17 @@ To work with multiple customers, simply provide different customer identifiers:
 ### Authentication Configuration
 
 
-## Available Tools
+## Automatic Session Management
 
-### Automatic Session Creation
+The MCP server **automatically creates and manages session tokens** when you provide customer identification. This eliminates manual session creation in most cases.
 
-The MCP server **automatically creates session tokens** when you provide a `customer_id` parameter instead of a `session_token`. This eliminates the need for manual session creation in most cases.
+### **How Automatic Sessions Work**
 
-**Option A: Using Customer Email (Easiest)**
+```
+Your Request → Customer Lookup → Session Creation → API Operation → Your Data
+```
+
+**Example Flow:**
 ```json
 {
   "name": "get_subscriptions",
@@ -300,61 +304,70 @@ The MCP server **automatically creates session tokens** when you provide a `cust
 }
 ```
 
-#### Manual Mode (Advanced)
+**Behind the scenes:**
+1. 📧 **Email Lookup**: `customer@example.com` → Customer ID `123456`
+2. 🔑 **Session Creation**: Customer ID `123456` → Session Token `abc123...`
+3. 📊 **API Call**: Session Token → Customer's Subscriptions
+4. 💾 **Caching**: Session cached for future calls
+
+### **Session Persistence and Caching**
+
+Sessions are intelligently cached within your MCP connection:
+
+```json
+// First call - creates and caches session for Alice
+{
+  "name": "get_customer",
+  "arguments": {
+    "customer_email": "alice@example.com"
+  }
+}
+
+// Second call - reuses Alice's cached session (fast!)
+{
+  "name": "get_subscriptions", 
+  "arguments": {
+    "customer_email": "alice@example.com"
+  }
+}
+
+// Third call - creates and caches new session for Bob
+{
+  "name": "get_orders",
+  "arguments": {
+    "customer_email": "bob@example.com"  
+  }
+}
+
+// Fourth call - reuses Alice's session again
+{
+  "name": "get_addresses",
+  "arguments": {
+    "customer_email": "alice@example.com"
+  }
+}
+```
+
+**Benefits:**
+- ⚡ **Performance**: No repeated session creation for same customer
+- 🔒 **Isolation**: Each customer gets separate session
+- 🧠 **Smart Caching**: Email lookups cached too
+- 🔄 **Automatic**: Works transparently across all tools
+
+### **Manual Session Creation (Advanced)**
+
+For advanced use cases, you can create sessions manually:
+
 ```json
 // Step 1: Create session manually
 {
   "name": "create_customer_session_by_id",
   "arguments": {
     "customer_id": "123456"
-### **Multi-Customer Session Management**
-
-The MCP server intelligently manages sessions for multiple customers:
-
-```json
-// Customer A - creates and caches session
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_email": "alice@example.com"
   }
 }
 
-// Customer B - creates and caches different session  
-{
-  "name": "get_orders",
-  "arguments": {
-    "customer_email": "bob@example.com"
-  }
-}
-
-// Back to Customer A - reuses cached session
-{
-  "name": "get_addresses",
-  "arguments": {
-    "customer_email": "alice@example.com"  // Uses cached session
-  }
-}
-
-// Customer C with known ID - creates and caches session
-{
-  "name": "get_customer",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-```
-
-**Session Cache Benefits:**
-- ✅ **Performance**: No repeated session creation for same customer
-- ✅ **Multi-Customer**: Each customer gets isolated session
-- ✅ **Automatic**: No manual session management required
-- ✅ **Persistent**: Sessions last for entire MCP connection
-- ✅ **Efficient**: Email-to-customer-ID lookup cached too
-  }
-}
-
-// Step 2: Use session token
+// Step 2: Use returned session token
 {
   "name": "get_subscriptions",
   "arguments": {
@@ -362,6 +375,8 @@ The MCP server intelligently manages sessions for multiple customers:
   }
 }
 ```
+
+## Available Tools
 
 ### Customer Management
 - `get_customer` - Retrieve current customer information
