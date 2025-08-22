@@ -123,7 +123,7 @@ class RechargeStorefrontAPIMCPServer {
       
       try {
         const customerResponse = await tempClient.getCustomerByEmail(customerEmail);
-        const foundCustomerId = customerResponse.customer?.id;
+        const foundCustomerId = customerResponse.customer?.id || customerResponse.customers?.[0]?.id;
         
         if (foundCustomerId) {
           if (process.env.DEBUG === 'true') {
@@ -163,12 +163,14 @@ class RechargeStorefrontAPIMCPServer {
             console.error(`[DEBUG] Auto-created session token for customer ${customerId}`);
           }
           
-          // Return client with the new session token
+          // Return client with the new session token (this replaces merchant token auth)
           return new RechargeClient({
             storeUrl: validatedDomain,
             sessionToken: autoSessionToken,
-            merchantToken: merchantToken,
+            // Don't pass merchantToken here - session token takes precedence
           });
+        } else {
+          throw new Error('Session creation succeeded but no token returned');
         }
       } catch (error) {
         if (process.env.DEBUG === 'true') {

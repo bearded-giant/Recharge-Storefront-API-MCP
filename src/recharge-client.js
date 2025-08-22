@@ -72,11 +72,19 @@ export class RechargeClient {
       return_url: options.return_url || null
     });
     
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] Session creation response:`, JSON.stringify(response, null, 2));
+    }
+    
     if (response.session && response.session.token) {
       // Update client to use the new session token
       this.sessionToken = response.session.token;
       this.client.defaults.headers['Authorization'] = `Bearer ${this.sessionToken}`;
       delete this.client.defaults.headers['X-Recharge-Access-Token'];
+      
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Client updated to use session token: ${this.sessionToken.substring(0, 10)}...`);
+      }
     }
     
     return response;
