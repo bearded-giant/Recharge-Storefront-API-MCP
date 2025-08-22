@@ -79,6 +79,8 @@ If you need the customer ID for other purposes:
 ```
 *Returns customer data including the ID you can use later*
 
+**Important**: Both `get_customer_by_email` and `create_customer_session_by_id` require a **merchant token** (not a session token) because they operate at the merchant level to look up customers and create sessions.
+
 ### Automatic Session Creation
 The MCP server automatically creates session tokens when you provide a `customer_id`:
 - Provide `customer_id` in any tool call (recommended)
@@ -125,7 +127,7 @@ Merchant Token + Customer ID → Session Token → API Operations
 **Option 1: Environment Variables (Recommended)**
 ```bash
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
+RECHARGE_MERCHANT_TOKEN=your_merchant_token_here  # Required for session creation
 ```
 
 **Option 2: Per-Tool Parameters**
@@ -134,7 +136,7 @@ RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
   "name": "create_customer_session_by_id",
   "arguments": {
     "store_url": "your-shop.myshopify.com",
-    "merchant_token": "your_merchant_token_here",
+    "merchant_token": "your_merchant_token_here",  // Required for this tool
     "customer_id": "123456"
   }
 }
@@ -252,11 +254,12 @@ To work with multiple customers, simply provide different customer identifiers:
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_MERCHANT_TOKEN` | Conditional* | Recharge merchant token | `your_merchant_token_here` |
+| `RECHARGE_MERCHANT_TOKEN` | Conditional* | Recharge merchant token (required for session creation) | `your_merchant_token_here` |
 | `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
+*Required unless you provide the corresponding parameter in each tool call. **Merchant token is required for any operation that involves customer lookup or session creation.**
 
 ### Authentication Configuration
 
