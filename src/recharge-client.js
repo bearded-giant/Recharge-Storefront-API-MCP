@@ -120,6 +120,14 @@ export class RechargeClient {
         return response;
       },
       (error) => {
+        // Check for session expiry errors and mark for renewal
+        if (error.response?.status === 401 && this.sessionToken) {
+          if (process.env.DEBUG === 'true') {
+            console.error(`[DEBUG] Session token appears to be expired (401 error)`);
+          }
+          // Add a flag to indicate session expiry
+          error.sessionExpired = true;
+        }
         handleAPIError(error);
       }
     );
