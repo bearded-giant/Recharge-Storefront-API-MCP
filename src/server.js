@@ -350,40 +350,7 @@ class RechargeStorefrontAPIMCPServer {
         // Get client
         const rechargeClient = await this.getRechargeClient(store_url, session_token, merchant_token, customer_id, customer_email);
         
-        let result;
-        try {
-          result = await tool.execute(rechargeClient, toolArgs);
-        } catch (error) {
-          // Check if this was a session expiry error and we can retry
-          if (error.sessionExpired && (customer_id || customer_email) && merchant_token) {
-            if (process.env.DEBUG === 'true') {
-              console.error(`[DEBUG] Session expired, attempting to create new session and retry`);
-            }
-            
-            // Clear the expired session from cache
-            if (customer_id) {
-              this.clearExpiredSession(customer_id);
-            } else if (customer_email) {
-              const cachedCustomerId = this.emailToCustomerIdCache.get(customer_email);
-              if (cachedCustomerId) {
-                this.clearExpiredSession(cachedCustomerId);
-              }
-            }
-            
-            // Get a new client (will create fresh session)
-            const newRechargeClient = await this.getRechargeClient(store_url, session_token, merchant_token, customer_id, customer_email);
-            
-            // Retry the operation
-            result = await tool.execute(newRechargeClient, toolArgs);
-            
-            if (process.env.DEBUG === 'true') {
-              console.error(`[DEBUG] Successfully retried with new session`);
-            }
-          } else {
-            throw error;
-          }
-        }
-        
+        const result = await tool.execute(rechargeClient, toolArgs);
         this.stats.successfulCalls++;
         
         if (process.env.DEBUG === 'true') {
@@ -485,6 +452,7 @@ class RechargeStorefrontAPIMCPServer {
         if (this.stats.toolCalls > 0) {
           this.logStats();
           console.error(`🗂️  Cached sessions: ${this.sessionCache.size}`);
+          console.error(`⏰ Session expiry cache: ${this.sessionExpiryCache.size}`);
           console.error(`📧 Cached customer IDs: ${this.emailToCustomerIdCache.size}`);
         }
       }, 60000); // Every minute

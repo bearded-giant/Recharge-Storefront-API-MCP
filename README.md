@@ -214,7 +214,7 @@ Customer Email/ID → Lookup → Session Creation → API Call → Cached Sessio
 
 #### Session Persistence
 
-Sessions are cached within your MCP connection:
+Sessions are cached within your MCP connection with automatic renewal:
 
 ```json
 // First call - creates and caches session
@@ -235,6 +235,13 @@ Sessions are cached within your MCP connection:
   "arguments": {"customer_email": "bob@example.com"}
 }
 ```
+
+#### Automatic Session Renewal
+
+- **⏰ Expiry Tracking**: Sessions expire after 1 hour, server tracks expiry times
+- **🔄 Auto Renewal**: Expired sessions automatically renewed on next API call
+- **🛡️ Retry Logic**: Failed calls due to expired sessions automatically retried with fresh session
+- **📊 Smart Caching**: Sessions renewed 5 minutes before expiry to prevent failures
 
 #### Performance Benefits
 
