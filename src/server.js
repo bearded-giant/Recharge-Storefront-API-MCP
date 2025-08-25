@@ -31,6 +31,7 @@ class RechargeStorefrontAPIMCPServer {
     // Session cache for multi-customer support
     this.sessionCache = new Map(); // customerId -> sessionToken
     this.emailToCustomerIdCache = new Map(); // email -> customerId
+    this.sessionExpiryCache = new Map(); // customerId -> expiryTime
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Default store URL: ${this.defaultStoreUrl || 'Not set (will require in tool calls)'}`);
