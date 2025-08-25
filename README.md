@@ -151,7 +151,7 @@ Merchant Token + Customer ID → Customer Session → API Operations
 3. **Create Storefront Token**: Create a new **Storefront API** token (not Admin API)
 4. **Copy Token**: Save the token (starts with your store prefix)
 
-⚠️ **Important**: Use **Storefront API** tokens, not Admin API tokens.
+**Important**: Use **Storefront API** tokens, not Admin API tokens.
 
 ### Authentication Methods
 
@@ -171,10 +171,10 @@ The simplest approach - just provide the customer's email address:
 ```
 
 **What happens automatically:**
-1. 📧 Email lookup → Customer ID
-2. 🔑 Customer ID → Session token  
-3. 📊 Session token → Customer data
-4. 💾 Session cached for future calls
+1. Email lookup → Customer ID
+2. Customer ID → Session token  
+3. Session token → Customer data
+4. Session cached for future calls
 
 #### Method 2: Customer ID
 
@@ -238,17 +238,17 @@ Sessions are cached within your MCP connection with automatic renewal:
 
 #### Automatic Session Renewal
 
-- **⏰ Expiry Tracking**: Sessions expire after 1 hour, server tracks expiry times
-- **🔄 Auto Renewal**: Expired sessions automatically renewed on next API call
-- **🛡️ Retry Logic**: Failed calls due to expired sessions automatically retried with fresh session
-- **📊 Smart Caching**: Sessions renewed 5 minutes before expiry to prevent failures
+- **Expiry Tracking**: Sessions expire after 1 hour, server tracks expiry times
+- **Auto Renewal**: Expired sessions automatically renewed on next API call
+- **Retry Logic**: Failed calls due to expired sessions automatically retried with fresh session
+- **Smart Caching**: Sessions renewed 5 minutes before expiry to prevent failures
 
 #### Performance Benefits
 
-- ⚡ **Fast**: No repeated session creation
-- 🧠 **Smart**: Email lookups cached too
-- 🔒 **Isolated**: Each customer gets separate session
-- 🔄 **Automatic**: Works transparently
+- **Fast**: No repeated session creation
+- **Smart**: Email lookups cached too
+- **Isolated**: Each customer gets separate session
+- **Automatic**: Works transparently
 
 ### Multi-Customer Support
 
@@ -275,14 +275,14 @@ The server includes built-in security protections:
 
 ```json
 // Safe: Default session when no customer sessions exist
-{"name": "get_subscriptions", "arguments": {}}  // ✅ Uses default session
+{"name": "get_subscriptions", "arguments": {}}  // Uses default session
 
 // Dangerous: Could expose wrong customer data
 {"name": "get_customer", "arguments": {"customer_email": "alice@example.com"}}
-{"name": "get_subscriptions", "arguments": {}}  // ❌ BLOCKED! Security error
+{"name": "get_subscriptions", "arguments": {}}  // BLOCKED! Security error
 
 // Safe: Always specify customer identification
-{"name": "get_subscriptions", "arguments": {"customer_email": "alice@example.com"}}  // ✅ Safe
+{"name": "get_subscriptions", "arguments": {"customer_email": "alice@example.com"}}  // Safe
 ```
 
 **Security Error Message:**
@@ -353,7 +353,7 @@ npm run validate
 npm run test:api-keys
 
 # Check configuration format
-node -e "require('dotenv').config(); console.log('✅ Configuration loaded')"
+node -e "require('dotenv').config(); console.log('Configuration loaded')"
 ```
 
 ## Usage
@@ -936,4 +936,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-*Built with ❤️ for the Recharge and MCP communities*
+*Built with care for the Recharge and MCP communities*
