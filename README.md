@@ -2,60 +2,164 @@
 
 A comprehensive Model Context Protocol (MCP) server that provides complete access to the Recharge Storefront API. This server enables AI assistants and other MCP clients to interact with Recharge subscription management functionality through a standardized interface.
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Authentication](#authentication)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Available Tools](#available-tools)
+- [Examples](#examples)
+- [Development](#development)
+- [Docker Deployment](#docker-deployment)
+- [Troubleshooting](#troubleshooting)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Overview
+
+The Recharge Storefront API MCP Server bridges the gap between AI assistants and Recharge's subscription management platform. It provides a complete, production-ready interface to all Recharge Storefront API endpoints through the standardized Model Context Protocol.
+
+### What is Recharge?
+
+Recharge is a leading subscription commerce platform that powers recurring billing for Shopify stores. It handles subscription management, billing cycles, customer portals, and recurring order processing for thousands of merchants.
+
+### What is MCP?
+
+Model Context Protocol (MCP) is a standardized way for AI assistants to interact with external services and APIs. This server implements MCP to make Recharge's functionality accessible to AI systems.
+
+### Key Benefits
+
+- **Complete API Coverage**: All 37 Recharge Storefront API endpoints
+- **Intelligent Authentication**: Automatic session management with multi-customer support
+- **Production Ready**: Docker support, error handling, logging, and monitoring
+- **Developer Friendly**: Comprehensive documentation, examples, and debugging tools
+- **Secure**: Built-in security protections and customer data isolation
+
 ## Features
 
 ### Complete Storefront API Coverage
-- **Customer Management**: Customer profile and information retrieval
-- **Subscription Management**: View, update, cancel, skip, swap subscriptions
-- **Address Management**: Shipping and billing address operations
-- **Payment Methods**: Payment method viewing and updates
-- **Product Catalog**: Browse subscription products and variants
-- **Order History**: View past orders and delivery status
-- **Charge Management**: View upcoming and past billing charges
-- **One-time Products**: Add products to next delivery
-- **Bundle Management**: Product bundle and selection management
-- **Discount Management**: Apply and manage discount codes
 
-### Key Capabilities
-- **Merchant Authentication**: Uses merchant API tokens for secure access
-- **Customer Scoping**: All operations properly scoped to specific customers
-- **Comprehensive Error Handling**: Detailed error messages with proper HTTP status codes
+| Category | Tools | Description |
+|----------|-------|-------------|
+| **Customer Management** | 4 tools | Profile management, lookup, and session creation |
+| **Subscription Lifecycle** | 10 tools | Create, update, cancel, skip, swap, and activate subscriptions |
+| **Address Management** | 5 tools | Full CRUD operations for shipping and billing addresses |
+| **Payment Methods** | 3 tools | View and update payment information |
+| **Product Catalog** | 2 tools | Browse subscription products and variants |
+| **Order Management** | 2 tools | View order history and tracking |
+| **Charge Management** | 2 tools | Billing and payment tracking |
+| **One-time Products** | 5 tools | Add products to upcoming deliveries |
+| **Bundle Management** | 7 tools | Product bundle and selection management |
+| **Discount System** | 4 tools | Apply and manage discount codes |
+
+### Advanced Features
+
+- **Automatic Session Management**: Intelligent session creation and caching
+- **Multi-Customer Support**: Handle multiple customers in a single MCP connection
+- **Flexible Authentication**: Environment variables, per-tool parameters, or explicit tokens
+- **Comprehensive Error Handling**: Detailed error messages with actionable guidance
+- **Debug Mode**: Extensive logging for development and troubleshooting
 - **Input Validation**: Zod schema validation for all tool parameters
-- **Debug Support**: Optional debug logging for development and troubleshooting
-- **Docker Support**: Complete containerization with multi-environment configurations
-- **Production Ready**: Health checks, logging, resource limits, and monitoring
+- **Security Protection**: Prevents accidental customer data exposure
 
-## Quick Start
+## Prerequisites
 
-### Prerequisites
-- Node.js 18.0.0 or higher
-- Recharge Storefront API access token
-- Shopify store with Recharge integration
+### Required
 
-### Getting Your API Access Token
+- **Node.js**: Version 18.0.0 or higher
+- **Shopify Store**: Must have a Shopify store with Recharge installed
+- **Recharge Account**: Active Recharge merchant account
+- **API Access**: Recharge Storefront API access token
 
-To use this MCP server, you need a Recharge Storefront API access token:
+### System Requirements
 
-1. **Log into your Recharge merchant portal**
-2. **Navigate to Apps & integrations > API tokens**
-3. **Create a new Storefront API token** (not Admin API)
-4. **Copy the token** (starts with your store prefix)
+- **Memory**: Minimum 256MB RAM (512MB recommended for production)
+- **Storage**: 100MB available disk space
+- **Network**: Internet connection for API access
+- **Platform**: Linux, macOS, or Windows (Docker recommended for Windows)
 
-## Authentication Model
+## Installation
 
-The Recharge Storefront API uses a **merchant token + customer ID authentication process**:
+### Quick Start
 
-### How It Works: Super Simple Authentication
-You need a **customer ID** to create sessions. Here's how to get it:
+```bash
+# Clone the repository
+git clone <repository-url>
+cd recharge-storefront-api-mcp
 
-#### Getting Customer ID: Two Ways
+# Install dependencies
+npm install
 
-**Option A: Automatic Email Lookup (Recommended)**
-Just provide `customer_email` in any tool call - the system automatically:
-1. Looks up customer by email using `get_customer_by_email`
-2. Extracts the customer ID from the response
-3. Creates a session token using that customer ID
-4. Executes your requested operation
+# Configure environment
+cp .env.example .env
+# Edit .env with your credentials
+
+# Start the server
+npm start
+```
+
+### Automated Setup
+
+```bash
+# Run the setup script
+npm run setup
+```
+
+The setup script will:
+- Validate Node.js version
+- Install dependencies
+- Create environment file
+- Validate configuration
+- Check for Docker (optional)
+- Display project statistics
+
+### Verification
+
+```bash
+# Validate installation
+npm run validate
+
+# Run comprehensive tests
+npm run test:full
+
+# Check API coverage
+npm run coverage
+```
+
+## Authentication
+
+### Understanding Recharge Authentication
+
+Recharge uses a two-step authentication process:
+
+1. **Merchant Token**: Authenticates your application with Recharge
+2. **Customer Session**: Scopes operations to a specific customer
+
+```
+Merchant Token + Customer ID → Customer Session → API Operations
+```
+
+### Getting Your API Token
+
+1. **Log into Recharge**: Access your merchant portal
+2. **Navigate to API Tokens**: Go to Apps & integrations > API tokens
+3. **Create Storefront Token**: Create a new **Storefront API** token (not Admin API)
+4. **Copy Token**: Save the token (starts with your store prefix)
+
+⚠️ **Important**: Use **Storefront API** tokens, not Admin API tokens.
+
+### Authentication Methods
+
+The server supports three flexible authentication approaches:
+
+#### Method 1: Customer Email (Recommended)
+
+The simplest approach - just provide the customer's email address:
 
 ```json
 {
@@ -65,61 +169,17 @@ Just provide `customer_email` in any tool call - the system automatically:
   }
 }
 ```
-*Behind the scenes: Email → Customer ID → Session Token → Your Data*
 
-**Option B: Manual Email Lookup (If Needed)**
-If you need the customer ID for other purposes:
-```json
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "customer@example.com"
-  }
-}
-```
-*Returns customer data including the ID you can use later*
+**What happens automatically:**
+1. 📧 Email lookup → Customer ID
+2. 🔑 Customer ID → Session token  
+3. 📊 Session token → Customer data
+4. 💾 Session cached for future calls
 
-**Important**: Both `get_customer_by_email` and `create_customer_session_by_id` require a **merchant token** (not a session token) because they operate at the merchant level to look up customers and create sessions.
+#### Method 2: Customer ID
 
-### API Endpoint Details
+If you already have the customer ID:
 
-**Different Endpoints for Different Operations:**
-- `get_customer_by_email` → `/api/v1/customers` (plural) - merchant-level customer lookup
-- `get_customer` → `/customer` (singular) - session-scoped current customer
-- `create_customer_session_by_id` → `/api/v1/customers/{id}/sessions`
-- All other operations → Various customer-scoped endpoints
-
-**Same Base URL**: All operations use `https://{store}.myshopify.com/tools/recurring/portal`
-
-### Automatic Session Creation
-The MCP server automatically creates session tokens when you provide a `customer_id`:
-- Provide `customer_id` in any tool call (recommended)
-- Or manually call `create_customer_session_by_id` first, then use returned token
-
-### How It Works
-```
-Merchant Token + Customer ID → Session Token → API Operations
-```
-
-1. **Merchant Token**: Authenticates you with Recharge (set in environment)
-2. **Customer ID**: Identifies which customer to create session for
-3. **Session Token**: Customer-scoped token for API operations
-4. **API Operations**: All operations automatically scoped to that customer
-
-### Authentication Examples
-
-**Option A: Using Email (Easiest - Fully Automatic)**
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_email": "customer@example.com"
-  }
-}
-```
-*The system automatically: looks up email → gets customer ID → creates session → returns subscriptions*
-
-**Option B: Using Customer ID (If You Have It)**
 ```json
 {
   "name": "get_subscriptions",
@@ -128,1043 +188,745 @@ Merchant Token + Customer ID → Session Token → API Operations
   }
 }
 ```
-*The system automatically: creates session for customer ID → returns subscriptions*
 
-### Authentication Configuration Options
+#### Method 3: Explicit Session Token
 
-**Important**: The system supports multiple authentication patterns to handle different scenarios.
+For advanced use cases with existing session tokens:
 
-**Option 1: Environment Variables (Recommended)**
-```bash
-RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_MERCHANT_TOKEN=your_merchant_token_here  # Required for auto session creation
-RECHARGE_SESSION_TOKEN=existing_session_token     # Optional: if you have a pre-existing session
-```
-
-**Option 2: Per-Tool Parameters (Customer-Specific)**
 ```json
 {
   "name": "get_subscriptions",
   "arguments": {
-    "store_url": "your-shop.myshopify.com",
-    "customer_email": "customer@example.com"  // Auto-creates session
+    "session_token": "existing_session_token"
   }
 }
 ```
 
-**Option 3: Direct Session Token (Advanced)**
+### Automatic Session Management
+
+The server intelligently manages customer sessions:
+
+#### Session Creation Flow
+
+```
+Customer Email/ID → Lookup → Session Creation → API Call → Cached Session
+```
+
+#### Session Persistence
+
+Sessions are cached within your MCP connection:
+
 ```json
+// First call - creates and caches session
 {
-  "name": "get_subscriptions",
-  "arguments": {
-    "session_token": "existing_session_token_here"
-  }
+  "name": "get_customer",
+  "arguments": {"customer_email": "alice@example.com"}
+}
+
+// Subsequent calls - reuses cached session (fast!)
+{
+  "name": "get_subscriptions", 
+  "arguments": {"customer_email": "alice@example.com"}
+}
+
+// Different customer - creates new cached session
+{
+  "name": "get_orders",
+  "arguments": {"customer_email": "bob@example.com"}
 }
 ```
 
-**Option 4: Mixed (Environment + Override)**
-```bash
-# Set default in environment
-RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
-RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
-```
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_email": "customer@example.com"  // Uses env merchant token
-  }
-}
-```
+#### Performance Benefits
 
-### How Customer Scoping Works
-
-When you call any tool, the API automatically:
-1. Uses the provided token to identify the customer
-2. Returns only data for that specific customer
-3. Applies all operations to that customer's account
-
-**Example Flow:**
-```json
-// Create session for specific customer
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-// Returns session token scoped to customer 123456
-```
+- ⚡ **Fast**: No repeated session creation
+- 🧠 **Smart**: Email lookups cached too
+- 🔒 **Isolated**: Each customer gets separate session
+- 🔄 **Automatic**: Works transparently
 
 ### Multi-Customer Support
 
-To work with multiple customers, simply provide different customer identifiers:
+Handle multiple customers seamlessly:
 
 ```json
-// Get data for Customer A
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_email": "customer-a@example.com"
-  }
-}
+// Customer A operations
+{"name": "get_customer", "arguments": {"customer_email": "alice@example.com"}}
+{"name": "get_subscriptions", "arguments": {"customer_email": "alice@example.com"}}
 
-// Get data for Customer B  
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "customer_email": "customer-b@example.com"
-  }
-}
+// Customer B operations  
+{"name": "get_customer", "arguments": {"customer_email": "bob@example.com"}}
+{"name": "get_orders", "arguments": {"customer_email": "bob@example.com"}}
 
-// Or mix identification methods
-{
-  "name": "get_orders",
-  "arguments": {
-    "customer_id": "789012"
-  }
-}
+// Back to Customer A - reuses cached session
+{"name": "get_addresses", "arguments": {"customer_email": "alice@example.com"}}
 ```
 
-## Prerequisites and Limitations
+### Security Protection
 
-### Requirements
-- **Shopify Store**: Must have a Shopify store
-- **Recharge Integration**: Recharge subscription app must be installed and configured
-- **Merchant Token**: Must have merchant token with Storefront API permissions
-- **Server-Side**: This MCP server runs server-side, no browser required
+The server includes built-in security protections:
 
-### Limitations
-- **Customer ID Required**: Need customer ID to create sessions
-- **Temporary Tokens**: Session tokens expire and need to be refreshed
-- **Shopify Integration**: Requires Shopify store with Recharge app installed
+#### Preventing Wrong Customer Data
 
-### Installation
+```json
+// Safe: Default session when no customer sessions exist
+{"name": "get_subscriptions", "arguments": {}}  // ✅ Uses default session
 
-1. **Clone and setup:**
-   ```bash
-   git clone <repository-url>
-   cd recharge-storefront-api-mcp
-   npm install
-   ```
+// Dangerous: Could expose wrong customer data
+{"name": "get_customer", "arguments": {"customer_email": "alice@example.com"}}
+{"name": "get_subscriptions", "arguments": {}}  // ❌ BLOCKED! Security error
 
-2. **Configure environment:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your credentials
-   ```
+// Safe: Always specify customer identification
+{"name": "get_subscriptions", "arguments": {"customer_email": "alice@example.com"}}  // ✅ Safe
+```
 
-3. **Required environment variables:**
-   ```bash
-   RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com  # Required
-   RECHARGE_MERCHANT_TOKEN=your_merchant_token_here    # Required*
-   ```
-   
-   *Required unless you provide `merchant_token` parameter in each tool call
-
-4. **Start the server:**
-   ```bash
-   npm start
-   ```
+**Security Error Message:**
+```
+Security Error: Cannot use default session token when customer-specific sessions exist. 
+Please specify 'customer_id', 'customer_email', or 'session_token' to ensure correct customer data access.
+```
 
 ## Configuration
 
 ### Environment Variables
 
+Create a `.env` file in the project root:
+
+```bash
+# Required: Your Shopify domain
+RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
+
+# Required: Merchant token for session creation
+RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
+
+# Optional: Default session token (if you have one)
+RECHARGE_SESSION_TOKEN=existing_session_token
+
+# Optional: Server configuration
+MCP_SERVER_NAME=recharge-storefront-api-mcp
+MCP_SERVER_VERSION=1.0.0
+
+# Optional: Enable debug logging
+DEBUG=true
+```
+
+### Configuration Options
+
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `RECHARGE_STOREFRONT_DOMAIN` | Conditional* | Your Shopify domain | `your-shop.myshopify.com` |
-| `RECHARGE_MERCHANT_TOKEN` | Conditional* | Recharge merchant token (required for session creation) | `your_merchant_token_here` |
-| `MCP_SERVER_NAME` | No | Server name | `recharge-storefront-api-mcp` |
+| `RECHARGE_STOREFRONT_DOMAIN` | Yes* | Your Shopify domain | `shop.myshopify.com` |
+| `RECHARGE_MERCHANT_TOKEN` | Yes* | Merchant token for session creation | `your_token_here` |
+| `RECHARGE_SESSION_TOKEN` | No | Default session token | `session_abc123` |
+| `MCP_SERVER_NAME` | No | Server identification | `recharge-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
 
-*Required unless you provide the corresponding parameter in each tool call. **Merchant token is required for any operation that involves customer lookup or session creation.**
+*Required unless provided in each tool call
 
-### Authentication Configuration
+### Per-Tool Configuration
 
+Override environment variables in individual tool calls:
 
-## Automatic Session Management
-
-The MCP server **automatically creates and manages session tokens** when you provide customer identification. This eliminates manual session creation in most cases.
-
-### **How Automatic Sessions Work**
-
-```
-Your Request → Customer Lookup → Session Creation → API Operation → Your Data
-```
-
-**Example Flow:**
 ```json
 {
   "name": "get_subscriptions",
   "arguments": {
+    "store_url": "different-shop.myshopify.com",
+    "merchant_token": "different_token",
     "customer_email": "customer@example.com"
   }
 }
 ```
 
-**Behind the scenes:**
-1. 📧 **Email Lookup**: `customer@example.com` → Customer ID `123456`
-2. 🔑 **Session Creation**: Customer ID `123456` → Session Token `abc123...`
-3. 📊 **API Call**: Session Token → Customer's Subscriptions
-4. 💾 **Caching**: Session cached for future calls
+### Configuration Validation
 
-### **Session Persistence and Caching**
+```bash
+# Validate configuration
+npm run validate
 
-Sessions are intelligently cached within your MCP connection:
+# Test environment setup
+npm run test:api-keys
+
+# Check configuration format
+node -e "require('dotenv').config(); console.log('✅ Configuration loaded')"
+```
+
+## Usage
+
+### Starting the Server
+
+```bash
+# Production mode
+npm start
+
+# Development mode with file watching
+npm run dev
+
+# Development with debug logging
+npm run dev:debug
+
+# Debug mode (production)
+DEBUG=true npm start
+```
+
+### Basic Usage Pattern
+
+1. **Start Server**: `npm start`
+2. **Connect MCP Client**: Point your MCP client to the server
+3. **Make Tool Calls**: Use any of the 37 available tools
+4. **Automatic Sessions**: Server handles authentication automatically
+
+### Common Workflows
+
+#### Customer Service Workflow
 
 ```json
-// First call - creates and caches session for Alice
+// 1. Look up customer
 {
   "name": "get_customer",
-  "arguments": {
-    "customer_email": "alice@example.com"
-  }
+  "arguments": {"customer_email": "customer@example.com"}
 }
 
-// Second call - reuses Alice's cached session (fast!)
+// 2. Check their subscriptions
 {
   "name": "get_subscriptions", 
-  "arguments": {
-    "customer_email": "alice@example.com"
-  }
+  "arguments": {"customer_email": "customer@example.com"}
 }
 
-// Third call - creates and caches new session for Bob
+// 3. View recent orders
 {
   "name": "get_orders",
-  "arguments": {
-    "customer_email": "bob@example.com"  
-  }
-}
-
-// Fourth call - reuses Alice's session again
-{
-  "name": "get_addresses",
-  "arguments": {
-    "customer_email": "alice@example.com"
-  }
+  "arguments": {"customer_email": "customer@example.com"}
 }
 ```
 
-**Benefits:**
-- ⚡ **Performance**: No repeated session creation for same customer
-- 🔒 **Isolation**: Each customer gets separate session
-- 🧠 **Smart Caching**: Email lookups cached too
-- 🔄 **Automatic**: Works transparently across all tools
-
-### **Manual Session Creation (Advanced)**
-
-For advanced use cases, you can create sessions manually:
+#### Subscription Management Workflow
 
 ```json
-// Step 1: Create session manually
+// 1. Get subscription details
 {
-  "name": "create_customer_session_by_id",
+  "name": "get_subscription",
   "arguments": {
-    "customer_id": "123456"
+    "customer_email": "customer@example.com",
+    "subscription_id": "sub_123"
   }
 }
 
-// Step 2: Use returned session token
+// 2. Skip next delivery
 {
-  "name": "get_subscriptions",
+  "name": "skip_subscription",
   "arguments": {
-    "session_token": "returned_session_token"
+    "customer_email": "customer@example.com", 
+    "subscription_id": "sub_123",
+    "date": "2024-02-15"
   }
 }
 ```
 
 ## Available Tools
 
-### Customer Management
-- `get_customer` - Retrieve current customer information
-- `create_customer_session_by_id` - Create customer session using customer ID (requires merchant token)
-- `update_customer` - Update current customer profile
-- `get_customer_by_email` - Find customer by email address
+### Customer Management (4 tools)
 
-### Subscription Management
-- `create_subscription` - Create a new subscription
-- `get_subscriptions` - List customer subscriptions
-- `get_subscription` - Get detailed subscription information
-- `update_subscription` - Modify subscription details
-- `skip_subscription` - Skip a delivery date
-- `unskip_subscription` - Restore a skipped delivery
-- `swap_subscription` - Change subscription product
-- `cancel_subscription` - Cancel a subscription
-- `activate_subscription` - Reactivate a cancelled subscription
-- `set_subscription_next_charge_date` - Set next charge date
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get_customer` | Get current customer information | `customer_email` or `customer_id` |
+| `update_customer` | Update customer profile | `email`, `first_name`, `last_name`, `phone` |
+| `get_customer_by_email` | Find customer by email (returns ID) | `email` |
+| `create_customer_session_by_id` | Create session manually | `customer_id`, `return_url` |
 
-### Address Management
-- `get_addresses` - List all customer addresses
-- `get_address` - Get specific address details
-- `create_address` - Add new address
-- `update_address` - Modify existing address
-- `delete_address` - Remove address
+### Subscription Management (10 tools)
 
-### Payment Methods
-- `get_payment_methods` - List payment methods
-- `get_payment_method` - Get payment method details
-- `update_payment_method` - Update billing information
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get_subscriptions` | List customer subscriptions | `status`, `limit`, `page` |
+| `get_subscription` | Get subscription details | `subscription_id` |
+| `create_subscription` | Create new subscription | `address_id`, `variant_id`, `quantity`, `frequency` |
+| `update_subscription` | Modify subscription | `subscription_id`, `quantity`, `frequency` |
+| `skip_subscription` | Skip delivery date | `subscription_id`, `date` |
+| `unskip_subscription` | Restore skipped delivery | `subscription_id`, `date` |
+| `swap_subscription` | Change product variant | `subscription_id`, `variant_id` |
+| `cancel_subscription` | Cancel subscription | `subscription_id`, `reason` |
+| `activate_subscription` | Reactivate subscription | `subscription_id` |
+| `set_subscription_next_charge_date` | Set next charge date | `subscription_id`, `date` |
 
-### Product Catalog
-- `get_products` - Browse available products
-- `get_product` - Get detailed product information
+### Address Management (5 tools)
 
-### Order & Charge History
-- `get_orders` - List customer orders
-- `get_order` - Get order details
-- `get_charges` - List charges
-- `get_charge` - Get charge details
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get_addresses` | List customer addresses | - |
+| `get_address` | Get address details | `address_id` |
+| `create_address` | Add new address | `address1`, `city`, `province`, `zip`, `country` |
+| `update_address` | Modify address | `address_id`, address fields |
+| `delete_address` | Remove address | `address_id` |
 
-### One-time Products
-- `get_onetimes` - List one-time products
-- `get_onetime` - Get one-time product details
-- `create_onetime` - Add one-time product
-- `update_onetime` - Modify one-time product
-- `delete_onetime` - Remove one-time product
+### Payment Methods (3 tools)
 
-### Bundle Management
-- `get_bundles` - List customer bundles
-- `get_bundle` - Get bundle details
-- `get_bundle_selections` - List bundle selections
-- `get_bundle_selection` - Get bundle selection details
-- `create_bundle_selection` - Create bundle selection
-- `update_bundle_selection` - Update bundle selection
-- `delete_bundle_selection` - Remove bundle selection
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get_payment_methods` | List payment methods | - |
+| `get_payment_method` | Get payment details | `payment_method_id` |
+| `update_payment_method` | Update billing info | `payment_method_id`, billing fields |
 
-### Discount Management
-- `get_discounts` - List applied discounts
-- `get_discount` - Get discount details
-- `apply_discount` - Apply discount code
-- `remove_discount` - Remove discount
+### Product Catalog (2 tools)
 
-## Usage Examples
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get_products` | Browse available products | `limit`, `handle` |
+| `get_product` | Get product details | `product_id` |
 
-### Session Creation and Customer Operations
+### Order & Charge History (4 tools)
 
-**Important**: You need a customer ID to create sessions, but once you have a session token, operations are automatically scoped to that customer:
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get_orders` | List customer orders | `status`, `limit`, `page` |
+| `get_order` | Get order details | `order_id` |
+| `get_charges` | List charges | `status`, `limit`, `page` |
+| `get_charge` | Get charge details | `charge_id` |
 
-#### Pattern 1: Create Session and Get Customer Data
+### One-time Products (5 tools)
 
-Create a session for a specific customer, then use the token:
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get_onetimes` | List one-time products | - |
+| `get_onetime` | Get one-time details | `onetime_id` |
+| `create_onetime` | Add to next delivery | `variant_id`, `quantity`, `next_charge_scheduled_at` |
+| `update_onetime` | Modify one-time product | `onetime_id`, update fields |
+| `delete_onetime` | Remove one-time product | `onetime_id` |
 
-```json
-// Step 1: Create session (requires customer ID)
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
+### Bundle Management (7 tools)
 
-// Step 2: Use the returned session token
-{
-  "name": "get_customer",
-  "arguments": {
-    "session_token": "returned_session_token"
-**Option B: Using Customer ID (If Known)**
-}
-  }
-}
-```
-    "customer_id": "123456"
-#### Pattern 2: Use Session Token for Operations
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get_bundles` | List customer bundles | `subscription_id` |
+| `get_bundle` | Get bundle details | `bundle_id` |
+| `get_bundle_selections` | List bundle selections | `bundle_id` |
+| `get_bundle_selection` | Get selection details | `bundle_selection_id` |
+| `create_bundle_selection` | Create selection | `bundle_id`, `variant_id`, `quantity` |
+| `update_bundle_selection` | Update selection | `bundle_selection_id`, update fields |
+| `delete_bundle_selection` | Remove selection | `bundle_selection_id` |
 
-Once you have a session token, operations are customer-scoped:
+### Discount Management (4 tools)
+
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get_discounts` | List applied discounts | - |
+| `get_discount` | Get discount details | `discount_id` |
+| `apply_discount` | Apply discount code | `discount_code` |
+| `remove_discount` | Remove discount | `discount_id` |
+
+## Examples
+
+### Complete Customer Service Example
 
 ```json
+// 1. Find customer by email
 {
-Merchant Token + Customer Email/ID → Session Token → API Operations
+  "name": "get_customer_by_email",
   "arguments": {
-    "session_token": "session_abc123"
-  }
-2. **Customer Email/ID**: Identifies which customer to create session for
-```
-
-#### Pattern 3: Find Customer by Email (Alternative Method)
-  "arguments": {
-    "session_token": "session_abc123",
     "email": "customer@example.com"
   }
 }
-```
 
-#### Pattern 4: Optional Customer ID Filtering
+// 2. Get customer details (automatic session creation)
+{
+  "name": "get_customer",
+  "arguments": {
+    "customer_email": "customer@example.com"
+  }
+}
 
-Some list operations accept customer_id as an optional filter (rarely needed):
-
-```json
+// 3. Check active subscriptions
 {
   "name": "get_subscriptions",
   "arguments": {
-    "session_token": "session_abc123",
-    "customer_id": "123456",  // Optional filter
+    "customer_email": "customer@example.com",
     "status": "active"
   }
 }
-```
 
-### Complete Use Case Examples
-
-#### Use Case 1: Customer Service - Automatic Session (Recommended)
-
-**Scenario**: Customer service agent helps customer - just use their email! Everything is automatic.
-
-```json
-// Get customer details - system automatically:
-// 1. Looks up customer by email
-// 2. Gets customer ID  
-// 3. Creates session token
-// 4. Returns customer data
+// 4. View recent orders
 {
-  "name": "get_customer",
+  "name": "get_orders",
   "arguments": {
-    "customer_email": "customer@example.com"
+    "customer_email": "customer@example.com",
+    "limit": 5
   }
 }
 
-// Get their subscriptions - system automatically:
-// 1. Looks up customer by email (or reuses from cache)
-// 2. Uses existing session or creates new one
-// 3. Returns subscription data
+// 5. Check upcoming charges
 {
-  "name": "get_subscriptions",
+  "name": "get_charges",
   "arguments": {
-    "customer_email": "customer@example.com"
+    "customer_email": "customer@example.com",
+    "status": "queued"
   }
 }
 ```
 
-**What happens behind the scenes:**
-- First call: `customer@example.com` → lookup customer → get ID `123456` → create session → return data
-- Subsequent calls: Reuse session for same customer automatically
-
-#### Use Case 2: Customer Service - Manual Session (Advanced)
-
-**Scenario**: Customer service agent helps customer starting with their email
+### Subscription Management Example
 
 ```json
-// Step 1: Find customer by email
+// 1. Get subscription details
 {
-  "name": "get_customer_by_email",
+  "name": "get_subscription",
   "arguments": {
-    "email": "customer@example.com"
+    "customer_email": "customer@example.com",
+    "subscription_id": "sub_123456"
   }
 }
 
-// Step 2: Create session using customer ID from step 1
+// 2. Update subscription frequency
 {
-  "name": "create_customer_session_by_id",
+  "name": "update_subscription",
   "arguments": {
-    "customer_id": "123456"  // From step 1 response
+    "customer_email": "customer@example.com",
+    "subscription_id": "sub_123456",
+    "order_interval_frequency": 2,
+    "order_interval_unit": "month"
   }
 }
 
-// Step 3: Get customer details using session token
-{
-  "name": "get_customer",
-  "arguments": {
-    "session_token": "session_token_from_step_2"
-  }
-}
-
-// Step 4: Get their subscriptions
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "session_token": "session_token_from_step_2"
-  }
-}
-
-// Step 5: Get their addresses
-{
-  "name": "get_addresses",
-  "arguments": {
-    "session_token": "session_token_from_step_2"
-  }
-}
-```
-
-#### Use Case 2: Subscription Management - Skip Next Delivery
-
-**Scenario**: Customer emails asking to skip delivery
-
-```json
-// Step 1: Find customer by email
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "customer@example.com"
-  }
-}
-
-// Step 2: Create session for customer
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "123456"  // From step 1
-  }
-}
-
-// Step 3: Get their active subscriptions
-{
-  "name": "get_subscriptions",
-  "arguments": {
-    "session_token": "session_token_from_step_2"
-  }
-}
-
-// Step 4: Skip specific subscription
+// 3. Skip next delivery
 {
   "name": "skip_subscription",
   "arguments": {
-    "session_token": "session_token_from_step_2",
-    "subscription_id": "sub_456",
+    "customer_email": "customer@example.com",
+    "subscription_id": "sub_123456", 
     "date": "2024-02-15"
   }
 }
 ```
 
-#### Use Case 3: Order Management - Check Recent Orders
-
-**Scenario**: Check customer's recent orders
+### Multi-Customer Example
 
 ```json
-// Step 1: Create session for customer
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-
-// Step 2: Get recent orders
-{
-  "name": "get_orders",
-  "arguments": {
-    "session_token": "returned_session_token"
-  }
-}
-
-// Step 3: Get specific order details
-{
-  "name": "get_order",
-  "arguments": {
-    "session_token": "returned_session_token",
-    "order_id": "order_789"
-  }
-}
-```
-
-#### Use Case 4: Address Management - Update Shipping Address
-
-**Scenario**: Update customer's shipping address
-
-```json
-// Step 1: Create session for customer
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-
-// Step 2: Get current addresses
-{
-  "name": "get_addresses",
-  "arguments": {
-    "session_token": "returned_session_token"
-  }
-}
-
-// Step 3: Update existing address
-{
-  "name": "update_address",
-  "arguments": {
-    "session_token": "returned_session_token",
-    "address_id": "addr_123",
-    "address1": "456 New Street",
-    "city": "New City",
-    "zip": "54321"
-  }
-}
-```
-
-#### Use Case 5: Product Management - Add One-time Product
-
-**Scenario**: Add product to customer's next delivery
-
-```json
-// Step 1: Create session for customer
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-
-// Step 2: Browse available products
-{
-  "name": "get_products",
-  "arguments": {
-    "session_token": "returned_session_token"
-  }
-}
-
-// Step 3: Add one-time product
-{
-  "name": "create_onetime",
-  "arguments": {
-    "session_token": "returned_session_token",
-    "variant_id": 12345,
-    "quantity": 1,
-    "next_charge_scheduled_at": "2024-02-01"
-  }
-}
-```
-
-### Customer ID Best Practices
-
-#### 1. **Email-First Workflow (Most Common)**
-```json
-// Always start with email lookup if you don't have customer ID
-{
-  "name": "get_customer_by_email",
-  "arguments": {
-    "email": "customer@example.com"
-  }
-}
-
-// Then create session with returned customer ID
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "returned_customer_id"
-  }
-}
-```
-
-#### 2. **Always Create Sessions Before Operations**
-```json
-// Create session first (after getting customer ID)
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
-```
-
-#### 3. **Use Session Tokens for All Operations**
-```javascript
-// Email → Customer ID → Session → Operations
-const customer = await callTool("get_customer_by_email", { email: "customer@example.com" });
-const session = await callTool("create_customer_session_by_id", { customer_id: customer.id });
-const customer = await callTool("get_customer", { session_token: session.token });
-const subscriptions = await callTool("get_subscriptions", { session_token: session.token });
-```
-
-#### 4. **Handle Authentication Errors**
-```json
-// If customer lookup fails
-{
-  "error": "Customer not found with email address"
-}
-
-// If session creation fails
-{
-  "error": "Customer not found or invalid merchant token"
-}
-```
-
-### Token vs Customer ID Relationship
-
-**Important**: In this implementation:
-- **Customer ID** is required to create sessions
-- **Session token** identifies customer automatically after creation
-- **Merchant token** is required for session creation
-- **Session scope** determines data access
-
-### Basic Operations (No Customer ID Needed)
-
-These operations use customer-scoped session tokens (after session creation):
-
-```json
+// Customer A operations
 {
   "name": "get_subscriptions",
-  "arguments": {
-    "session_token": "session_abc123"
-  }
+  "arguments": {"customer_email": "alice@example.com"}
 }
-```
 
-```json
+// Customer B operations
 {
-  "name": "get_orders",
-  "arguments": {
-    "session_token": "session_abc123"
-  }
+  "name": "get_orders", 
+  "arguments": {"customer_email": "bob@example.com"}
 }
-```
 
-```json
-{
-  "name": "get_charges",
-  "arguments": {
-    "session_token": "session_abc123"
-  }
-}
-```
-
-```json
+// Back to Customer A (reuses cached session)
 {
   "name": "get_addresses",
-  "arguments": {
-    "session_token": "session_abc123"
-  }
+  "arguments": {"customer_email": "alice@example.com"}
 }
 ```
 
+### Error Handling Example
+
 ```json
+// This will fail with helpful error message
 {
-  "name": "get_payment_methods",
+  "name": "get_subscription",
   "arguments": {
-    "session_token": "session_abc123"
+    "subscription_id": "invalid_id"
   }
+}
+
+// Error response:
+{
+  "error": "API Error (404): Subscription not found (Code: SUBSCRIPTION_NOT_FOUND)",
+  "tip": "Verify the subscription ID exists and you have access to it."
 }
 ```
 
 ## Development
 
-### Development Mode
+### Development Setup
+
 ```bash
-npm run dev          # Start with file watching
-npm run dev:debug    # Start with debug logging
+# Clone and install
+git clone <repository-url>
+cd recharge-storefront-api-mcp
+npm install
+
+# Setup environment
+npm run setup
+
+# Start development server
+npm run dev
 ```
 
-### Validation and Testing
+### Development Commands
+
 ```bash
-npm run validate     # Validate configuration and syntax
-npm run coverage     # Show API coverage report
-npm run test:full    # Run comprehensive tests
-npm run lint         # Check code syntax
+# Development with file watching
+npm run dev
+
+# Development with debug logging  
+npm run dev:debug
+
+# Validate code and configuration
+npm run validate
+
+# Run comprehensive tests
+npm run test:full
+
+# Check API coverage
+npm run coverage
+
+# View project statistics
+npm run stats
 ```
 
-### Docker Development
+### Code Quality
+
 ```bash
-npm run docker:build     # Build Docker image with version tag
-npm run docker:run       # Run with Docker Compose
-npm run docker:logs      # View container logs
-npm run docker:stop      # Stop containers
-npm run docker:clean     # Clean up containers and volumes
+# Lint code
+npm run lint
+
+# Validate syntax
+npm run validate
+
+# Test API key logic
+npm run test:api-keys
+
+# Health check
+npm run health
 ```
+
+### Adding New Tools
+
+1. **Create tool file**: `src/tools/new-feature-tools.js`
+2. **Follow patterns**: Use existing tools as templates
+3. **Add to index**: Export from `src/tools/index.js`
+4. **Add client methods**: Implement in `src/recharge-client.js`
+5. **Test thoroughly**: Use `npm run test:full`
+
+### Debugging
+
+Enable debug mode for detailed logging:
+
+```bash
+DEBUG=true npm start
+```
+
+Debug output includes:
+- API request/response details
+- Authentication flow tracing
+- Session creation and caching
+- Error stack traces
+- Performance metrics
 
 ## Docker Deployment
 
 ### Quick Docker Setup
+
 ```bash
 # Development
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
-# Production
+# Production  
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
+### Docker Commands
+
+```bash
+# Build image
+npm run docker:build
+
+# Run containers
+npm run docker:run
+
+# View logs
+npm run docker:logs
+
+# Stop containers
+npm run docker:stop
+
+# Clean up
+npm run docker:clean
+```
+
 ### Automated Deployment
+
 ```bash
-./scripts/deploy.sh development   # Deploy to dev
-./scripts/deploy.sh production    # Deploy to prod
+# Deploy to development
+./scripts/deploy.sh development
+
+# Deploy to production
+./scripts/deploy.sh production
 ```
 
-### Environment-Specific Configuration
-- `docker-compose.yml` - Base configuration
-- `docker-compose.dev.yml` - Development overrides
-- `docker-compose.prod.yml` - Production settings
+### Docker Configuration
 
-See [DOCKER.md](DOCKER.md) for detailed Docker deployment guide.
+- **Base**: `docker-compose.yml` - Core configuration
+- **Development**: `docker-compose.dev.yml` - Debug mode, volume mounts
+- **Production**: `docker-compose.prod.yml` - Resource limits, logging
 
-## Error Handling
-
-The server provides comprehensive error handling:
-
-### API Errors
-- **HTTP Status Codes**: Proper status code mapping
-- **Error Messages**: Detailed, actionable error descriptions
-- **Error Codes**: Recharge-specific error code preservation
-- **Debug Information**: Optional detailed logging
-
-### Common Error Scenarios
-- **Authentication**: Missing or invalid API tokens
-- **Validation**: Invalid parameter formats or values
-- **Network**: Connection timeouts and network issues
-- **Rate Limiting**: API rate limit handling
-
-### Debug Mode
-Enable debug logging for troubleshooting:
-```bash
-DEBUG=true npm start
-```
-
-## Security
-
-### Best Practices
-- **API Token Security**: Keep your merchant API tokens secure
-- **Environment Variables**: Use `.env` files for sensitive data
-- **Customer Privacy**: Only access customer data you're authorized to view
-
-### Production Security
-- Non-root container user
-- Resource limits and monitoring
-- Secure API token handling
-- Network isolation options
-
-## Monitoring and Maintenance
-
-### Health Checks
-```bash
-npm run health       # Basic health check
-docker compose ps    # Container status
-```
-
-### Log Management
-```bash
-npm run docker:logs  # View container logs
-docker compose logs --tail=100 recharge-storefront-api-mcp
-```
-
-### Performance Monitoring
-- Resource usage tracking
-- API response time monitoring
-- Error rate monitoring
-- Container health checks
-
-## API Coverage
-
-This MCP server provides **complete coverage** of the Recharge Storefront API with **33 tools**:
-
-- ✅ **Customer Management** - Current customer profile operations (4 tools)
-- ✅ **Subscription Lifecycle** - Complete subscription management (10 tools)
-- ✅ **Address Management** - Shipping and billing addresses (5 tools)
-- ✅ **Payment Methods** - Payment method management (3 tools)
-- ✅ **Product Catalog** - Product browsing and details (2 tools)
-- ✅ **Order Management** - Order history and tracking (2 tools)
-- ✅ **Charge Management** - Billing and payment tracking (2 tools)
-- ✅ **One-time Products** - Add-on product management (5 tools)
-- ✅ **Bundle Management** - Product bundle and selection management (7 tools)
-### Tools Without Customer Identification
-
-**⚠️ SECURITY WARNING**: Using tools without specifying `customer_id`, `customer_email`, or `session_token` can be dangerous!
-
-```json
-{
-  "name": "get_subscriptions",
-  "arguments": {}  // No customer identification
-}
-```
-
-**🔒 Security Protection**: The system prevents wrong customer data exposure:
-- ✅ **Safe**: Default session token used ONLY when no customer sessions are cached
-- ❌ **Blocked**: Default session token blocked when customer sessions exist (prevents data leakage)
-- 🛡️ **Error**: Clear security error guides you to specify customer identification
-
-**✅ Safe Solutions**:
-
-1. **Set Default Session Token** (if you have one):
-   ```bash
-   RECHARGE_SESSION_TOKEN=your_existing_session_token
-   ```
-   *Only works when no customer-specific sessions are active*
-
-2. **Provide Customer Identification** (recommended):
-   ```json
-   {
-     "name": "get_subscriptions",
-     "arguments": {
-       "customer_email": "customer@example.com"
-     }
-   }
-   ```
-
-3. **Use Explicit Session Token**:
-   ```json
-   {
-     "name": "get_subscriptions",
-     "arguments": {
-       "session_token": "session_token_here"
-     }
-   }
-   ```
-
-- ✅ **Discount System** - Coupon and discount management (4 tools)
-
-### 🔒 **Security: Preventing Wrong Customer Data**
-
-**Critical Security Feature**: The system prevents accidental customer data exposure:
-
-```json
-// Scenario: Dangerous data leakage potential
-{"name": "get_customer", "arguments": {"customer_email": "alice@example.com"}}  // Creates session for Alice
-{"name": "get_subscriptions", "arguments": {}}  // ❌ BLOCKED! Could expose Alice's data
-```
-
-**Error Message**:
-```
-Security Error: Cannot use default session token when customer-specific sessions exist. 
-Please specify 'customer_id', 'customer_email', or 'session_token' to ensure correct customer data access.
-```
-
-**✅ Safe Patterns**:
-```json
-// Always specify customer identification
-{"name": "get_customer", "arguments": {"customer_email": "alice@example.com"}}
-{"name": "get_subscriptions", "arguments": {"customer_email": "alice@example.com"}}  // ✅ Safe!
-
-// Or use explicit session tokens
-{"name": "get_subscriptions", "arguments": {"session_token": "alice_session_token"}}  // ✅ Safe!
-```
+See [DOCKER.md](DOCKER.md) for detailed deployment guide.
 
 ## Troubleshooting
 
-#### Authentication Confusion
-```
-Error: Customer not found
-```
-**Solution**: Ensure you're using a valid customer ID and merchant token:
-1. Use a valid customer ID from your customer database
-2. Ensure merchant token has Storefront API permissions
-3. Set `RECHARGE_MERCHANT_TOKEN` environment variable or provide in tool calls
-4. Customer must exist in Recharge system
+### Common Issues
 
-**Example of correct session creation**:
-```json
-{"name": "create_customer_session_by_id", "arguments": {"customer_id": "123456"}}
+#### Authentication Errors
+
+**Problem**: `Customer not found`
+```bash
+# Solution: Check customer ID and merchant token
+# Ensure customer exists in Recharge system
+# Verify merchant token has Storefront API permissions
 ```
 
-#### Invalid Token Type
-```
-Error: Invalid merchant token
-```
-**Solution**: Ensure you're using the correct merchant token:
-- ✅ Correct: Merchant token with Storefront API permissions
-- ❌ Wrong: Admin API token without Storefront permissions
-- ❌ Wrong: Expired or revoked merchant token
-
-#### Resource Access Issues
-```
-Error: Resource not found
-```
-**Solution**: Ensure the resource belongs to the customer session:
-- Create session first using customer ID
-- Use session token for subsequent operations
-- Use correct resource IDs from previous API responses
-
-**Correct usage examples**:
-```json
-// Create session first
-{"name": "create_customer_session_by_id", "arguments": {"customer_id": "123456"}}
-
-// Then use session token
-{"name": "get_customer", "arguments": {"session_token": "session_token_here"}}
-
-// Get customer subscriptions
-{"name": "get_subscriptions", "arguments": {"session_token": "session_token_here"}}
-
-// Get specific subscription
-{"name": "get_subscription", "arguments": {"session_token": "session_token_here", "subscription_id": "sub_789"}}
+**Problem**: `Invalid merchant token`
+```bash
+# Solution: Verify token type and permissions
+# Use Storefront API token (not Admin API)
+# Check token hasn't expired or been revoked
 ```
 
-#### Token Expiration
-```
-Error: Session token expired
-```
-**Solution**: Create a new session token using the customer ID:
-```json
-{
-  "name": "create_customer_session_by_id",
-  "arguments": {
-    "customer_id": "123456"
-  }
-}
+#### Configuration Issues
+
+**Problem**: `No store URL available`
+```bash
+# Solution: Set environment variable or provide in tool calls
+export RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
 ```
 
-#### Multiple Authentication Methods
+**Problem**: `Domain must end with .myshopify.com`
+```bash
+# Solution: Use correct Shopify domain format
+# Correct: shop.myshopify.com
+# Incorrect: shop.com
 ```
-Error: Multiple authentication tokens provided
-```
-#### Invalid Domain
-```
-Error: Domain must be a valid Shopify domain
-```
-**Solution**: Ensure `RECHARGE_STOREFRONT_DOMAIN` ends with `.myshopify.com`.
 
-#### Connection Issues
-```
-Error: Network error: No response received
-```
-**Solution**: Check internet connection and API endpoint availability.
+#### Session Issues
 
-#### Docker Issues
+**Problem**: `Session token expired`
+```bash
+# Solution: Sessions are automatically recreated
+# Provide customer_id or customer_email in next call
 ```
-Error: command not found
-```
-**Solution**: Ensure all required packages are installed in Dockerfile.
 
-### Debug Information
-Enable debug mode for detailed logging:
+**Problem**: `Security Error: Cannot use default session token`
+```bash
+# Solution: Always specify customer identification
+# Add customer_email or customer_id to tool calls
+```
+
+### Debug Mode
+
+Enable comprehensive debugging:
+
 ```bash
 DEBUG=true npm start
 ```
 
-This will show:
-- API request/response details
-- Token usage information
+Debug information includes:
+- Authentication flow details
+- API request/response logging
+- Session creation and caching
 - Error stack traces
 - Performance metrics
 
+### Getting Help
+
+1. **Check Documentation**: Review this README and [DOCKER.md](DOCKER.md)
+2. **Enable Debug Mode**: Use `DEBUG=true` for detailed logging
+3. **Validate Setup**: Run `npm run validate` and `npm run test:full`
+4. **Check Issues**: Search existing GitHub issues
+5. **Create Issue**: Provide debug logs and reproduction steps
+
+## Security
+
+### Security Best Practices
+
+#### API Token Security
+- **Never commit tokens** to version control
+- **Use environment variables** for sensitive data
+- **Rotate tokens regularly** (recommended: every 90 days)
+- **Use minimum required permissions**
+
+#### Customer Data Protection
+- **Always specify customer identification** in tool calls
+- **Verify customer access** before operations
+- **Use session tokens** for customer-scoped operations
+- **Monitor for unusual access patterns**
+
+#### Network Security
+- **Use HTTPS** for all API communications
+- **Implement proper firewall rules**
+- **Monitor API usage** for anomalies
+- **Set up rate limiting** if needed
+
+### Security Features
+
+#### Built-in Protections
+- **Customer data isolation**: Each customer gets separate session
+- **Wrong customer prevention**: Blocks ambiguous tool calls
+- **Input validation**: Zod schema validation for all inputs
+- **Error sanitization**: Sensitive data removed from logs
+
+#### Production Security
+- **Non-root container user**: Docker runs as non-privileged user
+- **Resource limits**: Memory and CPU limits in production
+- **Secure logging**: Sensitive data excluded from logs
+- **Health checks**: Monitor service availability
+
+### Reporting Security Issues
+
+See [SECURITY.md](SECURITY.md) for security reporting guidelines.
+
 ## Contributing
 
-### Development Setup
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run validation: `npm run validate`
-5. Test thoroughly: `npm run test:full`
-6. Submit a pull request
+### Getting Started
 
-### Code Standards
-- Use ESM modules
-- Follow existing code style
-- Add comprehensive error handling
-- Include input validation
-- Update documentation
-- Add tests for new features
+1. **Fork repository**: Create your own fork
+2. **Create branch**: `git checkout -b feature/your-feature`
+3. **Make changes**: Follow existing code patterns
+4. **Test thoroughly**: Run `npm run test:full`
+5. **Submit PR**: Include description and tests
 
-### Testing
-- Validate all changes with `npm run validate`
-- Test Docker builds with `npm run docker:build`
-- Verify API coverage with `npm run coverage`
-- Run full test suite with `npm run test:full`
+### Development Guidelines
+
+#### Code Standards
+- **ESM modules**: Use modern JavaScript modules
+- **Error handling**: Comprehensive error handling required
+- **Input validation**: Use Zod schemas for all inputs
+- **Documentation**: JSDoc comments for all functions
+- **Testing**: Include tests for new functionality
+
+#### Pull Request Process
+- **Descriptive title**: Clear description of changes
+- **Test coverage**: All tests must pass
+- **Documentation**: Update README if needed
+- **No breaking changes**: Or clearly document them
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
+
+---
 
 ## Support
 
-For issues, questions, or contributions:
-1. Check existing GitHub issues
-2. Create a new issue with detailed information
-3. Include debug logs when reporting problems
-4. Provide reproduction steps for bugs
+### Resources
+- **Documentation**: This README and [DOCKER.md](DOCKER.md)
+- **Security**: [SECURITY.md](SECURITY.md) for security guidelines
+- **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md) for development
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md) for version history
 
-## Changelog
+### Getting Help
+- **GitHub Issues**: Bug reports and feature requests
+- **GitHub Discussions**: Questions and community support
+- **Debug Mode**: Enable with `DEBUG=true` for troubleshooting
 
-### v1.0.0
-- Initial release with complete Recharge Storefront API coverage
-- 32 comprehensive API tools covering all Recharge Storefront API endpoints
-- Flexible authentication system
-- Docker deployment support
-- Comprehensive error handling
-- Production-ready configuration
+### Project Statistics
+- **37 Tools**: Complete Recharge Storefront API coverage
+- **10 Categories**: Comprehensive subscription management
+- **Production Ready**: Docker, monitoring, error handling
+- **Secure**: Built-in customer data protection
+- **Well Documented**: Comprehensive guides and examples
+
+---
+
+*Built with ❤️ for the Recharge and MCP communities*
