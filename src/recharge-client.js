@@ -114,12 +114,13 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Creating session for customer: ${customerId}`);
-      console.error(`[DEBUG] Using endpoint: /api/v1/customers/${customerId}/sessions`);
+      console.error(`[DEBUG] Using endpoint: /customer_portal`);
     }
     
     let response;
     try {
-      response = await this.makeRequest('POST', `/api/v1/customers/${customerId}/sessions`, {
+      response = await this.makeRequest('POST', `/customer_portal`, {
+        customer_id: customerId,
         return_url: options.return_url || null
       });
     } catch (error) {
@@ -307,11 +308,11 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Looking up customer by email: ${email}`);
-      console.error(`[DEBUG] Using endpoint: /api/v1/customers with email parameter`);
+      console.error(`[DEBUG] Using endpoint: /customers with email parameter`);
     }
     
     try {
-      return await this.makeRequest('GET', '/api/v1/customers', null, { email });
+      return await this.makeRequest('GET', '/customers', null, { email });
     } catch (error) {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Customer lookup failed for email ${email}:`, error.message);
