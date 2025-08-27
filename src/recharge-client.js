@@ -59,6 +59,7 @@ export class RechargeClient {
    * Create a customer session using customer ID (merchant token required)
    * @param {string} customerId - Customer ID
    * @param {Object} options - Session options
+   * @param {string} [options.return_url] - URL to redirect to after session
    * @returns {Promise<Object>} Session data including token
    */
   async createCustomerSessionById(customerId, options = {}) {
@@ -80,7 +81,9 @@ export class RechargeClient {
       // Update client to use the new session token
       this.sessionToken = response.session.token;
       this.client.defaults.headers['Authorization'] = `Bearer ${this.sessionToken}`;
-      delete this.client.defaults.headers['X-Recharge-Access-Token'];
+      if (this.client.defaults.headers['X-Recharge-Access-Token']) {
+        delete this.client.defaults.headers['X-Recharge-Access-Token'];
+      }
       
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Client updated to use session token: ${this.sessionToken.substring(0, 10)}...`);
@@ -198,9 +201,8 @@ export class RechargeClient {
     return this.makeRequest('GET', '/api/v1/customers', null, { email });
   }
 
-  // Customer methods
   /**
-   * Get customer information by customer ID
+   * Get customer information (uses current session context)
    * @returns {Promise<Object>} Customer data
    */
   async getCustomer() {
@@ -222,6 +224,9 @@ export class RechargeClient {
   /**
    * Get subscriptions with optional filtering
    * @param {Object} params - Query parameters
+   * @param {string} [params.status] - Filter by subscription status
+   * @param {number} [params.limit] - Number of results to return
+   * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Subscriptions data
    */
   async getSubscriptions(params = {}) {
@@ -335,6 +340,8 @@ export class RechargeClient {
   /**
    * Get addresses with optional filtering
    * @param {Object} params - Query parameters
+   * @param {number} [params.limit] - Number of results to return
+   * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Addresses data
    */
   async getAddresses(params = {}) {
@@ -390,6 +397,8 @@ export class RechargeClient {
   /**
    * Get payment methods with optional filtering
    * @param {Object} params - Query parameters
+   * @param {number} [params.limit] - Number of results to return
+   * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Payment methods data
    */
   async getPaymentMethods(params = {}) {
@@ -424,6 +433,9 @@ export class RechargeClient {
   /**
    * Get available products with optional filtering
    * @param {Object} params - Query parameters
+   * @param {number} [params.limit] - Number of results to return
+   * @param {string} [params.handle] - Filter by product handle
+   * @param {boolean} [params.subscription_defaults] - Include subscription defaults
    * @returns {Promise<Object>} Products data
    */
   async getProducts(params = {}) {
@@ -444,6 +456,9 @@ export class RechargeClient {
   /**
    * Get orders with optional filtering
    * @param {Object} params - Query parameters
+   * @param {string} [params.status] - Filter by order status
+   * @param {number} [params.limit] - Number of results to return
+   * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Orders data
    */
   async getOrders(params = {}) {
@@ -464,6 +479,9 @@ export class RechargeClient {
   /**
    * Get charges with optional filtering
    * @param {Object} params - Query parameters
+   * @param {string} [params.status] - Filter by charge status
+   * @param {number} [params.limit] - Number of results to return
+   * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Charges data
    */
   async getCharges(params = {}) {
@@ -484,6 +502,8 @@ export class RechargeClient {
   /**
    * Get one-time products with optional filtering
    * @param {Object} params - Query parameters
+   * @param {number} [params.limit] - Number of results to return
+   * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} One-time products data
    */
   async getOnetimes(params = {}) {
@@ -539,6 +559,9 @@ export class RechargeClient {
   /**
    * Get bundles with optional filtering
    * @param {Object} params - Query parameters
+   * @param {string} [params.subscription_id] - Filter by subscription ID
+   * @param {number} [params.limit] - Number of results to return
+   * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Bundles data
    */
   async getBundles(params = {}) {
@@ -559,6 +582,7 @@ export class RechargeClient {
    * Get bundle selections for a specific bundle
    * @param {string} bundleId - The bundle ID
    * @param {Object} params - Query parameters
+   * @param {number} [params.limit] - Number of results to return
    * @returns {Promise<Object>} Bundle selections data
    */
   async getBundleSelections(bundleId, params = {}) {
@@ -615,6 +639,8 @@ export class RechargeClient {
   /**
    * Get discounts with optional filtering
    * @param {Object} params - Query parameters
+   * @param {number} [params.limit] - Number of results to return
+   * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Discounts data
    */
   async getDiscounts(params = {}) {

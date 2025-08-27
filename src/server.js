@@ -103,11 +103,11 @@ class RechargeStorefrontAPIMCPServer {
 
   /**
    * Get or create a Recharge Storefront client
-   * @param {string} [toolStoreUrl] - Store URL from tool call (optional, takes precedence over env)
-   * @param {string} [toolSessionToken] - Session token from tool call (optional)
-   * @param {string} [toolMerchantToken] - Merchant token from tool call (optional)
-   * @param {string} [customerId] - Customer ID for automatic session creation (optional)
-   * @param {string} [customerEmail] - Customer email for automatic lookup and session creation (optional)
+   * @param {string} [toolStoreUrl] - Store URL from tool call
+   * @param {string} [toolSessionToken] - Session token from tool call
+   * @param {string} [toolMerchantToken] - Merchant token from tool call
+   * @param {string} [customerId] - Customer ID for automatic session creation
+   * @param {string} [customerEmail] - Customer email for automatic lookup and session creation
    * @returns {RechargeClient} Configured Recharge Storefront client
    * @throws {Error} If no store URL or authentication token is available
    */
@@ -173,7 +173,9 @@ class RechargeStorefrontAPIMCPServer {
       
       try {
         const customerResponse = await tempClient.getCustomerByEmail(customerEmail);
-        const foundCustomerId = customerResponse.customer?.id || customerResponse.customers?.[0]?.id;
+        const foundCustomerId = customerResponse.customer?.id || 
+                               customerResponse.customers?.[0]?.id ||
+                               (typeof customerResponse.id === 'string' ? customerResponse.id : null);
         
         if (foundCustomerId) {
           if (process.env.DEBUG === 'true') {
@@ -182,7 +184,7 @@ class RechargeStorefrontAPIMCPServer {
           // Cache the email -> customer ID mapping
           this.emailToCustomerIdCache.set(customerEmail, foundCustomerId);
           resolvedCustomerId = foundCustomerId;
-          cacheKey = `customer_${customerId}`;
+          cacheKey = `customer_${foundCustomerId}`;
         } else {
           throw new Error(`Customer not found with email address: ${customerEmail}`);
         }
@@ -364,18 +366,7 @@ class RechargeStorefrontAPIMCPServer {
         tools: tools.map(tool => ({
           name: tool.name,
           description: tool.description,
-          inputSchema: tool.inputSchema.shape ? {
-            type: "object",
-            properties: Object.fromEntries(
-              Object.entries(tool.inputSchema.shape).map(([key, value]) => [
-                key,
-                value._def ? { type: value._def.typeName?.toLowerCase() || "string" } : { type: "string" }
-              ])
-            ),
-            required: Object.keys(tool.inputSchema.shape).filter(key => 
-              !tool.inputSchema.shape[key]._def?.defaultValue
-            )
-          } : { type: "object" }
+          inputSchema: this.convertZodSchemaToJsonSchema(tool.inputSchema)
         }))
       };
     });

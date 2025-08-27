@@ -200,6 +200,14 @@ export function formatErrorResponse(error) {
  * @throws {Error} If required parameters are missing
  */
 export function validateRequiredParams(params, required) {
+  if (!params || typeof params !== 'object') {
+    throw new Error('Parameters must be an object');
+  }
+  
+  if (!Array.isArray(required)) {
+    throw new Error('Required parameters must be an array');
+  }
+  
   const missing = required.filter(param => 
     params[param] === undefined || 
     params[param] === null || 
@@ -223,9 +231,10 @@ export function validateRequiredParams(params, required) {
   const dateFields = ['date', 'next_charge_scheduled_at'];
   dateFields.forEach(field => {
     if (params[field] && typeof params[field] === 'string') {
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      // Allow both YYYY-MM-DD and ISO datetime formats
+      const dateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?)?$/;
       if (!dateRegex.test(params[field])) {
-        throw new Error(`Invalid date format for ${field}. Expected YYYY-MM-DD format`);
+        throw new Error(`Invalid date format for ${field}. Expected YYYY-MM-DD or ISO datetime format`);
       }
     }
   });
