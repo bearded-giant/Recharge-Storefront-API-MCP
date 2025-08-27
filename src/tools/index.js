@@ -8,6 +8,11 @@ import { discountTools } from './discount-tools.js';
 import { chargeTools } from './charge-tools.js';
 import { onetimeTools } from './onetimes-tools.js';
 import { bundleTools } from './bundle-tools.js';
+import { storeTools } from './store-tools.js';
+import { sessionTools } from './session-tools.js';
+import { asyncBatchTools } from './async-batch-tools.js';
+import { notificationTools } from './notification-tools.js';
+import { shopifyConnectorTools } from './shopify-connector-tools.js';
 
 export const tools = [
   ...customerTools,
@@ -20,4 +25,9 @@ export const tools = [
   ...chargeTools,
   ...onetimeTools,
   ...bundleTools,
+  ...storeTools,
+  ...sessionTools,
+  ...asyncBatchTools,
+  ...notificationTools,
+  ...shopifyConnectorTools,
 ];

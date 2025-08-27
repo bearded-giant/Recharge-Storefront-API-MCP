@@ -843,4 +843,166 @@ export class RechargeClient {
     validateRequiredParams({ discountId }, ['discountId']);
     return this.makeRequest('DELETE', `/discounts/${discountId}`);
   }
+
+  // Store methods
+  /**
+   * Get store settings and configuration
+   * @returns {Promise<Object>} Store settings data
+   * @throws {Error} If API request fails
+   */
+  async getStoreSettings() {
+    return this.makeRequest('GET', '/store');
+  }
+
+  /**
+   * Get available delivery schedules
+   * @returns {Promise<Object>} Delivery schedules data
+   * @throws {Error} If API request fails
+   */
+  async getDeliverySchedules() {
+    return this.makeRequest('GET', '/delivery_schedules');
+  }
+
+  /**
+   * Get detailed information about a specific delivery schedule
+   * @param {string} deliveryScheduleId - The delivery schedule ID
+   * @returns {Promise<Object>} Delivery schedule data
+   * @throws {Error} If delivery schedule ID is invalid or not found
+   */
+  async getDeliverySchedule(deliveryScheduleId) {
+    validateRequiredParams({ deliveryScheduleId }, ['deliveryScheduleId']);
+    return this.makeRequest('GET', `/delivery_schedules/${deliveryScheduleId}`);
+  }
+
+  // Session methods
+  /**
+   * Get session information
+   * @param {string} sessionId - The session ID
+   * @returns {Promise<Object>} Session data
+   * @throws {Error} If session ID is invalid or not found
+   */
+  async getSession(sessionId) {
+    validateRequiredParams({ sessionId }, ['sessionId']);
+    return this.makeRequest('GET', `/sessions/${sessionId}`);
+  }
+
+  // Async batch methods
+  /**
+   * Create an async batch operation
+   * @param {Object} batchData - Batch operation data
+   * @returns {Promise<Object>} Created batch data
+   * @throws {Error} If required fields are missing
+   */
+  async createAsyncBatch(batchData) {
+    const required = ['batch_type', 'object_ids'];
+    validateRequiredParams(batchData, required);
+    return this.makeRequest('POST', '/async_batches', batchData);
+  }
+
+  /**
+   * Get async batch operations with optional filtering
+   * @param {Object} [params={}] - Query parameters
+   * @param {number} [params.limit] - Number of results to return
+   * @param {number} [params.page] - Page number for pagination
+   * @returns {Promise<Object>} Async batches data
+   * @throws {Error} If API request fails
+   */
+  async getAsyncBatches(params = {}) {
+    return this.makeRequest('GET', '/async_batches', null, params);
+  }
+
+  /**
+   * Get detailed information about a specific async batch
+   * @param {string} batchId - The async batch ID
+   * @returns {Promise<Object>} Async batch data
+   * @throws {Error} If batch ID is invalid or not found
+   */
+  async getAsyncBatch(batchId) {
+    validateRequiredParams({ batchId }, ['batchId']);
+    return this.makeRequest('GET', `/async_batches/${batchId}`);
+  }
+
+  /**
+   * Get tasks for a specific async batch
+   * @param {string} batchId - The async batch ID
+   * @returns {Promise<Object>} Async batch tasks data
+   * @throws {Error} If batch ID is invalid or not found
+   */
+  async getAsyncBatchTasks(batchId) {
+    validateRequiredParams({ batchId }, ['batchId']);
+    return this.makeRequest('GET', `/async_batches/${batchId}/tasks`);
+  }
+
+  // Notification methods
+  /**
+   * Get notifications for a customer with optional filtering
+   * @param {string} customerId - The customer ID
+   * @param {Object} [params={}] - Query parameters
+   * @param {number} [params.limit] - Number of results to return
+   * @param {number} [params.page] - Page number for pagination
+   * @returns {Promise<Object>} Notifications data
+   * @throws {Error} If API request fails
+   */
+  async getNotifications(customerId, params = {}) {
+    validateRequiredParams({ customerId }, ['customerId']);
+    return this.makeRequest('GET', `/customers/${customerId}/notifications`, null, params);
+  }
+
+  /**
+   * Get detailed information about a specific notification
+   * @param {string} notificationId - The notification ID
+   * @returns {Promise<Object>} Notification data
+   * @throws {Error} If notification ID is invalid or not found
+   */
+  async getNotification(notificationId) {
+    validateRequiredParams({ notificationId }, ['notificationId']);
+    return this.makeRequest('GET', `/notifications/${notificationId}`);
+  }
+
+  /**
+   * Mark a notification as read
+   * @param {string} notificationId - The notification ID
+   * @returns {Promise<Object>} Update result
+   * @throws {Error} If notification ID is invalid or not found
+   */
+  async markNotificationRead(notificationId) {
+    validateRequiredParams({ notificationId }, ['notificationId']);
+    return this.makeRequest('PUT', `/notifications/${notificationId}`, { read: true });
+  }
+
+  // Shopify connector methods
+  /**
+   * Get Shopify connector configurations
+   * @returns {Promise<Object>} Shopify connectors data
+   * @throws {Error} If API request fails
+   */
+  async getShopifyConnectors() {
+    return this.makeRequest('GET', '/shopify_connectors');
+  }
+
+  /**
+   * Get detailed information about a specific Shopify connector
+   * @param {string} connectorId - The connector ID
+   * @returns {Promise<Object>} Shopify connector data
+   * @throws {Error} If connector ID is invalid or not found
+   */
+  async getShopifyConnector(connectorId) {
+    validateRequiredParams({ connectorId }, ['connectorId']);
+    return this.makeRequest('GET', `/shopify_connectors/${connectorId}`);
+  }
+
+  /**
+   * Update Shopify connector configuration
+   * @param {string} connectorId - The connector ID
+   * @param {Object} connectorData - Updated connector data
+   * @returns {Promise<Object>} Updated connector data
+   * @throws {Error} If connector ID is invalid or update data is empty
+   */
+  async updateShopifyConnector(connectorId, connectorData) {
+    validateRequiredParams({ connectorId }, ['connectorId']);
+    if (!connectorData || Object.keys(connectorData).length === 0) {
+      throw new Error('Shopify connector update data is required');
+    }
+    return this.makeRequest('PUT', `/shopify_connectors/${connectorId}`, connectorData);
+  }
 }
