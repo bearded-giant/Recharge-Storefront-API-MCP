@@ -532,15 +532,13 @@ class RechargeStorefrontAPIMCPServer {
     if (this.defaultStoreUrl) {
       console.error(`🔗 Store: ${this.defaultStoreUrl}`);
     }
-    const hasDefaultSessionToken = this.defaultSessionToken ? 'Yes' : 'No';
-    const hasDefaultMerchantToken = this.defaultMerchantToken ? 'Yes' : 'No';
-    console.error(`🔑 Default session token: ${hasDefaultSessionToken}`);
-    console.error(`🔑 Default merchant token: ${hasDefaultMerchantToken}`);
+    console.error(`Default session token: ${this.defaultSessionToken ? 'Yes' : 'No'}`);
+    console.error(`Default merchant token: ${this.defaultMerchantToken ? 'Yes' : 'No'}`);
     console.error(`🔐 Authentication: Session tokens (Bearer) + Merchant tokens (X-Recharge-Access-Token)`);
     console.error(`🛠️  Available tools: ${toolCount}`);
     console.error(`📊 API Coverage: Complete Recharge Storefront API`);
     console.error(`🔌 Transport: stdio`);
-    console.error(`🎯 Features: Auto session creation, multi-customer support, session caching`);
+    console.error(`Features: Auto session creation, multi-customer support, session caching, retry logic`);
     console.error(`✅ Server ready for MCP connections`);
     
     if (process.env.DEBUG === 'true') {

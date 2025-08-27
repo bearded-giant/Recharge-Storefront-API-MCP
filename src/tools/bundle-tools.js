@@ -104,7 +104,7 @@ export const bundleTools = [
     description: 'Get all selections for a specific bundle',
     inputSchema: bundleSelectionListSchema,
     execute: async (client, args) => {
-      const { bundle_id, ...params } = args;
+      const { bundle_id, session_token, merchant_token, store_url, customer_id, customer_email, ...params } = args;
       const selections = await client.getBundleSelections(bundle_id, params);
       return {
         content: [

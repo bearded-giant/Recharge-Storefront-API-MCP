@@ -23,7 +23,7 @@
     "deploy": "chmod +x scripts/deploy.sh && ./scripts/deploy.sh",
     "test": "npm run validate && npm run test:api-keys",
     "test:full": "chmod +x scripts/test.sh && ./scripts/test.sh",
-    "lint": "node --check src/server.js src/recharge-client.js src/utils/error-handler.js src/tools/index.js",
+    "lint": "find src -name '*.js' -exec node --check {} \\;",
     "validate": "npm run lint && node -c src/server.js && echo \"✅ Syntax validation passed\" && npm run coverage",
     "debug": "DEBUG=true node src/server.js",
     "clean": "rm -rf node_modules package-lock.json && npm install",
