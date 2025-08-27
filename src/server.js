@@ -315,7 +315,7 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // If we have merchant token and customer ID, create session automatically
-    if ((toolMerchantToken || defaultMerchantToken) && resolvedCustomerId) {
+    if ((toolMerchantToken || this.defaultMerchantToken) && resolvedCustomerId) {
       const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
       
       if (!merchantTokenToUse) {
