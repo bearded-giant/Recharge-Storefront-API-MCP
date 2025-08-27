@@ -292,6 +292,7 @@ export class RechargeClient {
   /**
    * Get customer information (uses current session context)
    * @returns {Promise<Object>} Customer data
+   * @throws {Error} If session token is invalid or expired
    */
   async getCustomer() {
     return this.makeRequest('GET', `/customer`);
@@ -301,6 +302,7 @@ export class RechargeClient {
    * Update customer information
    * @param {Object} data - Customer update data
    * @returns {Promise<Object>} Updated customer data
+   * @throws {Error} If update data is empty or invalid
    */
   async updateCustomer(data) {
     if (!data || Object.keys(data).length === 0) {
@@ -316,6 +318,7 @@ export class RechargeClient {
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Subscriptions data
+   * @throws {Error} If API request fails
    */
   async getSubscriptions(params = {}) {
     return this.makeRequest('GET', '/subscriptions', null, params);
@@ -325,6 +328,7 @@ export class RechargeClient {
    * Get detailed information about a specific subscription
    * @param {string} subscriptionId - The subscription ID
    * @returns {Promise<Object>} Subscription data
+   * @throws {Error} If subscription ID is invalid or not found
    */
   async getSubscription(subscriptionId) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
@@ -335,6 +339,7 @@ export class RechargeClient {
    * Create a new subscription
    * @param {Object} subscriptionData - Subscription data
    * @returns {Promise<Object>} Created subscription data
+   * @throws {Error} If required fields are missing or invalid
    */
   async createSubscription(subscriptionData) {
     const required = ['address_id', 'next_charge_scheduled_at', 'order_interval_frequency', 'order_interval_unit', 'quantity', 'variant_id'];
@@ -347,6 +352,7 @@ export class RechargeClient {
    * @param {string} subscriptionId - The subscription ID
    * @param {Object} data - Update data
    * @returns {Promise<Object>} Updated subscription data
+   * @throws {Error} If subscription ID is invalid or update data is empty
    */
   async updateSubscription(subscriptionId, data) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
@@ -359,8 +365,9 @@ export class RechargeClient {
   /**
    * Cancel a subscription
    * @param {string} subscriptionId - The subscription ID
-   * @param {Object} data - Cancellation data
+   * @param {Object} [data={}] - Cancellation data
    * @returns {Promise<Object>} Cancellation result
+   * @throws {Error} If subscription ID is invalid
    */
   async cancelSubscription(subscriptionId, data = {}) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
@@ -371,6 +378,7 @@ export class RechargeClient {
    * Activate a cancelled subscription
    * @param {string} subscriptionId - The subscription ID
    * @returns {Promise<Object>} Activation result
+   * @throws {Error} If subscription ID is invalid or subscription cannot be activated
    */
   async activateSubscription(subscriptionId) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
@@ -382,6 +390,7 @@ export class RechargeClient {
    * @param {string} subscriptionId - The subscription ID
    * @param {string} date - Date to skip (YYYY-MM-DD)
    * @returns {Promise<Object>} Skip result
+   * @throws {Error} If subscription ID or date is invalid
    */
   async skipSubscription(subscriptionId, date) {
     validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
@@ -393,6 +402,7 @@ export class RechargeClient {
    * @param {string} subscriptionId - The subscription ID
    * @param {string} date - Date to unskip (YYYY-MM-DD)
    * @returns {Promise<Object>} Unskip result
+   * @throws {Error} If subscription ID or date is invalid
    */
   async unskipSubscription(subscriptionId, date) {
     validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
@@ -404,6 +414,7 @@ export class RechargeClient {
    * @param {string} subscriptionId - The subscription ID
    * @param {Object} data - Swap data including variant_id
    * @returns {Promise<Object>} Swap result
+   * @throws {Error} If subscription ID is invalid or variant_id is missing
    */
   async swapSubscription(subscriptionId, data) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
@@ -418,6 +429,7 @@ export class RechargeClient {
    * @param {string} subscriptionId - The subscription ID
    * @param {string} date - Next charge date (YYYY-MM-DD)
    * @returns {Promise<Object>} Update result
+   * @throws {Error} If subscription ID or date is invalid
    */
   async setNextChargeDate(subscriptionId, date) {
     validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
@@ -427,10 +439,11 @@ export class RechargeClient {
   // Address methods
   /**
    * Get addresses with optional filtering
-   * @param {Object} params - Query parameters
+   * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Addresses data
+   * @throws {Error} If API request fails
    */
   async getAddresses(params = {}) {
     return this.makeRequest('GET', '/addresses', null, params);
@@ -440,6 +453,7 @@ export class RechargeClient {
    * Get detailed information about a specific address
    * @param {string} addressId - The address ID
    * @returns {Promise<Object>} Address data
+   * @throws {Error} If address ID is invalid or not found
    */
   async getAddress(addressId) {
     validateRequiredParams({ addressId }, ['addressId']);
@@ -450,6 +464,7 @@ export class RechargeClient {
    * Create a new address
    * @param {Object} addressData - Address data
    * @returns {Promise<Object>} Created address data
+   * @throws {Error} If required address fields are missing
    */
   async createAddress(addressData) {
     const required = ['address1', 'city', 'province', 'zip', 'country', 'first_name', 'last_name'];
@@ -462,6 +477,7 @@ export class RechargeClient {
    * @param {string} addressId - The address ID
    * @param {Object} addressData - Updated address data
    * @returns {Promise<Object>} Updated address data
+   * @throws {Error} If address ID is invalid or update data is empty
    */
   async updateAddress(addressId, addressData) {
     validateRequiredParams({ addressId }, ['addressId']);
@@ -475,6 +491,7 @@ export class RechargeClient {
    * Delete an address
    * @param {string} addressId - The address ID
    * @returns {Promise<Object>} Deletion result
+   * @throws {Error} If address ID is invalid or address cannot be deleted
    */
   async deleteAddress(addressId) {
     validateRequiredParams({ addressId }, ['addressId']);
@@ -484,10 +501,11 @@ export class RechargeClient {
   // Payment method methods
   /**
    * Get payment methods with optional filtering
-   * @param {Object} params - Query parameters
+   * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Payment methods data
+   * @throws {Error} If API request fails
    */
   async getPaymentMethods(params = {}) {
     return this.makeRequest('GET', '/payment_methods', null, params);
@@ -497,6 +515,7 @@ export class RechargeClient {
    * Get detailed information about a specific payment method
    * @param {string} paymentMethodId - The payment method ID
    * @returns {Promise<Object>} Payment method data
+   * @throws {Error} If payment method ID is invalid or not found
    */
   async getPaymentMethod(paymentMethodId) {
     validateRequiredParams({ paymentMethodId }, ['paymentMethodId']);
@@ -508,6 +527,7 @@ export class RechargeClient {
    * @param {string} paymentMethodId - The payment method ID
    * @param {Object} paymentData - Updated payment data
    * @returns {Promise<Object>} Updated payment method data
+   * @throws {Error} If payment method ID is invalid or update data is empty
    */
   async updatePaymentMethod(paymentMethodId, paymentData) {
     validateRequiredParams({ paymentMethodId }, ['paymentMethodId']);
@@ -520,11 +540,12 @@ export class RechargeClient {
   // Product methods
   /**
    * Get available products with optional filtering
-   * @param {Object} params - Query parameters
+   * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
    * @param {string} [params.handle] - Filter by product handle
    * @param {boolean} [params.subscription_defaults] - Include subscription defaults
    * @returns {Promise<Object>} Products data
+   * @throws {Error} If API request fails
    */
   async getProducts(params = {}) {
     return this.makeRequest('GET', '/products', null, params);
@@ -534,6 +555,7 @@ export class RechargeClient {
    * Get detailed product information
    * @param {string} productId - The product ID
    * @returns {Promise<Object>} Product data
+   * @throws {Error} If product ID is invalid or not found
    */
   async getProduct(productId) {
     validateRequiredParams({ productId }, ['productId']);
@@ -543,11 +565,12 @@ export class RechargeClient {
   // Order methods
   /**
    * Get orders with optional filtering
-   * @param {Object} params - Query parameters
+   * @param {Object} [params={}] - Query parameters
    * @param {string} [params.status] - Filter by order status
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Orders data
+   * @throws {Error} If API request fails
    */
   async getOrders(params = {}) {
     return this.makeRequest('GET', '/orders', null, params);
@@ -557,6 +580,7 @@ export class RechargeClient {
    * Get detailed order information
    * @param {string} orderId - The order ID
    * @returns {Promise<Object>} Order data
+   * @throws {Error} If order ID is invalid or not found
    */
   async getOrder(orderId) {
     validateRequiredParams({ orderId }, ['orderId']);
@@ -566,11 +590,12 @@ export class RechargeClient {
   // Charge methods
   /**
    * Get charges with optional filtering
-   * @param {Object} params - Query parameters
+   * @param {Object} [params={}] - Query parameters
    * @param {string} [params.status] - Filter by charge status
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Charges data
+   * @throws {Error} If API request fails
    */
   async getCharges(params = {}) {
     return this.makeRequest('GET', '/charges', null, params);
@@ -580,6 +605,7 @@ export class RechargeClient {
    * Get detailed charge information
    * @param {string} chargeId - The charge ID
    * @returns {Promise<Object>} Charge data
+   * @throws {Error} If charge ID is invalid or not found
    */
   async getCharge(chargeId) {
     validateRequiredParams({ chargeId }, ['chargeId']);
@@ -589,10 +615,11 @@ export class RechargeClient {
   // One-time product methods
   /**
    * Get one-time products with optional filtering
-   * @param {Object} params - Query parameters
+   * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} One-time products data
+   * @throws {Error} If API request fails
    */
   async getOnetimes(params = {}) {
     return this.makeRequest('GET', '/onetimes', null, params);
@@ -602,6 +629,7 @@ export class RechargeClient {
    * Get detailed information about a specific one-time product
    * @param {string} onetimeId - The one-time product ID
    * @returns {Promise<Object>} One-time product data
+   * @throws {Error} If one-time product ID is invalid or not found
    */
   async getOnetime(onetimeId) {
     validateRequiredParams({ onetimeId }, ['onetimeId']);
@@ -612,6 +640,7 @@ export class RechargeClient {
    * Create a one-time product
    * @param {Object} onetimeData - One-time product data
    * @returns {Promise<Object>} Created one-time product data
+   * @throws {Error} If required fields are missing
    */
   async createOnetime(onetimeData) {
     const required = ['variant_id', 'quantity', 'next_charge_scheduled_at'];
@@ -624,6 +653,7 @@ export class RechargeClient {
    * @param {string} onetimeId - The one-time product ID
    * @param {Object} onetimeData - Updated one-time product data
    * @returns {Promise<Object>} Updated one-time product data
+   * @throws {Error} If one-time product ID is invalid or update data is empty
    */
   async updateOnetime(onetimeId, onetimeData) {
     validateRequiredParams({ onetimeId }, ['onetimeId']);
@@ -637,6 +667,7 @@ export class RechargeClient {
    * Delete a one-time product
    * @param {string} onetimeId - The one-time product ID
    * @returns {Promise<Object>} Deletion result
+   * @throws {Error} If one-time product ID is invalid or product cannot be deleted
    */
   async deleteOnetime(onetimeId) {
     validateRequiredParams({ onetimeId }, ['onetimeId']);
@@ -646,11 +677,12 @@ export class RechargeClient {
   // Bundle methods
   /**
    * Get bundles with optional filtering
-   * @param {Object} params - Query parameters
+   * @param {Object} [params={}] - Query parameters
    * @param {string} [params.subscription_id] - Filter by subscription ID
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Bundles data
+   * @throws {Error} If API request fails
    */
   async getBundles(params = {}) {
     return this.makeRequest('GET', '/bundles', null, params);
@@ -660,6 +692,7 @@ export class RechargeClient {
    * Get detailed information about a specific bundle
    * @param {string} bundleId - The bundle ID
    * @returns {Promise<Object>} Bundle data
+   * @throws {Error} If bundle ID is invalid or not found
    */
   async getBundle(bundleId) {
     validateRequiredParams({ bundleId }, ['bundleId']);
@@ -669,9 +702,10 @@ export class RechargeClient {
   /**
    * Get bundle selections for a specific bundle
    * @param {string} bundleId - The bundle ID
-   * @param {Object} params - Query parameters
+   * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
    * @returns {Promise<Object>} Bundle selections data
+   * @throws {Error} If bundle ID is invalid
    */
   async getBundleSelections(bundleId, params = {}) {
     validateRequiredParams({ bundleId }, ['bundleId']);
@@ -682,6 +716,7 @@ export class RechargeClient {
    * Get detailed information about a specific bundle selection
    * @param {string} bundleSelectionId - The bundle selection ID
    * @returns {Promise<Object>} Bundle selection data
+   * @throws {Error} If bundle selection ID is invalid or not found
    */
   async getBundleSelection(bundleSelectionId) {
     validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
@@ -708,6 +743,7 @@ export class RechargeClient {
    * @param {string} bundleSelectionId - The bundle selection ID
    * @param {Object} selectionData - Updated bundle selection data
    * @returns {Promise<Object>} Updated bundle selection data
+   * @throws {Error} If bundle selection ID is invalid or update data is empty
    */
   async updateBundleSelection(bundleSelectionId, selectionData) {
     validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
@@ -721,6 +757,7 @@ export class RechargeClient {
    * Delete a bundle selection
    * @param {string} bundleSelectionId - The bundle selection ID
    * @returns {Promise<Object>} Deletion result
+   * @throws {Error} If bundle selection ID is invalid or selection cannot be deleted
    */
   async deleteBundleSelection(bundleSelectionId) {
     validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
@@ -730,10 +767,11 @@ export class RechargeClient {
   // Discount methods
   /**
    * Get discounts with optional filtering
-   * @param {Object} params - Query parameters
+   * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
    * @returns {Promise<Object>} Discounts data
+   * @throws {Error} If API request fails
    */
   async getDiscounts(params = {}) {
     return this.makeRequest('GET', '/discounts', null, params);
@@ -743,6 +781,7 @@ export class RechargeClient {
    * Get detailed information about a specific discount
    * @param {string} discountId - The discount ID
    * @returns {Promise<Object>} Discount data
+   * @throws {Error} If discount ID is invalid or not found
    */
   async getDiscount(discountId) {
     validateRequiredParams({ discountId }, ['discountId']);
@@ -753,6 +792,7 @@ export class RechargeClient {
    * Apply a discount code
    * @param {string} discountCode - The discount code to apply
    * @returns {Promise<Object>} Applied discount data
+   * @throws {Error} If discount code is invalid or cannot be applied
    */
   async applyDiscount(discountCode) {
     validateRequiredParams({ discountCode }, ['discountCode']);
@@ -763,6 +803,7 @@ export class RechargeClient {
    * Remove a discount
    * @param {string} discountId - The discount ID to remove
    * @returns {Promise<Object>} Removal result
+   * @throws {Error} If discount ID is invalid or discount cannot be removed
    */
   async removeDiscount(discountId) {
     validateRequiredParams({ discountId }, ['discountId']);

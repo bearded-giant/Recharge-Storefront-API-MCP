@@ -14,7 +14,7 @@
     "dev:debug": "DEBUG=true node --watch src/server.js",
     "build": "npm run lint && npm run validate",
     "coverage": "node scripts/coverage.js",
-    "docker:build": "docker build -t recharge-storefront-api-mcp:$(npm run version --silent) . && docker tag recharge-storefront-api-mcp:$(npm run version --silent) recharge-storefront-api-mcp:latest",
+    "docker:build": "docker build -t recharge-storefront-api-mcp:$(node -p \"require('./package.json').version\") . && docker tag recharge-storefront-api-mcp:$(node -p \"require('./package.json').version\") recharge-storefront-api-mcp:latest",
     "docker:run": "docker compose up -d --build",
     "docker:stop": "docker compose down",
     "docker:logs": "docker compose logs -f --tail=100 recharge-storefront-api-mcp",

@@ -205,7 +205,7 @@ export function formatErrorResponse(error) {
 /**
  * Validate required parameters
  * @param {Object} params - Parameters to validate
- * @param {string[]} required - Required parameter names
+ * @param {Array<string>} required - Required parameter names
  * @throws {Error} If required parameters are missing
  */
 export function validateRequiredParams(params, required) {

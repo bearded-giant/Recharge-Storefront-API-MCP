@@ -20,7 +20,7 @@ RUN addgroup -g 1001 -S nodejs && adduser -S recharge-storefront-api-mcp -u 1001
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production --no-audit --no-fund && npm cache clean --force
 
 # Copy source code
 COPY src/ ./src/

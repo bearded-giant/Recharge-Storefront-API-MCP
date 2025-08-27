@@ -5,7 +5,8 @@
  * This script tests the token and store URL precedence system without making actual API calls
  */
 
-console.log('🧪 Testing API Key and Store URL Handling Logic\n');
+(async () => {
+  console.log('🧪 Testing API Key and Store URL Handling Logic\n');
 
 // Test 1: Environment variables only
 console.log('Test 1: Environment variables only');
@@ -168,11 +169,12 @@ try {
   console.log(`❌ URL validation test failed: ${error.message}`);
 }
 
-console.log('\n🎉 API Key and Store URL Logic Tests Complete');
-console.log('\nSummary:');
-console.log('- Environment variables used when no tool parameters provided ✅');
-console.log('- Tool parameters take precedence over environment variables ✅');
-console.log('- Proper error when no token or store URL available anywhere ✅');
-console.log('- Empty string tokens and store URLs handled correctly ✅');
-console.log('- Tool parameters override empty environment ✅');
-console.log('- URL format validation works correctly ✅');
+  console.log('\n🎉 API Key and Store URL Logic Tests Complete');
+  console.log('\nSummary:');
+  console.log('- Environment variables used when no tool parameters provided ✅');
+  console.log('- Tool parameters take precedence over environment variables ✅');
+  console.log('- Proper error when no token or store URL available anywhere ✅');
+  console.log('- Empty string tokens and store URLs handled correctly ✅');
+  console.log('- Tool parameters override empty environment ✅');
+  console.log('- URL format validation works correctly ✅');
+})();

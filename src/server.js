@@ -115,11 +115,11 @@ class RechargeStorefrontAPIMCPServer {
 
   /**
    * Get or create a Recharge Storefront client
-   * @param {string|undefined} toolStoreUrl - Store URL from tool call
-   * @param {string|undefined} toolSessionToken - Session token from tool call
-   * @param {string|undefined} toolMerchantToken - Merchant token from tool call
-   * @param {string|undefined} customerId - Customer ID for automatic session creation
-   * @param {string|undefined} customerEmail - Customer email for automatic lookup and session creation
+   * @param {string} [toolStoreUrl] - Store URL from tool call
+   * @param {string} [toolSessionToken] - Session token from tool call
+   * @param {string} [toolMerchantToken] - Merchant token from tool call
+   * @param {string} [customerId] - Customer ID for automatic session creation
+   * @param {string} [customerEmail] - Customer email for automatic lookup and session creation
    * @returns {RechargeClient} Configured Recharge Storefront client
    * @throws {Error} If no store URL or authentication token is available
    */
