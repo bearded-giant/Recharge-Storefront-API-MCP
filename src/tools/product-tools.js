@@ -49,7 +49,7 @@ export const productTools = [
     description: 'Get detailed information about a specific product',
     inputSchema: productSchema,
     execute: async (client, args) => {
-      const { product_id, ...otherArgs } = args;
+      const { product_id } = args;
       const product = await client.getProduct(product_id);
       return {
         content: [

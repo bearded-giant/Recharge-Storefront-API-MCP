@@ -88,7 +88,7 @@ export const addressTools = [
     description: 'Get detailed information about a specific address',
     inputSchema: addressSchema,
     execute: async (client, args) => {
-      const { address_id, ...otherArgs } = args;
+      const { address_id } = args;
       const address = await client.getAddress(address_id);
       return {
         content: [
@@ -139,7 +139,7 @@ export const addressTools = [
     description: 'Delete an existing address',
     inputSchema: deleteAddressSchema,
     execute: async (client, args) => {
-      const { address_id, ...otherArgs } = args;
+      const { address_id } = args;
       const result = await client.deleteAddress(address_id);
       return {
         content: [

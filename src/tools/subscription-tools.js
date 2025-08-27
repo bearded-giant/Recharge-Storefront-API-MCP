@@ -154,7 +154,7 @@ export const subscriptionTools = [
     description: 'Get detailed information about a specific subscription',
     inputSchema: subscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, ...otherArgs } = args;
+      const { subscription_id } = args;
       const subscription = await client.getSubscription(subscription_id);
       return {
         content: [
@@ -188,7 +188,7 @@ export const subscriptionTools = [
     description: 'Skip a subscription delivery for a specific date',
     inputSchema: skipSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, date, customer_id, session_token, merchant_token, store_url, ...otherArgs } = args;
+      const { subscription_id, date } = args;
       const result = await client.skipSubscription(subscription_id, date);
       return {
         content: [
@@ -205,7 +205,7 @@ export const subscriptionTools = [
     description: 'Unskip a previously skipped subscription delivery',
     inputSchema: unskipSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, date, customer_id, session_token, merchant_token, store_url, ...otherArgs } = args;
+      const { subscription_id, date } = args;
       const result = await client.unskipSubscription(subscription_id, date);
       return {
         content: [
@@ -222,7 +222,7 @@ export const subscriptionTools = [
     description: 'Swap the variant of a subscription',
     inputSchema: swapSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, customer_id, session_token, merchant_token, store_url, ...swapData } = args;
+      const { subscription_id, customer_id, session_token, merchant_token, store_url, customer_email, ...swapData } = args;
       const swappedSubscription = await client.swapSubscription(subscription_id, swapData);
       return {
         content: [
@@ -239,7 +239,7 @@ export const subscriptionTools = [
     description: 'Cancel a subscription',
     inputSchema: cancelSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, customer_id, session_token, merchant_token, store_url, ...cancelData } = args;
+      const { subscription_id, customer_id, session_token, merchant_token, store_url, customer_email, ...cancelData } = args;
       const cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData);
       return {
         content: [
@@ -256,7 +256,7 @@ export const subscriptionTools = [
     description: 'Activate a cancelled subscription',
     inputSchema: activateSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, customer_id, session_token, merchant_token, store_url, ...otherArgs } = args;
+      const { subscription_id } = args;
       const activatedSubscription = await client.activateSubscription(subscription_id);
       return {
         content: [
@@ -273,7 +273,7 @@ export const subscriptionTools = [
     description: 'Set the next charge date for a subscription',
     inputSchema: setNextChargeDateSchema,
     execute: async (client, args) => {
-      const { subscription_id, date, customer_id, session_token, merchant_token, store_url, ...otherArgs } = args;
+      const { subscription_id, date } = args;
       const updatedSubscription = await client.setNextChargeDate(subscription_id, date);
       return {
         content: [

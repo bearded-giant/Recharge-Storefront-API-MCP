@@ -201,11 +201,9 @@ export class RechargeClient {
   // Customer methods
   /**
    * Get customer information by customer ID
-   * @param {string} customerId - Customer ID
    * @returns {Promise<Object>} Customer data
    */
-  async getCustomer(customerId) {
-    validateRequiredParams({ customerId }, ['customerId']);
+  async getCustomer() {
     return this.makeRequest('GET', `/customer`);
   }
 

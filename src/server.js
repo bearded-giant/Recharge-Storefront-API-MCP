@@ -113,7 +113,7 @@ class RechargeStorefrontAPIMCPServer {
    */
   async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId, customerEmail) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
-    let sessionToken = toolSessionToken || this.defaultSessionToken;
+    const sessionToken = toolSessionToken || this.defaultSessionToken;
     const merchantToken = toolMerchantToken || this.defaultMerchantToken;
     
     // Validate store URL
@@ -121,6 +121,8 @@ class RechargeStorefrontAPIMCPServer {
     
     // Check for cached session first if customer identification provided
     let cacheKey = null;
+    let resolvedCustomerId = customerId;
+    
     if (customerId) {
       cacheKey = `customer_${customerId}`;
     } else if (customerEmail) {
@@ -128,7 +130,7 @@ class RechargeStorefrontAPIMCPServer {
       const cachedCustomerId = this.emailToCustomerIdCache.get(customerEmail);
       if (cachedCustomerId) {
         cacheKey = `customer_${cachedCustomerId}`;
-        customerId = cachedCustomerId; // Use cached customer ID
+        resolvedCustomerId = cachedCustomerId; // Use cached customer ID
       } else {
         cacheKey = `email_${customerEmail}`;
       }
@@ -158,7 +160,7 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // If email provided but no customer ID, look up customer by email first
-    if (!customerId && customerEmail && merchantToken) {
+    if (!resolvedCustomerId && customerEmail && merchantToken) {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Looking up customer by email: ${customerEmail}`);
       }
@@ -179,7 +181,7 @@ class RechargeStorefrontAPIMCPServer {
           }
           // Cache the email -> customer ID mapping
           this.emailToCustomerIdCache.set(customerEmail, foundCustomerId);
-          customerId = foundCustomerId;
+          resolvedCustomerId = foundCustomerId;
           cacheKey = `customer_${customerId}`;
         } else {
           throw new Error(`Customer not found with email address: ${customerEmail}`);
@@ -193,9 +195,9 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // If we have merchant token and customer ID, create session automatically
-    if (merchantToken && customerId) {
+    if (merchantToken && resolvedCustomerId) {
       if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Auto-creating session for customer: ${customerId}`);
+        console.error(`[DEBUG] Auto-creating session for customer: ${resolvedCustomerId}`);
       }
       
       // Create temporary client with merchant token to create session
@@ -205,12 +207,12 @@ class RechargeStorefrontAPIMCPServer {
       });
       
       try {
-        const sessionResponse = await tempClient.createCustomerSessionById(customerId);
+        const sessionResponse = await tempClient.createCustomerSessionById(resolvedCustomerId);
         const autoSessionToken = sessionResponse.session?.token;
         
         if (autoSessionToken) {
           if (process.env.DEBUG === 'true') {
-            console.error(`[DEBUG] Auto-created session token for customer ${customerId}`);
+            console.error(`[DEBUG] Auto-created session token for customer ${resolvedCustomerId}`);
           }
           
           // Cache the new session
@@ -233,15 +235,15 @@ class RechargeStorefrontAPIMCPServer {
         }
       } catch (error) {
         if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] Failed to auto-create session for customer ${customerId}:`, error.message);
+          console.error(`[DEBUG] Failed to auto-create session for customer ${resolvedCustomerId}:`, error.message);
         }
-        throw new Error(`Failed to create session for customer ${customerId}: ${error.message}`);
+        throw new Error(`Failed to create session for customer ${resolvedCustomerId}: ${error.message}`);
       }
     }
     
     // SECURITY: Only use default session token if no customer identification provided
     // AND no cached sessions exist (to prevent wrong customer data exposure)
-    if (!customerId && !customerEmail && sessionToken && !toolSessionToken) {
+    if (!resolvedCustomerId && !customerEmail && sessionToken && !toolSessionToken) {
       if (this.sessionCache.size > 0) {
         throw new Error(
           "Security Error: Cannot use default session token when customer-specific sessions exist. " +
@@ -406,7 +408,9 @@ class RechargeStorefrontAPIMCPServer {
           console.error(`[DEBUG] Merchant token: ${merchant_token ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Customer ID: ${customer_id ? 'provided for auto-session' : 'not provided'}`);
           console.error(`[DEBUG] Customer email: ${customer_email ? 'provided for auto-lookup' : 'not provided'}`);
-          console.error(`[DEBUG] Arguments:`, JSON.stringify(toolArgs, null, 2));
+          if (Object.keys(toolArgs).length > 0) {
+            console.error(`[DEBUG] Tool arguments:`, JSON.stringify(toolArgs, null, 2));
+          }
         }
         
         // Get client with retry logic for expired sessions
@@ -430,7 +434,7 @@ class RechargeStorefrontAPIMCPServer {
             
           } catch (error) {
             // Check if this is a session expiry error and we can retry
-            if (error.sessionExpired && retryCount < maxRetries && (customer_id || customer_email)) {
+            if (error.sessionExpired && retryCount < maxRetries && (customer_id || customer_email) && (merchant_token || this.defaultMerchantToken)) {
               retryCount++;
               
               if (process.env.DEBUG === 'true') {
@@ -526,14 +530,14 @@ class RechargeStorefrontAPIMCPServer {
     
     // Log startup information to stderr (won't interfere with MCP protocol)
     const version = process.env.MCP_SERVER_VERSION || "1.0.0";
-    const hasDefaultStoreUrl = this.defaultStoreUrl ? 'Yes' : 'No (will require store URL in tool calls)';
+    const hasDefaultStoreUrl = this.defaultStoreUrl ? 'Yes' : 'No';
     const toolCount = tools.length;
     const nodeVersion = process.version;
     const platform = process.platform;
     
     console.error(`🚀 Recharge Storefront API MCP Server v${version}`);
     console.error(`🖥️  Platform: ${platform} | Node.js: ${nodeVersion}`);
-    console.error(`🏪 Default store URL: ${hasDefaultStoreUrl}`);
+    console.error(`🏪 Store URL configured: ${hasDefaultStoreUrl}`);
     if (this.defaultStoreUrl) {
       console.error(`🔗 Store: ${this.defaultStoreUrl}`);
     }
@@ -541,16 +545,29 @@ class RechargeStorefrontAPIMCPServer {
     const hasDefaultMerchantToken = this.defaultMerchantToken ? 'Yes' : 'No';
     console.error(`🔑 Default session token: ${hasDefaultSessionToken}`);
     console.error(`🔑 Default merchant token: ${hasDefaultMerchantToken}`);
-    console.error(`🔑 Authentication: Session tokens (Bearer) or Merchant tokens (X-Recharge-Access-Token)`);
+    console.error(`🔐 Authentication: Session tokens (Bearer) + Merchant tokens (X-Recharge-Access-Token)`);
     console.error(`🛠️  Available tools: ${toolCount}`);
     console.error(`📊 API Coverage: Complete Recharge Storefront API`);
     console.error(`🔌 Transport: stdio`);
-    console.error(`🎯 Capabilities: Customer management, subscriptions, payments, orders, bundles`);
+    console.error(`🎯 Features: Auto session creation, multi-customer support, session caching`);
     console.error(`✅ Server ready for MCP connections`);
     
     if (process.env.DEBUG === 'true') {
       console.error(`🐛 Debug mode enabled`);
-      console.error(`📋 Tool categories: ${[...new Set(tools.map(t => t.name.split('_')[1] || 'general'))].join(', ')}`);
+      console.error(`📋 Tool categories: ${[...new Set(tools.map(t => {
+        const parts = t.name.split('_');
+        if (parts.includes('customer')) return 'customer';
+        if (parts.includes('subscription')) return 'subscription';
+        if (parts.includes('address')) return 'address';
+        if (parts.includes('payment')) return 'payment';
+        if (parts.includes('product')) return 'product';
+        if (parts.includes('order')) return 'order';
+        if (parts.includes('charge')) return 'charge';
+        if (parts.includes('onetime')) return 'onetime';
+        if (parts.includes('bundle')) return 'bundle';
+        if (parts.includes('discount')) return 'discount';
+        return 'other';
+      }))].join(', ')}`);
       console.error(`📈 Statistics tracking enabled`);
     }
     

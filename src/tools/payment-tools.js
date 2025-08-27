@@ -59,7 +59,7 @@ export const paymentTools = [
     description: 'Get detailed information about a specific payment method',
     inputSchema: paymentMethodSchema,
     execute: async (client, args) => {
-      const { payment_method_id, ...otherArgs } = args;
+      const { payment_method_id } = args;
       const paymentMethod = await client.getPaymentMethod(payment_method_id);
       return {
         content: [

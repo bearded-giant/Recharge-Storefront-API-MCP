@@ -68,7 +68,7 @@ export const onetimeTools = [
     description: 'Get detailed information about a specific one-time product',
     inputSchema: onetimeSchema,
     execute: async (client, args) => {
-      const { onetime_id, ...otherArgs } = args;
+      const { onetime_id } = args;
       const onetime = await client.getOnetime(onetime_id);
       return {
         content: [
@@ -119,7 +119,7 @@ export const onetimeTools = [
     description: 'Delete a one-time product',
     inputSchema: onetimeSchema,
     execute: async (client, args) => {
-      const { onetime_id, ...otherArgs } = args;
+      const { onetime_id } = args;
       const result = await client.deleteOnetime(onetime_id);
       return {
         content: [

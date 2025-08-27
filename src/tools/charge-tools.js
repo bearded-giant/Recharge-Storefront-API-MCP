@@ -48,7 +48,7 @@ export const chargeTools = [
     description: 'Get detailed information about a specific charge',
     inputSchema: chargeSchema,
     execute: async (client, args) => {
-      const { charge_id, ...otherArgs } = args;
+      const { charge_id } = args;
       const charge = await client.getCharge(charge_id);
       return {
         content: [
