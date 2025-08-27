@@ -135,13 +135,15 @@ try {
     'https://valid-shop.myshopify.com',
     'invalid-shop.com',
     'not-a-url',
-    ''
+    '',
+    null,
+    undefined
   ];
   
   testUrls.forEach(url => {
     try {
       // Simulate validation logic
-      if (!url) {
+      if (!url || typeof url !== 'string') {
         throw new Error('No store URL provided');
       }
       
@@ -159,7 +161,7 @@ try {
       
       console.log(`✅ Valid URL: ${url} -> ${domain}`);
     } catch (error) {
-      console.log(`❌ Invalid URL: ${url} - ${error.message}`);
+      console.log(`❌ Invalid URL: ${String(url)} - ${error.message}`);
     }
   });
 } catch (error) {

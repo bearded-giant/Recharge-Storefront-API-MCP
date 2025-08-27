@@ -603,7 +603,11 @@ export class RechargeClient {
   /**
    * Create a bundle selection
    * @param {Object} selectionData - Bundle selection data
+   * @param {string} selectionData.bundle_id - Bundle ID
+   * @param {number} selectionData.variant_id - Selected variant ID
+   * @param {number} selectionData.quantity - Quantity selected
    * @returns {Promise<Object>} Created bundle selection data
+   * @throws {Error} If required fields are missing
    */
   async createBundleSelection(selectionData) {
     const required = ['bundle_id', 'variant_id', 'quantity'];

@@ -103,11 +103,11 @@ class RechargeStorefrontAPIMCPServer {
 
   /**
    * Get or create a Recharge Storefront client
-   * @param {string} [toolStoreUrl] - Store URL from tool call
-   * @param {string} [toolSessionToken] - Session token from tool call
-   * @param {string} [toolMerchantToken] - Merchant token from tool call
-   * @param {string} [customerId] - Customer ID for automatic session creation
-   * @param {string} [customerEmail] - Customer email for automatic lookup and session creation
+   * @param {string|undefined} toolStoreUrl - Store URL from tool call
+   * @param {string|undefined} toolSessionToken - Session token from tool call
+   * @param {string|undefined} toolMerchantToken - Merchant token from tool call
+   * @param {string|undefined} customerId - Customer ID for automatic session creation
+   * @param {string|undefined} customerEmail - Customer email for automatic lookup and session creation
    * @returns {RechargeClient} Configured Recharge Storefront client
    * @throws {Error} If no store URL or authentication token is available
    */
@@ -123,7 +123,7 @@ class RechargeStorefrontAPIMCPServer {
     let cacheKey = null;
     let resolvedCustomerId = customerId;
     
-    if (customerId) {
+    if (resolvedCustomerId) {
       cacheKey = `customer_${customerId}`;
     } else if (customerEmail) {
       // Check if we have cached customer ID for this email
@@ -175,7 +175,7 @@ class RechargeStorefrontAPIMCPServer {
         const customerResponse = await tempClient.getCustomerByEmail(customerEmail);
         const foundCustomerId = customerResponse.customer?.id || 
                                customerResponse.customers?.[0]?.id ||
-                               (typeof customerResponse.id === 'string' ? customerResponse.id : null);
+                               (customerResponse.id ? String(customerResponse.id) : null);
         
         if (foundCustomerId) {
           if (process.env.DEBUG === 'true') {
@@ -275,7 +275,8 @@ class RechargeStorefrontAPIMCPServer {
       });
     }
     
-    if (!sessionToken && !merchantToken) {
+    // Check if we have any authentication method available
+    if (!sessionToken && !merchantToken && !toolSessionToken) {
       throw new Error(
         "No authentication token available. Please provide either:\n" +
         "1. 'session_token' parameter in your tool call, or\n" +
@@ -433,20 +434,22 @@ class RechargeStorefrontAPIMCPServer {
               }
               
               // Clear cached session for this customer
-              const cacheKey = customer_id ? `customer_${customer_id}` : 
-                              customer_email ? `email_${customer_email}` : null;
+              let cacheKey = null;
+              if (customer_id) {
+                cacheKey = `customer_${customer_id}`;
+              } else if (customer_email) {
+                cacheKey = `email_${customer_email}`;
+                // Also clear the customer ID cache for this email
+                const cachedCustomerId = this.emailToCustomerIdCache.get(customer_email);
+                if (cachedCustomerId) {
+                  this.sessionCache.delete(`customer_${cachedCustomerId}`);
+                  this.sessionExpiryCache.delete(`customer_${cachedCustomerId}`);
+                }
+              }
               
               if (cacheKey) {
                 this.sessionCache.delete(cacheKey);
                 this.sessionExpiryCache.delete(cacheKey);
-                
-                // Also clear email cache if using email
-                if (customer_email && this.emailToCustomerIdCache.has(customer_email)) {
-                  const cachedCustomerId = this.emailToCustomerIdCache.get(customer_email);
-                  this.sessionCache.delete(`customer_${cachedCustomerId}`);
-                  this.sessionExpiryCache.delete(`customer_${cachedCustomerId}`);
-                }
-                
                 if (process.env.DEBUG === 'true') {
                   console.error(`[DEBUG] Cleared cached session for ${cacheKey}`);
                 }

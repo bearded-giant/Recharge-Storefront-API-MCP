@@ -255,5 +255,7 @@ export function sanitizeErrorMessage(message) {
     .replace(/token[s]?[:\s=]+[a-zA-Z0-9_-]+/gi, 'token=***')
     .replace(/key[s]?[:\s=]+[a-zA-Z0-9_-]+/gi, 'key=***')
     .replace(/password[s]?[:\s=]+[^\s]+/gi, 'password=***')
-    .replace(/secret[s]?[:\s=]+[^\s]+/gi, 'secret=***');
+    .replace(/secret[s]?[:\s=]+[^\s]+/gi, 'secret=***')
+    .replace(/Bearer\s+[a-zA-Z0-9_-]+/gi, 'Bearer ***')
+    .replace(/X-Recharge-Access-Token[:\s=]+[a-zA-Z0-9_-]+/gi, 'X-Recharge-Access-Token: ***');
 }

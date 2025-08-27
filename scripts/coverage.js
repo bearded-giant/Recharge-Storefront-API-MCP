@@ -49,5 +49,8 @@ try {
   console.log('\n✅ Complete Recharge Storefront API coverage');
 } catch (error) {
   console.error('❌ Error loading tools:', error.message);
+  if (process.env.DEBUG === 'true') {
+    console.error('Stack trace:', error.stack);
+  }
   process.exit(1);
 }
