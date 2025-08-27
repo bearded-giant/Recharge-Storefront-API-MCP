@@ -245,76 +245,30 @@ export class RechargeClient {
   }
 
   /**
-   * Make a safe API request
+   * Make an API request
    * @param {string} method - HTTP method
    * @param {string} endpoint - API endpoint
    * @param {Object} data - Request data
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} API response data
-   * @throws {Error} API error or circuit breaker error
+   * @throws {Error} API error
    */
   async makeRequest(method, endpoint, data = null, params = null) {
-    const requestFn = async () => {
-      const config = {
-        method: method.toLowerCase(),
-        url: endpoint,
-      };
-      
-      if (data) {
-        config.data = data;
-      }
-      
-      if (params) {
-        config.params = params;
-      }
-      
-      this.logger.debug('Making API request', {
-        method: method.toUpperCase(),
-        endpoint,
-        hasData: !!data,
-        hasParams: !!params
-      });
-      
-      const response = await this.client.request(config);
-      
-      this.logger.debug('API request successful', {
-        method: method.toUpperCase(),
-        endpoint,
-        status: response.status
-      });
-      
-      return response.data;
+    const config = {
+      method: method.toLowerCase(),
+      url: endpoint,
     };
-
-    // Execute with circuit breaker and retry logic
-    return this.circuitBreaker.execute(async () => {
-      return withRetry(requestFn, {
-        maxRetries: 3,
-        baseDelay: 1000,
-        shouldRetry: (error, attempt) => {
-          // Don't retry redirect errors or authentication errors
-          if (error.isRedirect || error.statusCode === 401 || error.statusCode === 403) {
-            return false;
-          }
-          
-          // Retry server errors and network errors
-          return error.statusCode >= 500 || 
-                 error.code === 'ECONNABORTED' || 
-                 error.code === 'ENOTFOUND' || 
-                 error.code === 'ECONNRESET' ||
-                 error.code === 'ETIMEDOUT';
-        },
-        onRetry: (error, attempt, delay) => {
-          this.logger.warn('Retrying API request', {
-            method: method.toUpperCase(),
-            endpoint,
-            attempt: attempt + 1,
-            delay: Math.round(delay),
-            error: error.message
-          });
-        }
-      });
-    });
+    
+    if (data) {
+      config.data = data;
+    }
+    
+    if (params) {
+      config.params = params;
+    }
+    
+    const response = await this.client.request(config);
+    return response.data;
   }
 
   /**
@@ -353,18 +307,6 @@ export class RechargeClient {
    */
   async getCustomer() {
     const response = await this.makeRequest('GET', `/customer`);
-    
-    // Validate response structure
-    try {
-      validateApiResponse(response.customer || response, RECHARGE_SCHEMAS.customer);
-    } catch (validationError) {
-      this.logger.warn('Customer response validation failed', {
-        error: validationError.message,
-        response: response
-      });
-      // Don't throw validation errors, just log them for now
-    }
-    
     return response;
   }
 
@@ -392,22 +334,6 @@ export class RechargeClient {
    */
   async getSubscriptions(params = {}) {
     const response = await this.makeRequest('GET', '/subscriptions', null, params);
-    
-    // Validate response structure
-    if (response.subscriptions && Array.isArray(response.subscriptions)) {
-      response.subscriptions.forEach((subscription, index) => {
-        try {
-          validateApiResponse(subscription, RECHARGE_SCHEMAS.subscription);
-        } catch (validationError) {
-          this.logger.warn('Subscription response validation failed', {
-            index,
-            error: validationError.message,
-            subscription: subscription
-          });
-        }
-      });
-    }
-    
     return response;
   }
 
@@ -534,22 +460,6 @@ export class RechargeClient {
    */
   async getAddresses(params = {}) {
     const response = await this.makeRequest('GET', '/addresses', null, params);
-    
-    // Validate response structure
-    if (response.addresses && Array.isArray(response.addresses)) {
-      response.addresses.forEach((address, index) => {
-        try {
-          validateApiResponse(address, RECHARGE_SCHEMAS.address);
-        } catch (validationError) {
-          this.logger.warn('Address response validation failed', {
-            index,
-            error: validationError.message,
-            address: address
-          });
-        }
-      });
-    }
-    
     return response;
   }
 

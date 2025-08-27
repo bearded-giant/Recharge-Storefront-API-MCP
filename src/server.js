@@ -11,10 +11,24 @@ import {
 import dotenv from "dotenv";
 import { RechargeClient } from "./recharge-client.js";
 import { tools } from "./tools/index.js";
-import { createLogger } from "./utils/logger.js";
 
 // Load environment variables
 dotenv.config();
+
+/**
+ * Convert Zod schema to JSON Schema for MCP protocol
+ * @param {import('zod').ZodSchema} zodSchema - Zod schema to convert
+ * @returns {Object} JSON Schema object
+ */
+function convertZodSchemaToJsonSchema(zodSchema) {
+  // Basic conversion - in a real implementation, you'd use a proper converter
+  // For now, return a basic object schema
+  return {
+    type: "object",
+    properties: {},
+    additionalProperties: true
+  };
+}
 
 /**
  * Recharge Storefront API MCP Server
@@ -24,9 +38,6 @@ dotenv.config();
  */
 class RechargeStorefrontAPIMCPServer {
   constructor() {
-    // Initialize logger
-    this.logger = createLogger('mcp-server');
-    
     // Store environment variables for client creation
     this.defaultStoreUrl = process.env.RECHARGE_STOREFRONT_DOMAIN;
     this.defaultSessionToken = process.env.RECHARGE_SESSION_TOKEN;
@@ -38,11 +49,11 @@ class RechargeStorefrontAPIMCPServer {
     this.sessionExpiryCache = new Map(); // customerId -> expiryTime
     
     if (process.env.DEBUG === 'true') {
-      this.logger.debug('Server initialization', {
+      console.error(`[DEBUG] Server initialization: ${JSON.stringify({
         defaultStoreUrl: this.defaultStoreUrl || 'Not set (will require in tool calls)',
         hasDefaultSessionToken: !!this.defaultSessionToken,
         hasDefaultMerchantToken: !!this.defaultMerchantToken
-      });
+      }, null, 2)}`);
     }
 
     this.server = new Server(
@@ -112,10 +123,10 @@ class RechargeStorefrontAPIMCPServer {
     }
 
     if (process.env.DEBUG === 'true') {
-      this.logger.debug('Store URL validation', {
+      console.error(`[DEBUG] Store URL validation: ${JSON.stringify({
         validatedDomain: domain,
         baseUrl: `https://${domain}/tools/recurring/portal`
-      });
+      }, null, 2)}`);
     }
 
     return domain;
@@ -162,14 +173,18 @@ class RechargeStorefrontAPIMCPServer {
       const expiryTime = this.sessionExpiryCache.get(cacheKey);
       
       if (expiryTime && Date.now() < expiryTime) {
-        this.logger.debug('Using cached session', { cacheKey });
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Using cached session: ${cacheKey}`);
+        }
         return new RechargeClient({
           storeUrl: validatedDomain,
           sessionToken: cachedSession,
         });
       } else {
         // Session expired, remove from cache
-        this.logger.debug('Cached session expired, removing from cache', { cacheKey });
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Cached session expired, removing from cache: ${cacheKey}`);
+        }
         this.sessionCache.delete(cacheKey);
         this.sessionExpiryCache.delete(cacheKey);
       }
@@ -178,10 +193,12 @@ class RechargeStorefrontAPIMCPServer {
     // If email provided but no customer ID, look up customer by email first
     if (!resolvedCustomerId && customerEmail && (toolMerchantToken || defaultMerchantToken)) {
       const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
-      this.logger.debug('Looking up customer by email', {
-        customerEmail,
-        hasMerchantToken: !!merchantTokenToUse
-      });
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Looking up customer by email: ${JSON.stringify({
+          customerEmail,
+          hasMerchantToken: !!merchantTokenToUse
+        }, null, 2)}`);
+      }
       
       // Create temporary client with merchant token to look up customer
       const tempClient = new RechargeClient({
@@ -196,26 +213,33 @@ class RechargeStorefrontAPIMCPServer {
                                (customerResponse.id ? String(customerResponse.id) : null);
         
         if (foundCustomerId) {
-          this.logger.debug('Found customer ID for email', {
-            customerEmail,
-            customerId: foundCustomerId
-          });
+          if (process.env.DEBUG === 'true') {
+            console.error(`[DEBUG] Found customer ID for email: ${JSON.stringify({
+              customerEmail,
+              customerId: foundCustomerId
+            }, null, 2)}`);
+          }
           // Cache the email -> customer ID mapping
           this.emailToCustomerIdCache.set(customerEmail, foundCustomerId);
           resolvedCustomerId = foundCustomerId;
           cacheKey = `customer_${foundCustomerId}`;
         } else {
-          this.logger.warn('Customer not found', {
-            customerEmail,
-            response: customerResponse
-          });
+          if (process.env.DEBUG === 'true') {
+            console.error(`[DEBUG] Customer not found: ${JSON.stringify({
+              customerEmail,
+              response: customerResponse
+            }, null, 2)}`);
+          }
           throw new Error(`Customer not found with email address: ${customerEmail}`);
         }
       } catch (error) {
-        this.logger.error('Failed to lookup customer by email', {
-          customerEmail,
-          isRedirect: error.isRedirect
-        }, error);
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Failed to lookup customer by email: ${JSON.stringify({
+            customerEmail,
+            isRedirect: error.isRedirect,
+            error: error.message
+          }, null, 2)}`);
+        }
         
         // Provide more specific error messages based on error type
         if (error.isRedirect) {
@@ -421,7 +445,7 @@ class RechargeStorefrontAPIMCPServer {
         tools: tools.map(tool => ({
           name: tool.name,
           description: tool.description,
-          inputSchema: this.convertZodSchemaToJsonSchema(tool.inputSchema)
+          inputSchema: convertZodSchemaToJsonSchema(tool.inputSchema)
         }))
       };
     });
