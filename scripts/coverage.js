@@ -45,7 +45,7 @@
       .forEach(([cat, count]) => {
         const percentage = ((count / totalTools) * 100).toFixed(1);
         console.log(`   ${cat}: ${percentage}%`);
-          }      );
+      });
 
     console.log('\n✅ Complete Recharge Storefront API coverage');
   } catch (error) {
@@ -55,5 +55,4 @@
     }
     process.exit(1);
   }
-}
-)
+})();
