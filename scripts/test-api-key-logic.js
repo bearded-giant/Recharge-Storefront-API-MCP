@@ -7,8 +7,7 @@
 
 (async () => {
   console.log('🧪 Testing API Key and Store URL Handling Logic\n');
-}
-)
+})();
 
 // Test 1: Environment variables only
 console.log('Test 1: Environment variables only');

@@ -39,26 +39,96 @@ curl -H "X-Recharge-Access-Token: your_token" \
 
 ## Redirect Errors
 
+### Understanding Redirect Errors
+
+Redirect errors occur when the Recharge API returns a 3xx redirect response instead of the expected data. This usually indicates configuration or authentication issues.
+
+**Common redirect patterns and their meanings:**
+
 ### Admin API Token Usage
 **Problem:** Using Admin API token instead of Storefront API token
 
+**Symptoms:**
+- Redirects to `/admin/oauth` endpoints
+- 302/303 redirect responses
+- OAuth-related error messages
+
 **Solution:** Create new **Storefront API** token in Recharge admin
+
+```bash
+# Check if you're getting OAuth redirects
+curl -v -H "X-Recharge-Access-Token: your_token" \
+     "https://your-shop.myshopify.com/tools/recurring/portal/customer"
+```
 
 ### Incorrect Store URL Format
 **Problem:** Wrong domain format
 
-**Correct format:**
-```bash
-RECHARGE_STOREFRONT_DOMAIN=shop.myshopify.com
-```
+**Common mistakes and correct formats:**
 
-**Wrong formats:**
 ```bash
-# Don't include protocol
+# ✅ CORRECT - Use myshopify.com domain
+RECHARGE_STOREFRONT_DOMAIN=shop.myshopify.com
+
+# ❌ WRONG - Don't include protocol
 RECHARGE_STOREFRONT_DOMAIN=https://shop.myshopify.com
 
-# Don't include trailing slash
+# ❌ WRONG - Don't include trailing slash
 RECHARGE_STOREFRONT_DOMAIN=shop.myshopify.com/
+
+# ❌ WRONG - Don't use custom domains
+RECHARGE_STOREFRONT_DOMAIN=shop.com
+
+# ❌ WRONG - Don't use admin URLs
+RECHARGE_STOREFRONT_DOMAIN=admin.shopify.com
+```
+
+### Session Token Issues
+**Problem:** Invalid or expired session tokens
+
+**Symptoms:**
+- Redirects to `/account/login` endpoints
+- 401 Unauthorized responses
+- Login page redirects
+
+**Solutions:**
+```bash
+# Use customer identification for auto-session creation
+{
+  "name": "get_customer",
+  "arguments": {
+    "customer_email": "customer@example.com"
+  }
+}
+
+# Or provide valid session token
+{
+  "name": "get_customer", 
+  "arguments": {
+    "session_token": "valid_session_token_here"
+  }
+}
+```
+
+### Store Configuration Issues
+**Problem:** Recharge not properly installed or configured
+
+**Symptoms:**
+- External redirects to different domains
+- 404 Not Found errors
+- Redirects to Shopify admin
+
+**Diagnostic steps:**
+```bash
+# 1. Verify store URL format
+echo "Store URL: your-shop.myshopify.com"
+
+# 2. Check if Recharge is installed
+curl -I "https://your-shop.myshopify.com/tools/recurring/portal"
+
+# 3. Verify API endpoint accessibility
+curl -v "https://your-shop.myshopify.com/tools/recurring/portal/customer" \
+     -H "Authorization: Bearer your_session_token"
 ```
 
 ## Debug Mode

@@ -88,9 +88,9 @@ export class RechargeClient {
 
   /**
    * Create a customer session using customer ID (merchant token required)
-   * @param {string} customerId Customer ID
-   * @param {Object} [options={}] Session options
-   * @param {string} [options.return_url] URL to redirect to after session
+   * @param {string} customerId - Customer ID
+   * @param {Object} [options={}] - Session options
+   * @param {string} [options.return_url] - URL to redirect to after session
    * @returns {Promise<Object>} Session data including token
    * @throws {Error} If merchant token is not available
    */

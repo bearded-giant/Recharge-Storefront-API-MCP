@@ -93,37 +93,65 @@ class RechargeStorefrontAPIMCPServer {
       );
     }
 
-    // Trim whitespace and remove common prefixes/suffixes
-    storeUrl = storeUrl.trim();
+    // Clean and validate store URL more thoroughly
+    let cleanUrl = storeUrl.trim();
+    
+    // Remove common prefixes that could cause issues
+    cleanUrl = cleanUrl.replace(/^https?:\/\//, '');
+    cleanUrl = cleanUrl.replace(/^www\./, '');
     
     // Extract domain from URL if full URL is provided
     let domain;
-    if (storeUrl.startsWith('http://') || storeUrl.startsWith('https://')) {
+    if (cleanUrl.includes('/')) {
       try {
-        const url = new URL(storeUrl);
-        domain = url.hostname;
+        // If there are slashes, take only the domain part
+        domain = cleanUrl.split('/')[0];
       } catch (error) {
-        throw new Error('Invalid store URL format. Please provide a valid URL or domain.');
+        throw new Error(`Invalid store URL format: ${storeUrl}. Please provide a valid domain.`);
       }
     } else {
-      domain = storeUrl;
+      domain = cleanUrl;
     }
 
     // Remove trailing slashes and clean up domain
     domain = domain.replace(/\/+$/, '').toLowerCase();
     
+    // Check for common mistakes
+    if (domain.includes('admin.shopify.com')) {
+      throw new Error(
+        `Invalid store URL: ${storeUrl}. ` +
+        `You provided an admin URL. Please use your store's myshopify.com domain instead ` +
+        `(e.g., your-shop.myshopify.com).`
+      );
+    }
+    
+    if (domain.endsWith('.com') && !domain.endsWith('.myshopify.com')) {
+      throw new Error(
+        `Invalid store URL: ${storeUrl}. ` +
+        `Please use your Shopify store's myshopify.com domain (e.g., your-shop.myshopify.com), ` +
+        `not a custom domain.`
+      );
+    }
+    
     if (!domain.includes('.myshopify.com')) {
-      throw new Error('Store URL must be a valid Shopify domain ending with .myshopify.com (e.g., your-shop.myshopify.com)');
+      throw new Error(
+        `Store URL must be a valid Shopify domain ending with .myshopify.com. ` +
+        `You provided: ${storeUrl}. Expected format: your-shop.myshopify.com`
+      );
     }
 
     // Validate domain format more strictly
     const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\.myshopify\.com$/;
     if (!domainRegex.test(domain)) {
-      throw new Error(`Invalid Shopify domain format: ${domain}. Expected format: your-shop.myshopify.com`);
+      throw new Error(
+        `Invalid Shopify domain format: ${domain}. ` +
+        `Expected format: your-shop.myshopify.com (letters, numbers, and hyphens only)`
+      );
     }
 
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Store URL validation: ${JSON.stringify({
+        originalUrl: storeUrl,
         validatedDomain: domain,
         baseUrl: `https://${domain}/tools/recurring/portal`
       }, null, 2)}`);

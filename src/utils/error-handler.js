@@ -250,7 +250,7 @@ export function validateRequiredParams(params, required) {
 
 /**
  * Sanitize error message for logging
- * @param {string} message Error message
+ * @param {string} message - Error message
  * @returns {string} Sanitized message
  */
 export function sanitizeErrorMessage(message) {
