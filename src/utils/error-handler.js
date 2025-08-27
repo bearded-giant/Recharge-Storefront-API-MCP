@@ -1,17 +1,15 @@
 /**
  * Custom error class for Recharge API errors
  * 
- * @class RechargeAPIError
- * @extends Error
  */
 export class RechargeAPIError extends Error {
   /**
    * Create a RechargeAPIError
    * 
-   * @param {string} message - Error message
-   * @param {number} statusCode - HTTP status code
-   * @param {string|null} errorCode - Recharge-specific error code
-   * @param {Object|null} details - Additional error details
+   * @param {string} message Error message
+   * @param {number} statusCode HTTP status code
+   * @param {string} [errorCode] Recharge-specific error code
+   * @param {Object} [details] Additional error details
    */
   constructor(message, statusCode, errorCode = null, details = null) {
     super(message);
@@ -45,7 +43,7 @@ export class RechargeAPIError extends Error {
 /**
  * Handle API errors from axios responses
  * 
- * @param {Error} error - Axios error object
+ * @param {Error} error Axios error object
  * @throws {RechargeAPIError} Formatted API error
  */
 export function handleAPIError(error) {
@@ -148,7 +146,7 @@ export function handleAPIError(error) {
 /**
  * Format error response for MCP protocol
  * 
- * @param {Error} error - Error object
+ * @param {Error} error Error object
  * @returns {Object} Formatted MCP error response
  */
 export function formatErrorResponse(error) {
@@ -204,9 +202,10 @@ export function formatErrorResponse(error) {
 
 /**
  * Validate required parameters
- * @param {Object} params - Parameters to validate
- * @param {Array<string>} required - Required parameter names
+ * @param {Object} params Parameters to validate
+ * @param {string[]} required Required parameter names
  * @throws {Error} If required parameters are missing
+ * @throws {Error} If parameters are invalid format
  */
 export function validateRequiredParams(params, required) {
   if (!params || typeof params !== 'object') {
@@ -251,7 +250,7 @@ export function validateRequiredParams(params, required) {
 
 /**
  * Sanitize error message for logging
- * @param {string} message - Error message
+ * @param {string} message Error message
  * @returns {string} Sanitized message
  */
 export function sanitizeErrorMessage(message) {

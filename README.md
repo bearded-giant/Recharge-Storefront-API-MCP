@@ -159,7 +159,7 @@ The server supports three flexible authentication approaches:
 
 #### Method 1: Customer Email (Recommended)
 
-The simplest approach - just provide the customer's email address:
+The simplest approach - provide the customer's email address:
 
 ```json
 {
@@ -172,7 +172,7 @@ The simplest approach - just provide the customer's email address:
 
 **What happens automatically:**
 1. Email lookup → Customer ID
-2. Customer ID → Session token  
+2. Customer ID → Session token
 3. Session token → Customer data
 4. Session cached for future calls
 
@@ -233,7 +233,6 @@ Sessions are cached within your MCP connection with automatic renewal:
 {
   "name": "get_orders",
   "arguments": {"customer_email": "bob@example.com"}
-}
 ```
 
 #### Automatic Session Renewal
@@ -267,7 +266,6 @@ Handle multiple customers seamlessly:
 {"name": "get_addresses", "arguments": {"customer_email": "alice@example.com"}}
 ```
 
-### Security Protection
 
 The server includes built-in security protections:
 

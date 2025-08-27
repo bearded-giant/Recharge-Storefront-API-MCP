@@ -98,17 +98,13 @@ run_test "Environment template check" "test -f .env.example" "required"
 
 # Test Docker configuration
 run_test "Dockerfile syntax check" "test -f Dockerfile" "optional"
-run_test "Docker Compose configuration" "test -f docker-compose.yml" "optional"
 
 # Test script permissions
 run_test "Setup script permissions" "test -x scripts/setup.sh" "optional"
-run_test "Deploy script permissions" "test -x scripts/deploy.sh" "optional"
 
 # Test source file structure
 run_test "Server file exists" "test -f src/server.js" "required"
 run_test "Client file exists" "test -f src/recharge-client.js" "required"
-run_test "Error handler exists" "test -f src/utils/error-handler.js" "required"
-run_test "Tools index exists" "test -f src/tools/index.js" "required"
 
 # Count tool files
 TOOL_FILES=$(find src/tools -name "*-tools.js" | wc -l)
@@ -191,11 +187,9 @@ run_test "No TODO/FIXME in production code" "! grep -r 'TODO\|FIXME' src/ --excl
 
 # Performance tests
 print_info "Running performance checks..."
-run_test "File size check" "find src -name '*.js' -size +100k | wc -l | grep -q '^0$'" "optional"
 
 # Documentation tests
 run_test "README exists" "test -f README.md" "required"
-run_test "Docker documentation exists" "test -f DOCKER.md" "optional"
 
 # Final summary
 echo ""

@@ -13,10 +13,10 @@ export class RechargeClient {
   /**
    * Create a new RechargeClient instance with session token
    * 
-   * @param {Object} config - Configuration object
-   * @param {string} config.storeUrl - Store URL (e.g., 'your-shop.myshopify.com')
-   * @param {string} [config.sessionToken] - Customer session token for authentication
-   * @param {string} [config.merchantToken] - Merchant token for authentication
+   * @param {Object} config Configuration object
+   * @param {string} config.storeUrl Store URL (e.g., 'your-shop.myshopify.com')
+   * @param {string} [config.sessionToken] Customer session token for authentication
+   * @param {string} [config.merchantToken] Merchant token for authentication
    * @throws {Error} If neither sessionToken nor merchantToken is provided
    */
   constructor({ storeUrl, sessionToken, merchantToken }) {
@@ -74,9 +74,9 @@ export class RechargeClient {
 
   /**
    * Create a customer session using customer ID (merchant token required)
-   * @param {string} customerId - Customer ID
-   * @param {Object} options - Session options
-   * @param {string} [options.return_url] - URL to redirect to after session
+   * @param {string} customerId Customer ID
+   * @param {Object} [options={}] Session options
+   * @param {string} [options.return_url] URL to redirect to after session
    * @returns {Promise<Object>} Session data including token
    * @throws {Error} If merchant token is not available
    */
@@ -263,9 +263,10 @@ export class RechargeClient {
 
   /**
    * Get customer by email address (requires merchant token)
-   * @param {string} email - Customer email address
+   * @param {string} email Customer email address
    * @returns {Promise<Object>} Customer data including customer ID
    * @throws {Error} If merchant token is not available
+   * @throws {Error} If customer is not found
    */
   async getCustomerByEmail(email) {
     if (!this.merchantToken) {

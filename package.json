@@ -31,7 +31,7 @@
     "version": "node -p \"require('./package.json').version\"",
     "mcp:test": "echo '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}' | npm start",
     "test:api-keys": "node scripts/test-api-key-logic.js",
-    "stats": "node -e \"import('./src/tools/index.js').then(m => { console.log('📊 Project Statistics:'); console.log('🔧 Total tools:', m.tools.length); console.log('📁 Tool files:', require('fs').readdirSync('./src/tools').filter(f => f.endsWith('-tools.js')).length); console.log('📦 Dependencies:', Object.keys(require('./package.json').dependencies).length); console.log('🛠️  Dev dependencies:', Object.keys(require('./package.json').devDependencies || {}).length); console.log('📋 Scripts:', Object.keys(require('./package.json').scripts).length); }).catch(e => console.error('Error:', e.message));\""
+    "stats": "node -e \"import('./src/tools/index.js').then(m => { const fs = require('fs'); const pkg = require('./package.json'); console.log('📊 Project Statistics:'); console.log('🔧 Total tools:', m.tools.length); console.log('📁 Tool files:', fs.readdirSync('./src/tools').filter(f => f.endsWith('-tools.js')).length); console.log('📦 Dependencies:', Object.keys(pkg.dependencies).length); console.log('🛠️  Dev dependencies:', Object.keys(pkg.devDependencies || {}).length); console.log('📋 Scripts:', Object.keys(pkg.scripts).length); }).catch(e => console.error('Error:', e.message));\""
   },
   "keywords": [
     "mcp",
