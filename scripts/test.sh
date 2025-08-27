@@ -151,17 +151,17 @@ fi
 
 # Test MCP protocol
 print_info "Testing MCP protocol startup..."
-if run_test "MCP server startup test" "timeout 10s node -e \"
+if run_test "MCP server startup test" "timeout 10s node -e '
     const { spawn } = require('child_process');
-    const server = spawn('node', ['src/server.js'], { 
-        env: { ...process.env, RECHARGE_STOREFRONT_DOMAIN: 'test.myshopify.com' }
+    const server = spawn(\"node\", [\"src/server.js\"], { 
+        env: { ...process.env, RECHARGE_STOREFRONT_DOMAIN: \"test.myshopify.com\" }
     });
     let serverReady = false;
     
-    server.stderr.on('data', (data) => {
+    server.stderr.on(\"data\", (data) => {
         const output = data.toString();
-        if (output.includes('Server ready')) {
-            console.log('MCP server started successfully');
+        if (output.includes(\"Server ready\")) {
+            console.log(\"MCP server started successfully\");
             serverReady = true;
             server.kill();
         }
@@ -172,18 +172,18 @@ if run_test "MCP server startup test" "timeout 10s node -e \"
         if (serverReady) {
             process.exit(0);
         } else {
-            console.error('Server did not start within timeout');
+            console.error(\"Server did not start within timeout\");
             process.exit(1);
         }
     }, 8000);
-\" 2>/dev/null" "optional"; then
+' 2>/dev/null" "optional"; then
     print_status "MCP server startup test passed"
 fi
 
 # Test security
 print_info "Running security checks..."
-run_test "No hardcoded secrets" "! grep -r 'sk_test_\|sk_live_\|password.*=' src/ --exclude-dir=node_modules" "required"
-run_test "No TODO/FIXME in production code" "! grep -r 'TODO\|FIXME' src/ --exclude-dir=node_modules" "optional"
+run_test "No hardcoded secrets" "! grep -r 'sk_test_\\|sk_live_\\|password.*=' src/ --exclude-dir=node_modules" "required"
+run_test "No TODO/FIXME in production code" "! grep -r 'TODO\\|FIXME' src/ --exclude-dir=node_modules" "optional"
 
 # Performance tests
 print_info "Running performance checks..."

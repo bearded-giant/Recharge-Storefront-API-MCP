@@ -60,9 +60,9 @@ export class RechargeClient {
     this.baseURL = `https://${cleanStoreUrl}/tools/recurring/portal`;
     
     if (process.env.DEBUG === 'true') {
-      console.error(`[DEBUG] RechargeClient initialized with base URL: ${this.baseURL}`);
-      console.error(`[DEBUG] Session token: ${this.sessionToken ? 'Present' : 'Not provided'}`);
-      console.error(`[DEBUG] Merchant token: ${this.merchantToken ? 'Present' : 'Not provided'}`);
+      console.error('[DEBUG] RechargeClient initialized with base URL:', this.baseURL);
+      console.error('[DEBUG] Session token:', this.sessionToken ? 'Present' : 'Not provided');
+      console.error('[DEBUG] Merchant token:', this.merchantToken ? 'Present' : 'Not provided');
     }
     
     const headers = {
@@ -75,12 +75,12 @@ export class RechargeClient {
     if (this.sessionToken) {
       headers['Authorization'] = `Bearer ${this.sessionToken}`;
       if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Using session token authentication: ${this.sessionToken.substring(0, 10)}...`);
+        console.error('[DEBUG] Using session token authentication:', this.sessionToken.substring(0, 10) + '...');
       }
     } else if (this.merchantToken) {
       headers['X-Recharge-Access-Token'] = this.merchantToken;
       if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Using merchant token authentication: ${this.merchantToken.substring(0, 10)}...`);
+        console.error('[DEBUG] Using merchant token authentication:', this.merchantToken.substring(0, 10) + '...');
       }
     } else {
       throw new Error('No authentication token available - this should not happen');
@@ -143,7 +143,7 @@ export class RechargeClient {
       this.merchantToken = null; // Clear merchant token since we have session token now
       
       if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Client updated to use session token: ${this.sessionToken.substring(0, 10)}...`);
+        console.error('[DEBUG] Client updated to use session token:', this.sessionToken.substring(0, 10) + '...');
       }
     }
     
@@ -164,14 +164,14 @@ export class RechargeClient {
         // Validate the final URL construction
         const fullUrl = `${config.baseURL}${config.url}`;
         if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] Full URL: ${fullUrl}`);
+          console.error('[DEBUG] Full URL:', fullUrl);
         }
         
         if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-          console.error(`[DEBUG] Headers:`, JSON.stringify(config.headers, null, 2));
+          console.error('[DEBUG]', config.method?.toUpperCase(), config.baseURL + config.url);
+          console.error('[DEBUG] Headers:', JSON.stringify(config.headers, null, 2));
           if (config.data) {
-            console.error(`[DEBUG] Request body:`, JSON.stringify(config.data, null, 2));
+            console.error('[DEBUG] Request body:', JSON.stringify(config.data, null, 2));
           }
         }
         return config;
@@ -183,10 +183,10 @@ export class RechargeClient {
     this.client.interceptors.response.use(
       (response) => {
         if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] Response ${response.status} from ${response.config.method?.toUpperCase()} ${response.config.url}`);
-          console.error(`[DEBUG] Response headers:`, JSON.stringify(response.headers, null, 2));
+          console.error('[DEBUG] Response', response.status, 'from', response.config.method?.toUpperCase(), response.config.url);
+          console.error('[DEBUG] Response headers:', JSON.stringify(response.headers, null, 2));
           if (response.data) {
-            console.error(`[DEBUG] Response body:`, JSON.stringify(response.data, null, 2));
+            console.error('[DEBUG] Response body:', JSON.stringify(response.data, null, 2));
           }
         }
         return response;
@@ -197,11 +197,11 @@ export class RechargeClient {
           const location = error.response.headers.location;
           const originalUrl = `${error.config.baseURL}${error.config.url}`;
           if (process.env.DEBUG === 'true') {
-            console.error(`[DEBUG] Redirect ${error.response.status} to: ${location}`);
-            console.error(`[DEBUG] Original URL: ${originalUrl}`);
-            console.error(`[DEBUG] Base URL: ${error.config.baseURL}`);
-            console.error(`[DEBUG] Request headers:`, JSON.stringify(error.config.headers, null, 2));
-            console.error(`[DEBUG] Response headers:`, JSON.stringify(error.response.headers, null, 2));
+            console.error('[DEBUG] Redirect', error.response.status, 'to:', location);
+            console.error('[DEBUG] Original URL:', originalUrl);
+            console.error('[DEBUG] Base URL:', error.config.baseURL);
+            console.error('[DEBUG] Request headers:', JSON.stringify(error.config.headers, null, 2));
+            console.error('[DEBUG] Response headers:', JSON.stringify(error.response.headers, null, 2));
           }
           
           // Create a more descriptive error for redirects
@@ -246,7 +246,7 @@ export class RechargeClient {
         // Check for session expiry errors and mark for renewal
         if (error.response?.status === 401 && this.sessionToken) {
           if (process.env.DEBUG === 'true') {
-            console.error(`[DEBUG] Session token appears to be expired (401 error)`);
+            console.error('[DEBUG] Session token appears to be expired (401 error)');
           }
           // Add a flag to indicate session expiry
           error.sessionExpired = true;
@@ -307,15 +307,15 @@ export class RechargeClient {
     }
     
     if (process.env.DEBUG === 'true') {
-      console.error(`[DEBUG] Looking up customer by email: ${email}`);
-      console.error(`[DEBUG] Using endpoint: /customer with email parameter`);
+      console.error('[DEBUG] Looking up customer by email:', email);
+      console.error('[DEBUG] Using endpoint: /customer with email parameter');
     }
     
     try {
       return await this.makeRequest('GET', '/customer', null, { email });
     } catch (error) {
       if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Customer lookup failed for email ${email}:`, error.message);
+        console.error('[DEBUG] Customer lookup failed for email', email + ':', error.message);
       }
       throw error;
     }

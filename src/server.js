@@ -411,7 +411,7 @@ class RechargeStorefrontAPIMCPServer {
     // If we have an explicit session token (from tool call), use it
     if (toolSessionToken) {
       if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Using explicit session token from tool call`);
+        console.error('[DEBUG] Using explicit session token from tool call');
       }
       
       return new RechargeClient({
@@ -424,7 +424,7 @@ class RechargeStorefrontAPIMCPServer {
     const merchantTokenToUse = toolMerchantToken || this.defaultMerchantToken;
     if (merchantTokenToUse) {
       if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Using merchant token for authentication`);
+        console.error('[DEBUG] Using merchant token for authentication');
       }
       
       return new RechargeClient({
