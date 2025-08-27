@@ -113,35 +113,52 @@ class RechargeStorefrontAPIMCPServer {
    */
   async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId, customerEmail) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
-    let sessionToken = toolSessionToken;
+    let sessionToken = toolSessionToken || this.defaultSessionToken;
     const merchantToken = toolMerchantToken || this.defaultMerchantToken;
     
     // Validate store URL
     const validatedDomain = this.validateStoreUrl(storeUrl);
     
-    // SECURITY: Only use default session token if explicitly no customer identification provided
-    // AND no cached sessions exist (to prevent wrong customer data exposure)
-    if (!sessionToken && !customerId && !customerEmail && this.defaultSessionToken) {
-      if (this.sessionCache.size > 0) {
-        throw new Error(
-          "Security Error: Cannot use default session token when customer-specific sessions exist. " +
-          "Please specify 'customer_id', 'customer_email', or 'session_token' to ensure correct customer data access."
-        );
+    // Check for cached session first if customer identification provided
+    let cacheKey = null;
+    if (customerId) {
+      cacheKey = `customer_${customerId}`;
+    } else if (customerEmail) {
+      // Check if we have cached customer ID for this email
+      const cachedCustomerId = this.emailToCustomerIdCache.get(customerEmail);
+      if (cachedCustomerId) {
+        cacheKey = `customer_${cachedCustomerId}`;
+        customerId = cachedCustomerId; // Use cached customer ID
+      } else {
+        cacheKey = `email_${customerEmail}`;
       }
+    }
+    
+    // Try to use cached session if available and not expired
+    if (cacheKey && this.sessionCache.has(cacheKey)) {
+      const cachedSession = this.sessionCache.get(cacheKey);
+      const expiryTime = this.sessionExpiryCache.get(cacheKey);
       
-      sessionToken = this.defaultSessionToken;
-      if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Using default session token from environment (no customer sessions cached)`);
+      if (expiryTime && Date.now() < expiryTime) {
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Using cached session for ${cacheKey}`);
+        }
+        return new RechargeClient({
+          storeUrl: validatedDomain,
+          sessionToken: cachedSession,
+        });
+      } else {
+        // Session expired, remove from cache
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Cached session expired for ${cacheKey}, removing from cache`);
+        }
+        this.sessionCache.delete(cacheKey);
+        this.sessionExpiryCache.delete(cacheKey);
       }
-      
-      return new RechargeClient({
-        storeUrl: validatedDomain,
-        sessionToken: sessionToken,
-      });
     }
     
     // If email provided but no customer ID, look up customer by email first
-    if (!sessionToken && !customerId && customerEmail && merchantToken) {
+    if (!customerId && customerEmail && merchantToken) {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Looking up customer by email: ${customerEmail}`);
       }
@@ -160,8 +177,10 @@ class RechargeStorefrontAPIMCPServer {
           if (process.env.DEBUG === 'true') {
             console.error(`[DEBUG] Found customer ID ${foundCustomerId} for email ${customerEmail}`);
           }
-          // Use the found customer ID for session creation
+          // Cache the email -> customer ID mapping
+          this.emailToCustomerIdCache.set(customerEmail, foundCustomerId);
           customerId = foundCustomerId;
+          cacheKey = `customer_${customerId}`;
         } else {
           throw new Error(`Customer not found with email address: ${customerEmail}`);
         }
@@ -173,8 +192,8 @@ class RechargeStorefrontAPIMCPServer {
       }
     }
     
-    // If no session token but we have merchant token and customer ID, create session automatically
-    if (!sessionToken && merchantToken && customerId) {
+    // If we have merchant token and customer ID, create session automatically
+    if (merchantToken && customerId) {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Auto-creating session for customer: ${customerId}`);
       }
@@ -194,11 +213,20 @@ class RechargeStorefrontAPIMCPServer {
             console.error(`[DEBUG] Auto-created session token for customer ${customerId}`);
           }
           
-          // Return client with the new session token (this replaces merchant token auth)
+          // Cache the new session
+          if (cacheKey) {
+            this.sessionCache.set(cacheKey, autoSessionToken);
+            // Sessions expire after 1 hour, cache for 55 minutes to be safe
+            this.sessionExpiryCache.set(cacheKey, Date.now() + (55 * 60 * 1000));
+            
+            if (process.env.DEBUG === 'true') {
+              console.error(`[DEBUG] Cached session for ${cacheKey}, expires in 55 minutes`);
+            }
+          }
+          
           return new RechargeClient({
             storeUrl: validatedDomain,
             sessionToken: autoSessionToken,
-            // Don't pass merchantToken here - session token takes precedence
           });
         } else {
           throw new Error('Session creation succeeded but no token returned');
@@ -211,6 +239,38 @@ class RechargeStorefrontAPIMCPServer {
       }
     }
     
+    // SECURITY: Only use default session token if no customer identification provided
+    // AND no cached sessions exist (to prevent wrong customer data exposure)
+    if (!customerId && !customerEmail && sessionToken && !toolSessionToken) {
+      if (this.sessionCache.size > 0) {
+        throw new Error(
+          "Security Error: Cannot use default session token when customer-specific sessions exist. " +
+          "Please specify 'customer_id', 'customer_email', or 'session_token' to ensure correct customer data access."
+        );
+      }
+      
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Using default session token from environment (no customer sessions cached)`);
+      }
+      
+      return new RechargeClient({
+        storeUrl: validatedDomain,
+        sessionToken: sessionToken,
+      });
+    }
+    
+    // If we have an explicit session token (from tool call), use it
+    if (toolSessionToken) {
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Using explicit session token from tool call`);
+      }
+      
+      return new RechargeClient({
+        storeUrl: validatedDomain,
+        sessionToken: toolSessionToken,
+      });
+    }
+    
     if (!sessionToken && !merchantToken) {
       throw new Error(
         "No authentication token available. Please provide either:\n" +
@@ -220,25 +280,22 @@ class RechargeStorefrontAPIMCPServer {
       );
     }
     
-    if (process.env.DEBUG === 'true') {
-      const storeUrlSource = toolStoreUrl ? 'tool parameter' : 'environment variable';
-      const sessionTokenSource = toolSessionToken ? 'tool parameter' : 
-                                 sessionToken === this.defaultSessionToken ? 'environment variable' : 'auto-created';
-      const merchantTokenSource = toolMerchantToken ? 'tool parameter' : 'environment variable';
-      console.error(`[DEBUG] Using store URL from: ${storeUrlSource} (${validatedDomain})`);
-      if (sessionToken) {
-        console.error(`[DEBUG] Using session token from: ${sessionTokenSource}`);
+    // Fallback to merchant token if available
+    if (merchantToken) {
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Using merchant token for authentication`);
       }
-      if (merchantToken) {
-        console.error(`[DEBUG] Using merchant token from: ${merchantTokenSource}`);
-      }
+      
+      return new RechargeClient({
+        storeUrl: validatedDomain,
+        merchantToken: merchantToken,
+      });
     }
-
-    // Create a new client instance
+    
+    // Final fallback to session token
     return new RechargeClient({
       storeUrl: validatedDomain,
       sessionToken: sessionToken,
-      merchantToken: merchantToken,
     });
   }
 
@@ -352,14 +409,60 @@ class RechargeStorefrontAPIMCPServer {
           console.error(`[DEBUG] Arguments:`, JSON.stringify(toolArgs, null, 2));
         }
         
-        // Get client
-        const rechargeClient = await this.getRechargeClient(store_url, session_token, merchant_token, customer_id, customer_email);
+        // Get client with retry logic for expired sessions
+        let rechargeClient;
+        let result;
+        let retryCount = 0;
+        const maxRetries = 2;
         
-        const result = await tool.execute(rechargeClient, toolArgs);
-        this.stats.successfulCalls++;
-        
-        if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] Tool '${name}' completed successfully`);
+        while (retryCount <= maxRetries) {
+          try {
+            rechargeClient = await this.getRechargeClient(store_url, session_token, merchant_token, customer_id, customer_email);
+            result = await tool.execute(rechargeClient, toolArgs);
+            
+            this.stats.successfulCalls++;
+            
+            if (process.env.DEBUG === 'true') {
+              console.error(`[DEBUG] Tool '${name}' completed successfully`);
+            }
+            
+            break; // Success, exit retry loop
+            
+          } catch (error) {
+            // Check if this is a session expiry error and we can retry
+            if (error.sessionExpired && retryCount < maxRetries && (customer_id || customer_email)) {
+              retryCount++;
+              
+              if (process.env.DEBUG === 'true') {
+                console.error(`[DEBUG] Session expired, attempting retry ${retryCount}/${maxRetries}`);
+              }
+              
+              // Clear cached session for this customer
+              const cacheKey = customer_id ? `customer_${customer_id}` : 
+                              customer_email ? `email_${customer_email}` : null;
+              
+              if (cacheKey) {
+                this.sessionCache.delete(cacheKey);
+                this.sessionExpiryCache.delete(cacheKey);
+                
+                // Also clear email cache if using email
+                if (customer_email && this.emailToCustomerIdCache.has(customer_email)) {
+                  const cachedCustomerId = this.emailToCustomerIdCache.get(customer_email);
+                  this.sessionCache.delete(`customer_${cachedCustomerId}`);
+                  this.sessionExpiryCache.delete(`customer_${cachedCustomerId}`);
+                }
+                
+                if (process.env.DEBUG === 'true') {
+                  console.error(`[DEBUG] Cleared cached session for ${cacheKey}`);
+                }
+              }
+              
+              continue; // Retry with fresh session
+            }
+            
+            // Not a retryable error or max retries reached
+            throw error;
+          }
         }
         
         return result;
