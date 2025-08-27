@@ -1,5 +1,9 @@
 import axios from 'axios';
 import { handleAPIError, validateRequiredParams } from './utils/error-handler.js';
+import { CircuitBreaker } from './utils/circuit-breaker.js';
+import { withRetry } from './utils/retry-handler.js';
+import { createLogger } from './utils/logger.js';
+import { validateApiResponse, RECHARGE_SCHEMAS } from './utils/type-validator.js';
 
 /**
  * Recharge Storefront API Client
@@ -25,6 +29,16 @@ export class RechargeClient {
     if (!sessionToken && !merchantToken) {
       throw new Error('Either sessionToken or merchantToken is required');
     }
+    
+    // Initialize logger
+    this.logger = createLogger('recharge-client');
+    
+    // Initialize circuit breaker
+    this.circuitBreaker = new CircuitBreaker({
+      failureThreshold: 5,
+      resetTimeout: 60000, // 1 minute
+      monitoringPeriod: 60000 // 1 minute
+    });
     
     this.sessionToken = sessionToken;
     this.merchantToken = merchantToken;
@@ -237,9 +251,10 @@ export class RechargeClient {
    * @param {Object} data - Request data
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} API response data
+   * @throws {Error} API error or circuit breaker error
    */
   async makeRequest(method, endpoint, data = null, params = null) {
-    try {
+    const requestFn = async () => {
       const config = {
         method: method.toLowerCase(),
         url: endpoint,
@@ -253,12 +268,53 @@ export class RechargeClient {
         config.params = params;
       }
       
+      this.logger.debug('Making API request', {
+        method: method.toUpperCase(),
+        endpoint,
+        hasData: !!data,
+        hasParams: !!params
+      });
+      
       const response = await this.client.request(config);
+      
+      this.logger.debug('API request successful', {
+        method: method.toUpperCase(),
+        endpoint,
+        status: response.status
+      });
+      
       return response.data;
-    } catch (error) {
-      // Error is already handled by interceptor
-      throw error;
-    }
+    };
+
+    // Execute with circuit breaker and retry logic
+    return this.circuitBreaker.execute(async () => {
+      return withRetry(requestFn, {
+        maxRetries: 3,
+        baseDelay: 1000,
+        shouldRetry: (error, attempt) => {
+          // Don't retry redirect errors or authentication errors
+          if (error.isRedirect || error.statusCode === 401 || error.statusCode === 403) {
+            return false;
+          }
+          
+          // Retry server errors and network errors
+          return error.statusCode >= 500 || 
+                 error.code === 'ECONNABORTED' || 
+                 error.code === 'ENOTFOUND' || 
+                 error.code === 'ECONNRESET' ||
+                 error.code === 'ETIMEDOUT';
+        },
+        onRetry: (error, attempt, delay) => {
+          this.logger.warn('Retrying API request', {
+            method: method.toUpperCase(),
+            endpoint,
+            attempt: attempt + 1,
+            delay: Math.round(delay),
+            error: error.message
+          });
+        }
+      });
+    });
   }
 
   /**
@@ -296,7 +352,20 @@ export class RechargeClient {
    * @throws {Error} If session token is invalid or expired
    */
   async getCustomer() {
-    return this.makeRequest('GET', `/customer`);
+    const response = await this.makeRequest('GET', `/customer`);
+    
+    // Validate response structure
+    try {
+      validateApiResponse(response.customer || response, RECHARGE_SCHEMAS.customer);
+    } catch (validationError) {
+      this.logger.warn('Customer response validation failed', {
+        error: validationError.message,
+        response: response
+      });
+      // Don't throw validation errors, just log them for now
+    }
+    
+    return response;
   }
 
   /**
@@ -322,7 +391,24 @@ export class RechargeClient {
    * @throws {Error} If API request fails
    */
   async getSubscriptions(params = {}) {
-    return this.makeRequest('GET', '/subscriptions', null, params);
+    const response = await this.makeRequest('GET', '/subscriptions', null, params);
+    
+    // Validate response structure
+    if (response.subscriptions && Array.isArray(response.subscriptions)) {
+      response.subscriptions.forEach((subscription, index) => {
+        try {
+          validateApiResponse(subscription, RECHARGE_SCHEMAS.subscription);
+        } catch (validationError) {
+          this.logger.warn('Subscription response validation failed', {
+            index,
+            error: validationError.message,
+            subscription: subscription
+          });
+        }
+      });
+    }
+    
+    return response;
   }
 
   /**
@@ -447,7 +533,24 @@ export class RechargeClient {
    * @throws {Error} If API request fails
    */
   async getAddresses(params = {}) {
-    return this.makeRequest('GET', '/addresses', null, params);
+    const response = await this.makeRequest('GET', '/addresses', null, params);
+    
+    // Validate response structure
+    if (response.addresses && Array.isArray(response.addresses)) {
+      response.addresses.forEach((address, index) => {
+        try {
+          validateApiResponse(address, RECHARGE_SCHEMAS.address);
+        } catch (validationError) {
+          this.logger.warn('Address response validation failed', {
+            index,
+            error: validationError.message,
+            address: address
+          });
+        }
+      });
+    }
+    
+    return response;
   }
 
   /**

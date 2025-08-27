@@ -11,6 +11,7 @@ import {
 import dotenv from "dotenv";
 import { RechargeClient } from "./recharge-client.js";
 import { tools } from "./tools/index.js";
+import { createLogger } from "./utils/logger.js";
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +24,9 @@ dotenv.config();
  */
 class RechargeStorefrontAPIMCPServer {
   constructor() {
+    // Initialize logger
+    this.logger = createLogger('mcp-server');
+    
     // Store environment variables for client creation
     this.defaultStoreUrl = process.env.RECHARGE_STOREFRONT_DOMAIN;
     this.defaultSessionToken = process.env.RECHARGE_SESSION_TOKEN;
@@ -34,9 +38,11 @@ class RechargeStorefrontAPIMCPServer {
     this.sessionExpiryCache = new Map(); // customerId -> expiryTime
     
     if (process.env.DEBUG === 'true') {
-      console.error(`[DEBUG] Default store URL: ${this.defaultStoreUrl || 'Not set (will require in tool calls)'}`);
-      console.error(`[DEBUG] Default session token: ${this.defaultSessionToken ? 'Set' : 'Not set'}`);
-      console.error(`[DEBUG] Default merchant token: ${this.defaultMerchantToken ? 'Set' : 'Not set'}`);
+      this.logger.debug('Server initialization', {
+        defaultStoreUrl: this.defaultStoreUrl || 'Not set (will require in tool calls)',
+        hasDefaultSessionToken: !!this.defaultSessionToken,
+        hasDefaultMerchantToken: !!this.defaultMerchantToken
+      });
     }
 
     this.server = new Server(
@@ -106,8 +112,10 @@ class RechargeStorefrontAPIMCPServer {
     }
 
     if (process.env.DEBUG === 'true') {
-      console.error(`[DEBUG] Validated store URL: ${domain}`);
-      console.error(`[DEBUG] Will use base URL: https://${domain}/tools/recurring/portal`);
+      this.logger.debug('Store URL validation', {
+        validatedDomain: domain,
+        baseUrl: `https://${domain}/tools/recurring/portal`
+      });
     }
 
     return domain;
@@ -154,18 +162,14 @@ class RechargeStorefrontAPIMCPServer {
       const expiryTime = this.sessionExpiryCache.get(cacheKey);
       
       if (expiryTime && Date.now() < expiryTime) {
-        if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] Using cached session for ${cacheKey}`);
-        }
+        this.logger.debug('Using cached session', { cacheKey });
         return new RechargeClient({
           storeUrl: validatedDomain,
           sessionToken: cachedSession,
         });
       } else {
         // Session expired, remove from cache
-        if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] Cached session expired for ${cacheKey}, removing from cache`);
-        }
+        this.logger.debug('Cached session expired, removing from cache', { cacheKey });
         this.sessionCache.delete(cacheKey);
         this.sessionExpiryCache.delete(cacheKey);
       }
@@ -174,10 +178,10 @@ class RechargeStorefrontAPIMCPServer {
     // If email provided but no customer ID, look up customer by email first
     if (!resolvedCustomerId && customerEmail && (toolMerchantToken || defaultMerchantToken)) {
       const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
-      if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Looking up customer by email: ${customerEmail}`);
-        console.error(`[DEBUG] Using merchant token for lookup: ${merchantTokenToUse ? 'Yes' : 'No'}`);
-      }
+      this.logger.debug('Looking up customer by email', {
+        customerEmail,
+        hasMerchantToken: !!merchantTokenToUse
+      });
       
       // Create temporary client with merchant token to look up customer
       const tempClient = new RechargeClient({
@@ -192,26 +196,26 @@ class RechargeStorefrontAPIMCPServer {
                                (customerResponse.id ? String(customerResponse.id) : null);
         
         if (foundCustomerId) {
-          if (process.env.DEBUG === 'true') {
-            console.error(`[DEBUG] Found customer ID ${foundCustomerId} for email ${customerEmail}`);
-          }
+          this.logger.debug('Found customer ID for email', {
+            customerEmail,
+            customerId: foundCustomerId
+          });
           // Cache the email -> customer ID mapping
           this.emailToCustomerIdCache.set(customerEmail, foundCustomerId);
           resolvedCustomerId = foundCustomerId;
           cacheKey = `customer_${foundCustomerId}`;
         } else {
-          if (process.env.DEBUG === 'true') {
-            console.error(`[DEBUG] Customer lookup response:`, JSON.stringify(customerResponse, null, 2));
-          }
+          this.logger.warn('Customer not found', {
+            customerEmail,
+            response: customerResponse
+          });
           throw new Error(`Customer not found with email address: ${customerEmail}`);
         }
       } catch (error) {
-        if (process.env.DEBUG === 'true') {
-          console.error(`[DEBUG] Failed to lookup customer by email ${customerEmail}:`, error.message);
-          if (error.isRedirect) {
-            console.error(`[DEBUG] Redirect error during customer lookup - this may indicate authentication issues`);
-          }
-        }
+        this.logger.error('Failed to lookup customer by email', {
+          customerEmail,
+          isRedirect: error.isRedirect
+        }, error);
         
         // Provide more specific error messages based on error type
         if (error.isRedirect) {
