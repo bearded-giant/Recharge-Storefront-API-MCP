@@ -54,11 +54,20 @@ export function handleAPIError(error) {
     
     // Handle redirect errors specially
     if (error.isRedirect) {
-      throw new RechargeAPIError(error.message, status, 'REDIRECT_ERROR', {
+      const details = {
         location: error.response.headers.location,
-        originalUrl: error.config?.url,
-        baseUrl: error.config?.baseURL
-      });
+        originalUrl: error.originalUrl || error.config?.url,
+        baseUrl: error.config?.baseURL,
+        redirectLocation: error.redirectLocation,
+        requestHeaders: error.config?.headers,
+        responseHeaders: error.response?.headers
+      };
+      
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Redirect error details:`, JSON.stringify(details, null, 2));
+      }
+      
+      throw new RechargeAPIError(error.message, status, 'REDIRECT_ERROR', details);
     }
     
     // Extract error message with fallback chain

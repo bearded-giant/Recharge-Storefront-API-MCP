@@ -76,6 +76,9 @@ class RechargeStorefrontAPIMCPServer {
       );
     }
 
+    // Trim whitespace and remove common prefixes/suffixes
+    storeUrl = storeUrl.trim();
+    
     // Extract domain from URL if full URL is provided
     let domain;
     if (storeUrl.startsWith('http://') || storeUrl.startsWith('https://')) {
@@ -89,8 +92,17 @@ class RechargeStorefrontAPIMCPServer {
       domain = storeUrl;
     }
 
+    // Remove trailing slashes and clean up domain
+    domain = domain.replace(/\/+$/, '').toLowerCase();
+    
     if (!domain.includes('.myshopify.com')) {
       throw new Error('Store URL must be a valid Shopify domain ending with .myshopify.com (e.g., your-shop.myshopify.com)');
+    }
+
+    // Validate domain format more strictly
+    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\.myshopify\.com$/;
+    if (!domainRegex.test(domain)) {
+      throw new Error(`Invalid Shopify domain format: ${domain}. Expected format: your-shop.myshopify.com`);
     }
 
     if (process.env.DEBUG === 'true') {
@@ -164,6 +176,7 @@ class RechargeStorefrontAPIMCPServer {
       const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Looking up customer by email: ${customerEmail}`);
+        console.error(`[DEBUG] Using merchant token for lookup: ${merchantTokenToUse ? 'Yes' : 'No'}`);
       }
       
       // Create temporary client with merchant token to look up customer
@@ -187,13 +200,29 @@ class RechargeStorefrontAPIMCPServer {
           resolvedCustomerId = foundCustomerId;
           cacheKey = `customer_${foundCustomerId}`;
         } else {
+          if (process.env.DEBUG === 'true') {
+            console.error(`[DEBUG] Customer lookup response:`, JSON.stringify(customerResponse, null, 2));
+          }
           throw new Error(`Customer not found with email address: ${customerEmail}`);
         }
       } catch (error) {
         if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] Failed to lookup customer by email ${customerEmail}:`, error.message);
+          if (error.isRedirect) {
+            console.error(`[DEBUG] Redirect error during customer lookup - this may indicate authentication issues`);
+          }
         }
-        throw new Error(`Failed to find customer with email ${customerEmail}: ${error.message}`);
+        
+        // Provide more specific error messages based on error type
+        if (error.isRedirect) {
+          throw new Error(
+            `Authentication error during customer lookup for ${customerEmail}. ` +
+            `This usually indicates the merchant token is invalid or doesn't have the required permissions. ` +
+            `Please verify your RECHARGE_MERCHANT_TOKEN is a valid Storefront API token.`
+          );
+        } else {
+          throw new Error(`Failed to find customer with email ${customerEmail}: ${error.message}`);
+        }
       }
     }
     
@@ -202,6 +231,7 @@ class RechargeStorefrontAPIMCPServer {
       const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Auto-creating session for customer: ${resolvedCustomerId}`);
+        console.error(`[DEBUG] Using merchant token: ${merchantTokenToUse ? 'Yes' : 'No'}`);
       }
       
       // Create temporary client with merchant token to create session
@@ -235,13 +265,29 @@ class RechargeStorefrontAPIMCPServer {
             sessionToken: autoSessionToken,
           });
         } else {
+          if (process.env.DEBUG === 'true') {
+            console.error(`[DEBUG] Session creation response:`, JSON.stringify(sessionResponse, null, 2));
+          }
           throw new Error('Session creation succeeded but no token returned');
         }
       } catch (error) {
         if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] Failed to auto-create session for customer ${resolvedCustomerId}:`, error.message);
+          if (error.isRedirect) {
+            console.error(`[DEBUG] Redirect error during session creation - this may indicate authentication issues`);
+          }
         }
-        throw new Error(`Failed to create session for customer ${resolvedCustomerId}: ${error.message}`);
+        
+        // Provide more specific error messages based on error type
+        if (error.isRedirect) {
+          throw new Error(
+            `Authentication error during session creation for customer ${resolvedCustomerId}. ` +
+            `This usually indicates the merchant token is invalid or doesn't have the required permissions. ` +
+            `Please verify your RECHARGE_MERCHANT_TOKEN is a valid Storefront API token.`
+          );
+        } else {
+          throw new Error(`Failed to create session for customer ${resolvedCustomerId}: ${error.message}`);
+        }
       }
     }
     
@@ -491,6 +537,17 @@ class RechargeStorefrontAPIMCPServer {
           if (error.errorCode) {
             errorMessage += ` (Code: ${error.errorCode})`;
           }
+          
+          // Add specific guidance for redirect errors
+          if (error.errorCode === 'REDIRECT_ERROR') {
+            errorMessage += '\n\nThis redirect error often indicates:\n';
+            errorMessage += '1. Invalid or expired authentication tokens\n';
+            errorMessage += '2. Using Admin API token instead of Storefront API token\n';
+            errorMessage += '3. Incorrect store URL configuration\n';
+            errorMessage += '4. Recharge not properly installed on the store\n';
+            errorMessage += '\nPlease verify your authentication tokens and store URL configuration.';
+          }
+          
           throw new McpError(
             ErrorCode.InternalError,
             errorMessage

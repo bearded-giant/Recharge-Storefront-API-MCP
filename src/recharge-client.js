@@ -30,8 +30,17 @@ export class RechargeClient {
     this.merchantToken = merchantToken;
     this.storeUrl = storeUrl;
     
+    // Validate and clean store URL
+    const cleanStoreUrl = this.storeUrl.replace(/\/+$/, '').toLowerCase();
+    
     // Construct the Recharge Storefront API base URL
-    this.baseURL = `https://${this.storeUrl}/tools/recurring/portal`;
+    this.baseURL = `https://${cleanStoreUrl}/tools/recurring/portal`;
+    
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] RechargeClient initialized with base URL: ${this.baseURL}`);
+      console.error(`[DEBUG] Session token: ${this.sessionToken ? 'Present' : 'Not provided'}`);
+      console.error(`[DEBUG] Merchant token: ${this.merchantToken ? 'Present' : 'Not provided'}`);
+    }
     
     const headers = {
       'Content-Type': 'application/json',
@@ -42,8 +51,14 @@ export class RechargeClient {
     // Set appropriate authentication header
     if (this.sessionToken) {
       headers['Authorization'] = `Bearer ${this.sessionToken}`;
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Using session token authentication`);
+      }
     } else if (this.merchantToken) {
       headers['X-Recharge-Access-Token'] = this.merchantToken;
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Using merchant token authentication`);
+      }
     }
     
     this.client = axios.create({
@@ -72,9 +87,22 @@ export class RechargeClient {
     
     validateRequiredParams({ customerId }, ['customerId']);
     
-    const response = await this.makeRequest('POST', `/api/v1/customers/${customerId}/sessions`, {
-      return_url: options.return_url || null
-    });
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] Creating session for customer: ${customerId}`);
+      console.error(`[DEBUG] Using endpoint: /api/v1/customers/${customerId}/sessions`);
+    }
+    
+    let response;
+    try {
+      response = await this.makeRequest('POST', `/api/v1/customers/${customerId}/sessions`, {
+        return_url: options.return_url || null
+      });
+    } catch (error) {
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Session creation failed for customer ${customerId}:`, error.message);
+      }
+      throw error;
+    }
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Session creation response:`, JSON.stringify(response, null, 2));
@@ -102,9 +130,20 @@ export class RechargeClient {
     // Request interceptor for logging
     this.client.interceptors.request.use(
       (config) => {
+        // Ensure URL doesn't have double slashes or malformed paths
+        if (config.url && config.url.startsWith('//')) {
+          config.url = config.url.substring(1);
+        }
+        
+        // Validate the final URL construction
+        const fullUrl = `${config.baseURL}${config.url}`;
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Full URL: ${fullUrl}`);
+        }
+        
         if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-          console.error(`[DEBUG] Headers:`, config.headers);
+          console.error(`[DEBUG] Headers:`, JSON.stringify(config.headers, null, 2));
           if (config.data) {
             console.error(`[DEBUG] Request body:`, JSON.stringify(config.data, null, 2));
           }
@@ -119,6 +158,7 @@ export class RechargeClient {
       (response) => {
         if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] Response ${response.status} from ${response.config.method?.toUpperCase()} ${response.config.url}`);
+          console.error(`[DEBUG] Response headers:`, JSON.stringify(response.headers, null, 2));
           if (response.data) {
             console.error(`[DEBUG] Response body:`, JSON.stringify(response.data, null, 2));
           }
@@ -129,20 +169,51 @@ export class RechargeClient {
         // Handle redirect responses
         if (error.response && [301, 302, 303, 307, 308].includes(error.response.status)) {
           const location = error.response.headers.location;
+          const originalUrl = `${error.config.baseURL}${error.config.url}`;
           if (process.env.DEBUG === 'true') {
             console.error(`[DEBUG] Redirect ${error.response.status} to: ${location}`);
-            console.error(`[DEBUG] Original URL: ${error.config.url}`);
+            console.error(`[DEBUG] Original URL: ${originalUrl}`);
             console.error(`[DEBUG] Base URL: ${error.config.baseURL}`);
+            console.error(`[DEBUG] Request headers:`, JSON.stringify(error.config.headers, null, 2));
+            console.error(`[DEBUG] Response headers:`, JSON.stringify(error.response.headers, null, 2));
           }
           
           // Create a more descriptive error for redirects
-          const redirectError = new Error(
-            `API returned redirect ${error.response.status} to ${location}. ` +
-            `This may indicate an authentication issue or incorrect API endpoint. ` +
-            `Please verify your store URL and authentication tokens.`
-          );
+          let redirectError;
+          
+          // Analyze redirect patterns to provide specific guidance
+          if (location && location.includes('/admin/oauth')) {
+            redirectError = new Error(
+              `Authentication redirect detected (${error.response.status}). ` +
+              `This usually means you're using an Admin API token instead of a Storefront API token, ` +
+              `or the token doesn't have the required permissions. ` +
+              `Please verify you're using a Storefront API token with proper permissions.`
+            );
+          } else if (location && location.includes('/account/login')) {
+            redirectError = new Error(
+              `Login redirect detected (${error.response.status}). ` +
+              `This indicates the session token is invalid or expired. ` +
+              `Please verify your session token or provide customer_id/customer_email for automatic session creation.`
+            );
+          } else if (location && !location.includes(error.config.baseURL)) {
+            redirectError = new Error(
+              `External redirect detected (${error.response.status}) to ${location}. ` +
+              `This may indicate the store URL is incorrect or Recharge is not properly installed. ` +
+              `Please verify your RECHARGE_STOREFRONT_DOMAIN setting.`
+            );
+          } else {
+            redirectError = new Error(
+              `API returned redirect ${error.response.status} to ${location}. ` +
+              `Original URL: ${originalUrl}. ` +
+              `This may indicate an authentication issue or incorrect API endpoint. ` +
+              `Please verify your store URL and authentication tokens.`
+            );
+          }
+          
           redirectError.response = error.response;
           redirectError.isRedirect = true;
+          redirectError.originalUrl = originalUrl;
+          redirectError.redirectLocation = location;
           throw redirectError;
         }
         
@@ -202,7 +273,20 @@ export class RechargeClient {
     }
     
     validateRequiredParams({ email }, ['email']);
-    return this.makeRequest('GET', '/api/v1/customers', null, { email });
+    
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] Looking up customer by email: ${email}`);
+      console.error(`[DEBUG] Using endpoint: /api/v1/customers with email parameter`);
+    }
+    
+    try {
+      return await this.makeRequest('GET', '/api/v1/customers', null, { email });
+    } catch (error) {
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Customer lookup failed for email ${email}:`, error.message);
+      }
+      throw error;
+    }
   }
 
   /**

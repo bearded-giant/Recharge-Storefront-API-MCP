@@ -823,6 +823,14 @@ DEBUG=true npm start
 
 # 4. Check if store has Recharge installed
 # Verify Recharge is properly installed on the Shopify store
+
+# 5. Token type mismatch
+# Ensure you're using Storefront API tokens, not Admin API tokens
+# Admin API tokens will cause OAuth redirects
+
+# 6. Domain validation issues
+# Ensure domain follows exact format: shop-name.myshopify.com
+# No trailing slashes, no protocol prefix, lowercase
 ```
 
 #### Session Issues
