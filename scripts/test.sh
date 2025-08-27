@@ -14,19 +14,19 @@ NC='\033[0m' # No Color
 
 # Function to print colored output
 print_status() {
-    echo -e "${GREEN}✅${NC} $1"
+    printf "${GREEN}✅${NC} %s\n" "$1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️${NC} $1"
+    printf "${YELLOW}⚠️${NC} %s\n" "$1"
 }
 
 print_error() {
-    echo -e "${RED}❌${NC} $1"
+    printf "${RED}❌${NC} %s\n" "$1"
 }
 
 print_info() {
-    echo -e "${BLUE}ℹ️${NC} $1"
+    printf "${BLUE}ℹ️${NC} %s\n" "$1"
 }
 
 echo "🧪 Running Recharge Storefront API MCP Server tests..."
