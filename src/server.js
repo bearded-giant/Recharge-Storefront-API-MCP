@@ -73,8 +73,6 @@ class RechargeStorefrontAPIMCPServer {
       startTime: new Date(),
       toolCalls: 0,
       errors: 0,
-      successfulCalls: 0
-    };
 
     this.setupToolHandlers();
     this.setupErrorHandling();
