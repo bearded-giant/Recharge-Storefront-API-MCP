@@ -15,7 +15,9 @@ export class RechargeClient {
    * 
    * @param {Object} config - Configuration object
    * @param {string} config.storeUrl - Store URL (e.g., 'your-shop.myshopify.com')
-   * @param {string} config.sessionToken - Customer session token for authentication
+   * @param {string} [config.sessionToken] - Customer session token for authentication
+   * @param {string} [config.merchantToken] - Merchant token for authentication
+   * @throws {Error} If neither sessionToken nor merchantToken is provided
    */
   constructor({ storeUrl, sessionToken, merchantToken }) {
     validateRequiredParams({ storeUrl }, ['storeUrl']);
@@ -61,6 +63,7 @@ export class RechargeClient {
    * @param {Object} options - Session options
    * @param {string} [options.return_url] - URL to redirect to after session
    * @returns {Promise<Object>} Session data including token
+   * @throws {Error} If merchant token is not available
    */
   async createCustomerSessionById(customerId, options = {}) {
     if (!this.merchantToken) {
@@ -81,9 +84,9 @@ export class RechargeClient {
       // Update client to use the new session token
       this.sessionToken = response.session.token;
       this.client.defaults.headers['Authorization'] = `Bearer ${this.sessionToken}`;
-      if (this.client.defaults.headers['X-Recharge-Access-Token']) {
-        delete this.client.defaults.headers['X-Recharge-Access-Token'];
-      }
+      // Remove merchant token header since we now have a session token
+      delete this.client.defaults.headers['X-Recharge-Access-Token'];
+      this.merchantToken = null; // Clear merchant token since we have session token now
       
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Client updated to use session token: ${this.sessionToken.substring(0, 10)}...`);
@@ -191,6 +194,7 @@ export class RechargeClient {
    * Get customer by email address (requires merchant token)
    * @param {string} email - Customer email address
    * @returns {Promise<Object>} Customer data including customer ID
+   * @throws {Error} If merchant token is not available
    */
   async getCustomerByEmail(email) {
     if (!this.merchantToken) {

@@ -113,8 +113,8 @@ class RechargeStorefrontAPIMCPServer {
    */
   async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId, customerEmail) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
-    const sessionToken = toolSessionToken || this.defaultSessionToken;
-    const merchantToken = toolMerchantToken || this.defaultMerchantToken;
+    const defaultSessionToken = this.defaultSessionToken;
+    const defaultMerchantToken = this.defaultMerchantToken;
     
     // Validate store URL
     const validatedDomain = this.validateStoreUrl(storeUrl);
@@ -160,7 +160,8 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // If email provided but no customer ID, look up customer by email first
-    if (!resolvedCustomerId && customerEmail && merchantToken) {
+    if (!resolvedCustomerId && customerEmail && (toolMerchantToken || defaultMerchantToken)) {
+      const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Looking up customer by email: ${customerEmail}`);
       }
@@ -168,7 +169,7 @@ class RechargeStorefrontAPIMCPServer {
       // Create temporary client with merchant token to look up customer
       const tempClient = new RechargeClient({
         storeUrl: validatedDomain,
-        merchantToken: merchantToken,
+        merchantToken: merchantTokenToUse,
       });
       
       try {
@@ -197,7 +198,8 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // If we have merchant token and customer ID, create session automatically
-    if (merchantToken && resolvedCustomerId) {
+    if ((toolMerchantToken || defaultMerchantToken) && resolvedCustomerId) {
+      const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Auto-creating session for customer: ${resolvedCustomerId}`);
       }
@@ -205,7 +207,7 @@ class RechargeStorefrontAPIMCPServer {
       // Create temporary client with merchant token to create session
       const tempClient = new RechargeClient({
         storeUrl: validatedDomain,
-        merchantToken: merchantToken,
+        merchantToken: merchantTokenToUse,
       });
       
       try {
@@ -245,7 +247,7 @@ class RechargeStorefrontAPIMCPServer {
     
     // SECURITY: Only use default session token if no customer identification provided
     // AND no cached sessions exist (to prevent wrong customer data exposure)
-    if (!resolvedCustomerId && !customerEmail && sessionToken && !toolSessionToken) {
+    if (!resolvedCustomerId && !customerEmail && defaultSessionToken && !toolSessionToken) {
       if (this.sessionCache.size > 0) {
         throw new Error(
           "Security Error: Cannot use default session token when customer-specific sessions exist. " +
@@ -259,7 +261,7 @@ class RechargeStorefrontAPIMCPServer {
       
       return new RechargeClient({
         storeUrl: validatedDomain,
-        sessionToken: sessionToken,
+        sessionToken: defaultSessionToken,
       });
     }
     
@@ -276,7 +278,7 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // Check if we have any authentication method available
-    if (!sessionToken && !merchantToken && !toolSessionToken) {
+    if (!defaultSessionToken && !defaultMerchantToken && !toolSessionToken && !toolMerchantToken) {
       throw new Error(
         "No authentication token available. Please provide either:\n" +
         "1. 'session_token' parameter in your tool call, or\n" +
@@ -286,21 +288,23 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // Fallback to merchant token if available
-    if (merchantToken) {
+    const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
+    if (merchantTokenToUse) {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Using merchant token for authentication`);
       }
       
       return new RechargeClient({
         storeUrl: validatedDomain,
-        merchantToken: merchantToken,
+        merchantToken: merchantTokenToUse,
       });
     }
     
     // Final fallback to session token
+    const sessionTokenToUse = toolSessionToken || defaultSessionToken;
     return new RechargeClient({
       storeUrl: validatedDomain,
-      sessionToken: sessionToken,
+      sessionToken: sessionTokenToUse,
     });
   }
 
