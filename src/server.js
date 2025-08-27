@@ -241,8 +241,8 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // If email provided but no customer ID, look up customer by email first
-    if (!resolvedCustomerId && customerEmail && (toolMerchantToken || defaultMerchantToken)) {
-      const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
+    if (!resolvedCustomerId && customerEmail && (toolMerchantToken || this.defaultMerchantToken)) {
+      const merchantTokenToUse = toolMerchantToken || this.defaultMerchantToken;
       
       if (!merchantTokenToUse) {
         throw new Error(
@@ -316,7 +316,7 @@ class RechargeStorefrontAPIMCPServer {
     
     // If we have merchant token and customer ID, create session automatically
     if ((toolMerchantToken || this.defaultMerchantToken) && resolvedCustomerId) {
-      const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
+      const merchantTokenToUse = toolMerchantToken || this.defaultMerchantToken;
       
       if (!merchantTokenToUse) {
         throw new Error(
