@@ -27,18 +27,31 @@ export class RechargeClient {
     validateRequiredParams({ storeUrl }, ['storeUrl']);
     
     if (!sessionToken && !merchantToken) {
-      throw new Error('Either sessionToken or merchantToken is required');
+      throw new Error(
+        'Authentication required: Either sessionToken or merchantToken must be provided.\n' +
+        'Please provide one of:\n' +
+        '1. sessionToken - for customer-scoped operations\n' +
+        '2. merchantToken - for admin operations and session creation'
+      );
     }
     
-    // Initialize logger
-    this.logger = createLogger('recharge-client');
+    // Validate token formats
+    if (sessionToken && typeof sessionToken !== 'string') {
+      throw new Error('sessionToken must be a string');
+    }
     
-    // Initialize circuit breaker
-    this.circuitBreaker = new CircuitBreaker({
-      failureThreshold: 5,
-      resetTimeout: 60000, // 1 minute
-      monitoringPeriod: 60000 // 1 minute
-    });
+    if (merchantToken && typeof merchantToken !== 'string') {
+      throw new Error('merchantToken must be a string');
+    }
+    
+    // Basic token format validation
+    if (sessionToken && sessionToken.trim().length === 0) {
+      throw new Error('sessionToken cannot be empty');
+    }
+    
+    if (merchantToken && merchantToken.trim().length === 0) {
+      throw new Error('merchantToken cannot be empty');
+    }
     
     this.sessionToken = sessionToken;
     this.merchantToken = merchantToken;
@@ -66,13 +79,15 @@ export class RechargeClient {
     if (this.sessionToken) {
       headers['Authorization'] = `Bearer ${this.sessionToken}`;
       if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Using session token authentication`);
+        console.error(`[DEBUG] Using session token authentication: ${this.sessionToken.substring(0, 10)}...`);
       }
     } else if (this.merchantToken) {
       headers['X-Recharge-Access-Token'] = this.merchantToken;
       if (process.env.DEBUG === 'true') {
-        console.error(`[DEBUG] Using merchant token authentication`);
+        console.error(`[DEBUG] Using merchant token authentication: ${this.merchantToken.substring(0, 10)}...`);
       }
+    } else {
+      throw new Error('No authentication token available - this should not happen');
     }
     
     this.client = axios.create({
@@ -280,10 +295,19 @@ export class RechargeClient {
    */
   async getCustomerByEmail(email) {
     if (!this.merchantToken) {
-      throw new Error('Merchant token required for customer lookup by email');
+      throw new Error(
+        'Merchant token required for customer lookup by email. Please provide a merchant token when creating the RechargeClient:\n' +
+        'new RechargeClient({ storeUrl, merchantToken: "your_merchant_token" })'
+      );
     }
     
     validateRequiredParams({ email }, ['email']);
+    
+    // Additional email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error(`Invalid email format: ${email}`);
+    }
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Looking up customer by email: ${email}`);

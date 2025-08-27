@@ -172,8 +172,30 @@ class RechargeStorefrontAPIMCPServer {
    */
   async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId, customerEmail) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
-    const defaultSessionToken = this.defaultSessionToken;
-    const defaultMerchantToken = this.defaultMerchantToken;
+    
+    // Validate that we have at least one authentication method available
+    const hasSessionToken = toolSessionToken || this.defaultSessionToken;
+    const hasMerchantToken = toolMerchantToken || this.defaultMerchantToken;
+    const hasCustomerIdentification = customerId || customerEmail;
+    
+    if (!hasSessionToken && !hasMerchantToken) {
+      throw new Error(
+        "No authentication token available. Please provide either:\n" +
+        "1. 'session_token' parameter in your tool call, or\n" +
+        "2. 'merchant_token' parameter in your tool call, or\n" +
+        "3. Set RECHARGE_SESSION_TOKEN or RECHARGE_MERCHANT_TOKEN in your environment variables."
+      );
+    }
+    
+    // If only merchant token is available, require customer identification
+    if (!hasSessionToken && hasMerchantToken && !hasCustomerIdentification) {
+      throw new Error(
+        "Merchant token requires customer identification. Please provide either:\n" +
+        "1. 'customer_id' parameter for direct session creation, or\n" +
+        "2. 'customer_email' parameter for customer lookup and session creation, or\n" +
+        "3. Provide a 'session_token' parameter instead."
+      );
+    }
     
     // Validate store URL
     const validatedDomain = this.validateStoreUrl(storeUrl);
@@ -221,6 +243,16 @@ class RechargeStorefrontAPIMCPServer {
     // If email provided but no customer ID, look up customer by email first
     if (!resolvedCustomerId && customerEmail && (toolMerchantToken || defaultMerchantToken)) {
       const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
+      
+      if (!merchantTokenToUse) {
+        throw new Error(
+          "Merchant token required for customer email lookup. Please provide either:\n" +
+          "1. 'merchant_token' parameter in your tool call, or\n" +
+          "2. Set RECHARGE_MERCHANT_TOKEN in your environment variables, or\n" +
+          "3. Use 'customer_id' instead of 'customer_email' if you have the customer ID."
+        );
+      }
+      
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Looking up customer by email: ${JSON.stringify({
           customerEmail,
@@ -285,6 +317,15 @@ class RechargeStorefrontAPIMCPServer {
     // If we have merchant token and customer ID, create session automatically
     if ((toolMerchantToken || defaultMerchantToken) && resolvedCustomerId) {
       const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
+      
+      if (!merchantTokenToUse) {
+        throw new Error(
+          "Merchant token required for automatic session creation. Please provide either:\n" +
+          "1. 'merchant_token' parameter in your tool call, or\n" +
+          "2. Set RECHARGE_MERCHANT_TOKEN in your environment variables."
+        );
+      }
+      
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Auto-creating session for customer: ${resolvedCustomerId}`);
         console.error(`[DEBUG] Using merchant token: ${merchantTokenToUse ? 'Yes' : 'No'}`);
@@ -349,7 +390,7 @@ class RechargeStorefrontAPIMCPServer {
     
     // SECURITY: Only use default session token if no customer identification provided
     // AND no cached sessions exist (to prevent wrong customer data exposure)
-    if (!resolvedCustomerId && !customerEmail && defaultSessionToken && !toolSessionToken) {
+    if (!resolvedCustomerId && !customerEmail && this.defaultSessionToken && !toolSessionToken) {
       if (this.sessionCache.size > 0) {
         throw new Error(
           "Security Error: Cannot use default session token when customer-specific sessions exist. " +
@@ -363,7 +404,7 @@ class RechargeStorefrontAPIMCPServer {
       
       return new RechargeClient({
         storeUrl: validatedDomain,
-        sessionToken: defaultSessionToken,
+        sessionToken: this.defaultSessionToken,
       });
     }
     
@@ -379,18 +420,8 @@ class RechargeStorefrontAPIMCPServer {
       });
     }
     
-    // Check if we have any authentication method available
-    if (!defaultSessionToken && !defaultMerchantToken && !toolSessionToken && !toolMerchantToken) {
-      throw new Error(
-        "No authentication token available. Please provide either:\n" +
-        "1. 'session_token' parameter in your tool call, or\n" +
-        "2. 'customer_id' or 'customer_email' parameter (requires merchant token), or\n" +
-        "3. Set RECHARGE_SESSION_TOKEN or RECHARGE_MERCHANT_TOKEN in your environment variables."
-      );
-    }
-    
     // Fallback to merchant token if available
-    const merchantTokenToUse = toolMerchantToken || defaultMerchantToken;
+    const merchantTokenToUse = toolMerchantToken || this.defaultMerchantToken;
     if (merchantTokenToUse) {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Using merchant token for authentication`);
@@ -403,7 +434,13 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // Final fallback to session token
-    const sessionTokenToUse = toolSessionToken || defaultSessionToken;
+    const sessionTokenToUse = toolSessionToken || this.defaultSessionToken;
+    if (!sessionTokenToUse) {
+      throw new Error(
+        "No valid authentication token available. This should not happen - please check your configuration."
+      );
+    }
+    
     return new RechargeClient({
       storeUrl: validatedDomain,
       sessionToken: sessionTokenToUse,
