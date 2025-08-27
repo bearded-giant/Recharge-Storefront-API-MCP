@@ -308,11 +308,11 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Looking up customer by email: ${email}`);
-      console.error(`[DEBUG] Using endpoint: /customers with email parameter`);
+      console.error(`[DEBUG] Using endpoint: /customer with email parameter`);
     }
     
     try {
-      return await this.makeRequest('GET', '/customers', null, { email });
+      return await this.makeRequest('GET', '/customer', null, { email });
     } catch (error) {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Customer lookup failed for email ${email}:`, error.message);

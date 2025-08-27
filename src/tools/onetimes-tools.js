@@ -85,7 +85,12 @@ export const onetimeTools = [
     description: 'Create a new one-time product',
     inputSchema: createOnetimeSchema,
     execute: async (client, args) => {
-      const { session_token, merchant_token, store_url, customer_id, ...onetimeData } = args;
+      const onetimeData = { ...args };
+      delete onetimeData.session_token;
+      delete onetimeData.merchant_token;
+      delete onetimeData.store_url;
+      delete onetimeData.customer_id;
+      delete onetimeData.customer_email;
       const onetime = await client.createOnetime(onetimeData);
       return {
         content: [
@@ -102,7 +107,14 @@ export const onetimeTools = [
     description: 'Update a one-time product',
     inputSchema: updateOnetimeSchema,
     execute: async (client, args) => {
-      const { onetime_id, session_token, merchant_token, store_url, customer_id, ...updateData } = args;
+      const { onetime_id } = args;
+      const updateData = { ...args };
+      delete updateData.onetime_id;
+      delete updateData.session_token;
+      delete updateData.merchant_token;
+      delete updateData.store_url;
+      delete updateData.customer_id;
+      delete updateData.customer_email;
       const updatedOnetime = await client.updateOnetime(onetime_id, updateData);
       return {
         content: [

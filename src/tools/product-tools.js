@@ -32,7 +32,12 @@ export const productTools = [
     description: 'Get products available for subscription',
     inputSchema: productListSchema,
     execute: async (client, args) => {
-      const { session_token, merchant_token, store_url, customer_id, ...params } = args;
+      const params = { ...args };
+      delete params.session_token;
+      delete params.merchant_token;
+      delete params.store_url;
+      delete params.customer_id;
+      delete params.customer_email;
       const products = await client.getProducts(params);
       return {
         content: [

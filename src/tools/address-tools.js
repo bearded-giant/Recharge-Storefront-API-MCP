@@ -105,7 +105,12 @@ export const addressTools = [
     description: 'Create a new address for a customer',
     inputSchema: createAddressSchema,
     execute: async (client, args) => {
-      const { session_token, merchant_token, store_url, customer_id, ...addressData } = args;
+      const addressData = { ...args };
+      delete addressData.session_token;
+      delete addressData.merchant_token;
+      delete addressData.store_url;
+      delete addressData.customer_id;
+      delete addressData.customer_email;
       const newAddress = await client.createAddress(addressData);
       return {
         content: [
@@ -122,7 +127,14 @@ export const addressTools = [
     description: 'Update an existing address',
     inputSchema: updateAddressSchema,
     execute: async (client, args) => {
-      const { address_id, session_token, merchant_token, store_url, customer_id, ...addressData } = args;
+      const { address_id } = args;
+      const addressData = { ...args };
+      delete addressData.address_id;
+      delete addressData.session_token;
+      delete addressData.merchant_token;
+      delete addressData.store_url;
+      delete addressData.customer_id;
+      delete addressData.customer_email;
       const updatedAddress = await client.updateAddress(address_id, addressData);
       return {
         content: [

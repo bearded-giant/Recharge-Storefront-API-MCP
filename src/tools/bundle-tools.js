@@ -104,7 +104,14 @@ export const bundleTools = [
     description: 'Get all selections for a specific bundle',
     inputSchema: bundleSelectionListSchema,
     execute: async (client, args) => {
-      const { bundle_id, session_token, merchant_token, store_url, customer_id, customer_email, ...params } = args;
+      const { bundle_id } = args;
+      const params = { ...args };
+      delete params.bundle_id;
+      delete params.session_token;
+      delete params.merchant_token;
+      delete params.store_url;
+      delete params.customer_id;
+      delete params.customer_email;
       const selections = await client.getBundleSelections(bundle_id, params);
       return {
         content: [
@@ -138,7 +145,12 @@ export const bundleTools = [
     description: 'Create a new bundle selection',
     inputSchema: createBundleSelectionSchema,
     execute: async (client, args) => {
-      const { session_token, merchant_token, store_url, customer_id, ...selectionData } = args;
+      const selectionData = { ...args };
+      delete selectionData.session_token;
+      delete selectionData.merchant_token;
+      delete selectionData.store_url;
+      delete selectionData.customer_id;
+      delete selectionData.customer_email;
       const selection = await client.createBundleSelection(selectionData);
       return {
         content: [
@@ -155,7 +167,14 @@ export const bundleTools = [
     description: 'Update an existing bundle selection',
     inputSchema: updateBundleSelectionSchema,
     execute: async (client, args) => {
-      const { bundle_selection_id, session_token, merchant_token, store_url, customer_id, ...updateData } = args;
+      const { bundle_selection_id } = args;
+      const updateData = { ...args };
+      delete updateData.bundle_selection_id;
+      delete updateData.session_token;
+      delete updateData.merchant_token;
+      delete updateData.store_url;
+      delete updateData.customer_id;
+      delete updateData.customer_email;
       const updatedSelection = await client.updateBundleSelection(bundle_selection_id, updateData);
       return {
         content: [

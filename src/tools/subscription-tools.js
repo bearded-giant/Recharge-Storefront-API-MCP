@@ -137,7 +137,11 @@ export const subscriptionTools = [
     description: 'Create a new subscription',
     inputSchema: createSubscriptionSchema,
     execute: async (client, args) => {
-      const { customer_id, session_token, merchant_token, store_url, ...subscriptionData } = args;
+      const subscriptionData = { ...args };
+      delete subscriptionData.customer_id;
+      delete subscriptionData.session_token;
+      delete subscriptionData.merchant_token;
+      delete subscriptionData.store_url;
       const subscription = await client.createSubscription(subscriptionData);
       return {
         content: [
@@ -171,7 +175,13 @@ export const subscriptionTools = [
     description: 'Update subscription details like frequency, quantity, or next charge date',
     inputSchema: updateSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, customer_id, session_token, merchant_token, store_url, ...updateData } = args;
+      const { subscription_id } = args;
+      const updateData = { ...args };
+      delete updateData.subscription_id;
+      delete updateData.customer_id;
+      delete updateData.session_token;
+      delete updateData.merchant_token;
+      delete updateData.store_url;
       const updatedSubscription = await client.updateSubscription(subscription_id, updateData);
       return {
         content: [
@@ -222,7 +232,14 @@ export const subscriptionTools = [
     description: 'Swap the variant of a subscription',
     inputSchema: swapSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, customer_id, session_token, merchant_token, store_url, customer_email, ...swapData } = args;
+      const { subscription_id } = args;
+      const swapData = { ...args };
+      delete swapData.subscription_id;
+      delete swapData.customer_id;
+      delete swapData.session_token;
+      delete swapData.merchant_token;
+      delete swapData.store_url;
+      delete swapData.customer_email;
       const swappedSubscription = await client.swapSubscription(subscription_id, swapData);
       return {
         content: [
@@ -239,7 +256,14 @@ export const subscriptionTools = [
     description: 'Cancel a subscription',
     inputSchema: cancelSubscriptionSchema,
     execute: async (client, args) => {
-      const { subscription_id, customer_id, session_token, merchant_token, store_url, customer_email, ...cancelData } = args;
+      const { subscription_id } = args;
+      const cancelData = { ...args };
+      delete cancelData.subscription_id;
+      delete cancelData.customer_id;
+      delete cancelData.session_token;
+      delete cancelData.merchant_token;
+      delete cancelData.store_url;
+      delete cancelData.customer_email;
       const cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData);
       return {
         content: [

@@ -62,7 +62,12 @@ export const customerTools = [
     description: 'Update customer information',
     inputSchema: updateCustomerSchema,
     execute: async (client, args) => {
-      const { session_token, merchant_token, store_url, customer_id, customer_email, ...updateData } = args;
+      const updateData = { ...args };
+      delete updateData.session_token;
+      delete updateData.merchant_token;
+      delete updateData.store_url;
+      delete updateData.customer_id;
+      delete updateData.customer_email;
       const updatedCustomer = await client.updateCustomer(updateData);
       return {
         content: [

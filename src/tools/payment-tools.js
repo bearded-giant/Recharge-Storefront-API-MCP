@@ -76,7 +76,14 @@ export const paymentTools = [
     description: 'Update payment method billing address',
     inputSchema: updatePaymentMethodSchema,
     execute: async (client, args) => {
-      const { payment_method_id, session_token, merchant_token, store_url, customer_id, ...paymentData } = args;
+      const { payment_method_id } = args;
+      const paymentData = { ...args };
+      delete paymentData.payment_method_id;
+      delete paymentData.session_token;
+      delete paymentData.merchant_token;
+      delete paymentData.store_url;
+      delete paymentData.customer_id;
+      delete paymentData.customer_email;
       const updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData);
       return {
         content: [
