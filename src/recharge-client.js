@@ -48,7 +48,7 @@ export class RechargeClient {
       baseURL: this.baseURL,
       headers,
       timeout: 30000, // 30 seconds
-      maxRedirects: 5,
+      maxRedirects: 0, // Disable automatic redirects to prevent loops
       validateStatus: (status) => status < 500, // Don't throw for 4xx errors, let our handler deal with them
     });
 
@@ -120,6 +120,26 @@ export class RechargeClient {
         return response;
       },
       (error) => {
+        // Handle redirect responses
+        if (error.response && [301, 302, 303, 307, 308].includes(error.response.status)) {
+          const location = error.response.headers.location;
+          if (process.env.DEBUG === 'true') {
+            console.error(`[DEBUG] Redirect ${error.response.status} to: ${location}`);
+            console.error(`[DEBUG] Original URL: ${error.config.url}`);
+            console.error(`[DEBUG] Base URL: ${error.config.baseURL}`);
+          }
+          
+          // Create a more descriptive error for redirects
+          const redirectError = new Error(
+            `API returned redirect ${error.response.status} to ${location}. ` +
+            `This may indicate an authentication issue or incorrect API endpoint. ` +
+            `Please verify your store URL and authentication tokens.`
+          );
+          redirectError.response = error.response;
+          redirectError.isRedirect = true;
+          throw redirectError;
+        }
+        
         // Check for session expiry errors and mark for renewal
         if (error.response?.status === 401 && this.sessionToken) {
           if (process.env.DEBUG === 'true') {

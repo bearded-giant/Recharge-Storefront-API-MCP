@@ -93,6 +93,11 @@ class RechargeStorefrontAPIMCPServer {
       throw new Error('Store URL must be a valid Shopify domain ending with .myshopify.com (e.g., your-shop.myshopify.com)');
     }
 
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] Validated store URL: ${domain}`);
+      console.error(`[DEBUG] Will use base URL: https://${domain}/tools/recurring/portal`);
+    }
+
     return domain;
   }
 

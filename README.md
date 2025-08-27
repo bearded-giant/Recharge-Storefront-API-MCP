@@ -804,6 +804,27 @@ export RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
 # Incorrect: shop.com
 ```
 
+#### Redirect Issues
+
+**Problem**: `Too many redirects` or `API returned redirect`
+```bash
+# Common causes and solutions:
+
+# 1. Incorrect store URL format
+# Use: your-shop.myshopify.com
+# Not: your-shop.com or https://your-shop.myshopify.com
+
+# 2. Invalid authentication tokens
+# Verify your tokens are correct and have proper permissions
+
+# 3. API endpoint issues
+# Enable debug mode to see redirect details:
+DEBUG=true npm start
+
+# 4. Check if store has Recharge installed
+# Verify Recharge is properly installed on the Shopify store
+```
+
 #### Session Issues
 
 **Problem**: `Session token expired`

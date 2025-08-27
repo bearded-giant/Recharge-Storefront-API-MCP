@@ -52,6 +52,15 @@ export function handleAPIError(error) {
   if (error.response) {
     const { status, data } = error.response;
     
+    // Handle redirect errors specially
+    if (error.isRedirect) {
+      throw new RechargeAPIError(error.message, status, 'REDIRECT_ERROR', {
+        location: error.response.headers.location,
+        originalUrl: error.config?.url,
+        baseUrl: error.config?.baseURL
+      });
+    }
+    
     // Extract error message with fallback chain
     let message = 'Unknown API error';
     if (data?.message) {
