@@ -67,8 +67,8 @@ export class RechargeClient {
     // Validate and clean store URL
     const cleanStoreUrl = this.storeUrl.replace(/\/+$/, '').toLowerCase();
     
-    // Construct the base URL to match your shopify_proxy routes
-    this.baseURL = `https://${cleanStoreUrl}/shopify_proxy`;
+    // Construct the base URL for Recharge Storefront API
+    this.baseURL = `https://${cleanStoreUrl}/tools/recurring/portal`;
     
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] RechargeClient initialized with base URL:', this.baseURL);
@@ -384,7 +384,7 @@ export class RechargeClient {
    * @throws {Error} If session token is invalid or expired
    */
   async getCustomer() {
-    const response = await this.makeRequest('GET', `/portal/customer`);
+    const response = await this.makeRequest('GET', `/customer`);
     return response;
   }
 
@@ -398,7 +398,7 @@ export class RechargeClient {
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Customer update data is required');
     }
-    return this.makeRequest('PUT', `/portal/customer`, data);
+    return this.makeRequest('PUT', `/customer`, data);
   }
 
   /**
@@ -411,7 +411,7 @@ export class RechargeClient {
    * @throws {Error} If API request fails
    */
   async getSubscriptions(params = {}) {
-    const response = await this.makeRequest('GET', '/portal/subscriptions', null, params);
+    const response = await this.makeRequest('GET', '/subscriptions', null, params);
     return response;
   }
 
@@ -423,7 +423,7 @@ export class RechargeClient {
    */
   async getSubscription(subscriptionId) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('GET', `/portal/subscriptions/${subscriptionId}`);
+    return this.makeRequest('GET', `/subscriptions/${subscriptionId}`);
   }
 
   /**
@@ -451,7 +451,7 @@ export class RechargeClient {
       processedData.order_interval_frequency = parseInt(processedData.order_interval_frequency, 10);
     }
     
-    return this.makeRequest('POST', '/portal/subscriptions', processedData);
+    return this.makeRequest('POST', '/subscriptions', processedData);
   }
 
   /**
@@ -479,7 +479,7 @@ export class RechargeClient {
       processedData.order_interval_frequency = parseInt(processedData.order_interval_frequency, 10);
     }
     
-    return this.makeRequest('PUT', `/portal/subscriptions/${subscriptionId}`, processedData);
+    return this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, processedData);
   }
 
   /**
@@ -491,7 +491,7 @@ export class RechargeClient {
    */
   async cancelSubscription(subscriptionId, data = {}) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('POST', `/portal/subscriptions/${subscriptionId}/cancel`, data);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/cancel`, data);
   }
 
   /**
@@ -502,7 +502,7 @@ export class RechargeClient {
    */
   async activateSubscription(subscriptionId) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('POST', `/portal/subscriptions/${subscriptionId}/activate`);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/activate`);
   }
 
   /**
@@ -514,7 +514,7 @@ export class RechargeClient {
    */
   async skipSubscription(subscriptionId, date) {
     validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
-    return this.makeRequest('POST', `/portal/subscriptions/${subscriptionId}/skip`, { date });
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/skip`, { date });
   }
 
   /**
@@ -526,7 +526,7 @@ export class RechargeClient {
    */
   async unskipSubscription(subscriptionId, date) {
     validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
-    return this.makeRequest('POST', `/portal/subscriptions/${subscriptionId}/unskip`, { date });
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/unskip`, { date });
   }
 
   /**
@@ -549,7 +549,7 @@ export class RechargeClient {
       processedData.quantity = parseInt(processedData.quantity, 10);
     }
     
-    return this.makeRequest('POST', `/portal/subscriptions/${subscriptionId}/swap`, processedData);
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/swap`, processedData);
   }
 
   /**
@@ -561,7 +561,7 @@ export class RechargeClient {
    */
   async setNextChargeDate(subscriptionId, date) {
     validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
-    return this.makeRequest('POST', `/portal/subscriptions/${subscriptionId}/set_next_charge_date`, { date });
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/set_next_charge_date`, { date });
   }
 
   // Address methods
@@ -574,7 +574,7 @@ export class RechargeClient {
    * @throws {Error} If API request fails
    */
   async getAddresses(params = {}) {
-    const response = await this.makeRequest('GET', '/portal/addresses', null, params);
+    const response = await this.makeRequest('GET', '/addresses', null, params);
     return response;
   }
 
@@ -598,7 +598,7 @@ export class RechargeClient {
   async createAddress(addressData) {
     const required = ['address1', 'city', 'province', 'zip', 'country', 'first_name', 'last_name'];
     validateRequiredParams(addressData, required);
-    return this.makeRequest('POST', '/portal/addresses', addressData);
+    return this.makeRequest('POST', '/addresses', addressData);
   }
 
   /**
@@ -613,7 +613,7 @@ export class RechargeClient {
     if (!addressData || Object.keys(addressData).length === 0) {
       throw new Error('Address update data is required');
     }
-    return this.makeRequest('PUT', `/portal/addresses/${addressId}`, addressData);
+    return this.makeRequest('PUT', `/addresses/${addressId}`, addressData);
   }
 
   /**
@@ -624,7 +624,7 @@ export class RechargeClient {
    */
   async deleteAddress(addressId) {
     validateRequiredParams({ addressId }, ['addressId']);
-    return this.makeRequest('DELETE', `/portal/addresses/${addressId}`);
+    return this.makeRequest('DELETE', `/addresses/${addressId}`);
   }
 
   // Payment method methods
