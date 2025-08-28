@@ -11,23 +11,23 @@ import { handleAPIError, validateRequiredParams } from './utils/error-handler.js
  */
 export class RechargeClient {
   /**
-   * Create a new RechargeClient instance with session token
+   * Create a new RechargeClient instance
    * 
    * @param {Object} config Configuration object
    * @param {string} config.storeUrl Store URL (e.g., 'your-shop.myshopify.com')
-   * @param {string} [config.sessionToken] Customer session token for authentication
-   * @param {string} [config.merchantToken] Merchant token for authentication
-   * @throws {Error} If neither sessionToken nor merchantToken is provided
+   * @param {string} [config.sessionToken] Customer session token for customer-scoped operations
+   * @param {string} [config.adminToken] Admin API token for admin operations and session creation
+   * @throws {Error} If neither sessionToken nor adminToken is provided
    */
-  constructor({ storeUrl, sessionToken, merchantToken }) {
+  constructor({ storeUrl, sessionToken, adminToken }) {
     validateRequiredParams({ storeUrl }, ['storeUrl']);
     
-    if (!sessionToken && !merchantToken) {
+    if (!sessionToken && !adminToken) {
       throw new Error(
-        'Authentication required: Either sessionToken or merchantToken must be provided.\n' +
+        'Authentication required: Either sessionToken or adminToken must be provided.\n' +
         'Please provide one of:\n' +
         '1. sessionToken - for customer-scoped operations\n' +
-        '2. merchantToken - for admin operations and session creation'
+        '2. adminToken - for admin operations and session creation'
       );
     }
     
@@ -36,15 +36,16 @@ export class RechargeClient {
       throw new Error('sessionToken must be a string');
     }
     
-    if (merchantToken && typeof merchantToken !== 'string') {
-      throw new Error('merchantToken must be a string');
+    if (adminToken && typeof adminToken !== 'string') {
+      throw new Error('adminToken must be a string');
     }
     
-    // Validate merchant token type if provided
-    if (merchantToken && merchantToken.startsWith('strfnt_')) {
-      if (process.env.DEBUG === 'true') {
-        console.error('[DEBUG] Using Storefront API token for merchant operations');
-      }
+    // Validate admin token type if provided
+    if (adminToken && adminToken.startsWith('strfnt_')) {
+      throw new Error(
+        'Invalid token type: Storefront API tokens (strfnt_) cannot be used for admin operations.\n' +
+        'Please provide an Admin API token (usually starts with sk_) for customer lookup and session creation.'
+      );
     }
     
     // Basic token format validation
@@ -52,12 +53,12 @@ export class RechargeClient {
       throw new Error('sessionToken cannot be empty');
     }
     
-    if (merchantToken && merchantToken.trim().length === 0) {
-      throw new Error('merchantToken cannot be empty');
+    if (adminToken && adminToken.trim().length === 0) {
+      throw new Error('adminToken cannot be empty');
     }
     
     this.sessionToken = sessionToken;
-    this.merchantToken = merchantToken;
+    this.adminToken = adminToken;
     this.storeUrl = storeUrl;
     
     // Validate and clean store URL
@@ -84,10 +85,10 @@ export class RechargeClient {
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Using session token authentication:', this.sessionToken.substring(0, 10) + '...');
       }
-    } else if (this.merchantToken) {
-      headers['X-Recharge-Access-Token'] = this.merchantToken;
+    } else if (this.adminToken) {
+      // For admin operations, we'll set headers per request
       if (process.env.DEBUG === 'true') {
-        console.error('[DEBUG] Using merchant token authentication:', this.merchantToken.substring(0, 10) + '...');
+        console.error('[DEBUG] Admin token available for admin operations:', this.adminToken.substring(0, 10) + '...');
       }
     } else {
       throw new Error('No authentication token available - this should not happen');
@@ -110,30 +111,30 @@ export class RechargeClient {
    * @param {Object} [options={}] - Session options
    * @param {string} [options.return_url] - URL to redirect to after session
    * @returns {Promise<Object>} Session data including token
-   * @throws {Error} If merchant token is not available
+   * @throws {Error} If admin token is not available
    */
   async createCustomerSessionById(customerId, options = {}) {
-    if (!this.merchantToken) {
-      throw new Error('Merchant token required for session creation');
+    if (!this.adminToken) {
+      throw new Error('Admin API token required for session creation');
     }
     
     validateRequiredParams({ customerId }, ['customerId']);
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Creating session for customer: ${customerId}`);
-      console.error(`[DEBUG] Using Storefront API endpoint for session creation`);
+      console.error(`[DEBUG] Using Admin API for session creation`);
     }
     
     let response;
     try {
-      // Use Storefront API for session creation
-      const apiResponse = await axios.post(`https://${this.storeUrl}/tools/recurring/portal/customers/${customerId}/sessions`, {
+      // Use Admin API for session creation
+      const apiResponse = await axios.post(`https://api.rechargeapps.com/customers/${customerId}/sessions`, {
         return_url: options.return_url
       }, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${this.merchantToken}`,
+          'X-Recharge-Access-Token': this.adminToken,
           'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
         },
         timeout: 30000,
@@ -315,15 +316,15 @@ export class RechargeClient {
    * Get customer by email address (requires merchant token)
    * @param {string} email Customer email address
    * @returns {Promise<Object>} Customer data including customer ID
-   * @throws {Error} If merchant token is not available
+   * @throws {Error} If admin token is not available
    * @throws {Error} If customer is not found
    */
   async getCustomerByEmail(email) {
-    if (!this.merchantToken) {
+    if (!this.adminToken) {
       throw new Error(
-        'Merchant token required for customer lookup by email. Please provide a merchant token when creating the RechargeClient:\n' +
-        'new RechargeClient({ storeUrl, merchantToken: "your_merchant_token" })\n' +
-        'Note: For Storefront API operations, use your Storefront API token (strfnt_...)'
+        'Admin API token required for customer lookup by email. Please provide an admin token when creating the RechargeClient:\n' +
+        'new RechargeClient({ storeUrl, adminToken: "your_admin_token" })\n' +
+        'Note: Admin API tokens usually start with sk_ prefix'
       );
     }
     
@@ -337,17 +338,17 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] Looking up customer by email:', email);
-      console.error('[DEBUG] Using Storefront API endpoint for customer lookup');
+      console.error('[DEBUG] Using Admin API for customer lookup');
     }
     
     try {
-      // Use Storefront API for customer lookup
-      const response = await axios.get(`https://${this.storeUrl}/tools/recurring/portal/customers/search`, {
+      // Use Admin API for customer lookup
+      const response = await axios.get(`https://api.rechargeapps.com/customers`, {
         params: { email },
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${this.merchantToken}`,
+          'X-Recharge-Access-Token': this.adminToken,
           'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
         },
         timeout: 30000,

@@ -41,7 +41,7 @@ class RechargeStorefrontAPIMCPServer {
     // Store environment variables for client creation
     this.defaultStoreUrl = process.env.RECHARGE_STOREFRONT_DOMAIN;
     this.defaultSessionToken = process.env.RECHARGE_SESSION_TOKEN;
-    this.defaultMerchantToken = process.env.RECHARGE_MERCHANT_TOKEN;
+    this.defaultAdminToken = process.env.RECHARGE_ADMIN_TOKEN;
     
     // Session cache for multi-customer support
     this.sessionCache = new Map(); // customerId -> sessionToken
@@ -52,7 +52,7 @@ class RechargeStorefrontAPIMCPServer {
       console.error(`[DEBUG] Server initialization: ${JSON.stringify({
         defaultStoreUrl: this.defaultStoreUrl || 'Not set (will require in tool calls)',
         hasDefaultSessionToken: !!this.defaultSessionToken,
-        hasDefaultMerchantToken: !!this.defaultMerchantToken
+        hasDefaultAdminToken: !!this.defaultAdminToken
       }, null, 2)}`);
     }
 
@@ -164,33 +164,33 @@ class RechargeStorefrontAPIMCPServer {
    * Get or create a Recharge Storefront client
    * @param {string} [toolStoreUrl] - Store URL from tool call
    * @param {string} [toolSessionToken] - Session token from tool call
-   * @param {string} [toolMerchantToken] - Merchant token from tool call
+   * @param {string} [toolAdminToken] - Admin token from tool call
    * @param {string} [customerId] - Customer ID for automatic session creation
    * @param {string} [customerEmail] - Customer email for automatic lookup and session creation
    * @returns {RechargeClient} Configured Recharge Storefront client
    * @throws {Error} If no store URL or authentication token is available
    */
-  async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId, customerEmail) {
+  async getRechargeClient(toolStoreUrl, toolSessionToken, toolAdminToken, customerId, customerEmail) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
     
     // Validate that we have at least one authentication method available
     const hasSessionToken = toolSessionToken || this.defaultSessionToken;
-    const hasMerchantToken = toolMerchantToken || this.defaultMerchantToken;
+    const hasAdminToken = toolAdminToken || this.defaultAdminToken;
     const hasCustomerIdentification = customerId || customerEmail;
     
-    if (!hasSessionToken && !hasMerchantToken) {
+    if (!hasSessionToken && !hasAdminToken) {
       throw new Error(
         "No authentication token available. Please provide either:\n" +
         "1. 'session_token' parameter in your tool call, or\n" +
-        "2. 'merchant_token' parameter in your tool call, or\n" +
-        "3. Set RECHARGE_SESSION_TOKEN or RECHARGE_MERCHANT_TOKEN in your environment variables."
+        "2. 'admin_token' parameter in your tool call, or\n" +
+        "3. Set RECHARGE_SESSION_TOKEN or RECHARGE_ADMIN_TOKEN in your environment variables."
       );
     }
     
-    // If only merchant token is available, require customer identification
-    if (!hasSessionToken && hasMerchantToken && !hasCustomerIdentification) {
+    // If only admin token is available, require customer identification
+    if (!hasSessionToken && hasAdminToken && !hasCustomerIdentification) {
       throw new Error(
-        "Merchant token requires customer identification. Please provide either:\n" +
+        "Admin token requires customer identification. Please provide either:\n" +
         "1. 'customer_id' parameter for direct session creation, or\n" +
         "2. 'customer_email' parameter for customer lookup and session creation, or\n" +
         "3. Provide a 'session_token' parameter instead."
