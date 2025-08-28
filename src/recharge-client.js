@@ -114,14 +114,14 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Creating session for customer: ${customerId}`);
-      console.error(`[DEBUG] Using endpoint: /customer_portal with customer_id parameter`);
+      console.error(`[DEBUG] Using endpoint: /customer_portal`);
     }
     
     let response;
     try {
-      response = await this.makeRequest('POST', `/customer_portal`, {
-        customer_id: parseInt(customerId, 10),
-        return_url: options.return_url || null
+      // Use the correct Storefront API endpoint for session creation
+      response = await this.makeRequest('POST', `/customers/${customerId}/sessions`, {
+        return_url: options.return_url
       });
     } catch (error) {
       if (process.env.DEBUG === 'true') {
@@ -308,11 +308,11 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] Looking up customer by email:', email);
-      console.error('[DEBUG] Using endpoint: /customers with email parameter');
+      console.error('[DEBUG] Using endpoint: /customer with email parameter');
     }
     
     try {
-      return await this.makeRequest('GET', '/customers', null, { email });
+      return await this.makeRequest('GET', '/customer', null, { email });
     } catch (error) {
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Customer lookup failed for email', email + ':', error.message);
@@ -327,7 +327,7 @@ export class RechargeClient {
    * @throws {Error} If session token is invalid or expired
    */
   async getCustomer() {
-    const response = await this.makeRequest('GET', `/customers`);
+    const response = await this.makeRequest('GET', `/customer`);
     return response;
   }
 
@@ -341,7 +341,7 @@ export class RechargeClient {
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Customer update data is required');
     }
-    return this.makeRequest('PUT', `/customers`, data);
+    return this.makeRequest('PUT', `/customer`, data);
   }
 
   /**
@@ -378,7 +378,23 @@ export class RechargeClient {
   async createSubscription(subscriptionData) {
     const required = ['address_id', 'next_charge_scheduled_at', 'order_interval_frequency', 'order_interval_unit', 'quantity', 'variant_id'];
     validateRequiredParams(subscriptionData, required);
-    return this.makeRequest('POST', '/subscriptions', subscriptionData);
+    
+    // Convert string IDs to integers where needed
+    const processedData = { ...subscriptionData };
+    if (processedData.address_id) {
+      processedData.address_id = parseInt(processedData.address_id, 10);
+    }
+    if (processedData.variant_id) {
+      processedData.variant_id = parseInt(processedData.variant_id, 10);
+    }
+    if (processedData.quantity) {
+      processedData.quantity = parseInt(processedData.quantity, 10);
+    }
+    if (processedData.order_interval_frequency) {
+      processedData.order_interval_frequency = parseInt(processedData.order_interval_frequency, 10);
+    }
+    
+    return this.makeRequest('POST', '/subscriptions', processedData);
   }
 
   /**
@@ -393,7 +409,20 @@ export class RechargeClient {
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Subscription update data is required');
     }
-    return this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, data);
+    
+    // Convert string values to appropriate types
+    const processedData = { ...data };
+    if (processedData.variant_id) {
+      processedData.variant_id = parseInt(processedData.variant_id, 10);
+    }
+    if (processedData.quantity) {
+      processedData.quantity = parseInt(processedData.quantity, 10);
+    }
+    if (processedData.order_interval_frequency) {
+      processedData.order_interval_frequency = parseInt(processedData.order_interval_frequency, 10);
+    }
+    
+    return this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, processedData);
   }
 
   /**
@@ -455,7 +484,15 @@ export class RechargeClient {
     if (!data?.variant_id) {
       throw new Error('variant_id is required for subscription swap');
     }
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/swap`, data);
+    
+    // Convert variant_id to integer and quantity if provided
+    const processedData = { ...data };
+    processedData.variant_id = parseInt(processedData.variant_id, 10);
+    if (processedData.quantity) {
+      processedData.quantity = parseInt(processedData.quantity, 10);
+    }
+    
+    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/swap`, processedData);
   }
 
   /**
@@ -680,7 +717,16 @@ export class RechargeClient {
   async createOnetime(onetimeData) {
     const required = ['variant_id', 'quantity', 'next_charge_scheduled_at'];
     validateRequiredParams(onetimeData, required);
-    return this.makeRequest('POST', '/onetimes', onetimeData);
+    
+    // Convert numeric fields to proper types
+    const processedData = { ...onetimeData };
+    processedData.variant_id = parseInt(processedData.variant_id, 10);
+    processedData.quantity = parseInt(processedData.quantity, 10);
+    if (processedData.price) {
+      processedData.price = parseFloat(processedData.price);
+    }
+    
+    return this.makeRequest('POST', '/onetimes', processedData);
   }
 
   /**
@@ -695,7 +741,17 @@ export class RechargeClient {
     if (!onetimeData || Object.keys(onetimeData).length === 0) {
       throw new Error('One-time product update data is required');
     }
-    return this.makeRequest('PUT', `/onetimes/${onetimeId}`, onetimeData);
+    
+    // Convert numeric fields to proper types
+    const processedData = { ...onetimeData };
+    if (processedData.quantity) {
+      processedData.quantity = parseInt(processedData.quantity, 10);
+    }
+    if (processedData.price) {
+      processedData.price = parseFloat(processedData.price);
+    }
+    
+    return this.makeRequest('PUT', `/onetimes/${onetimeId}`, processedData);
   }
 
   /**
@@ -770,7 +826,17 @@ export class RechargeClient {
   async createBundleSelection(selectionData) {
     const required = ['bundle_id', 'variant_id', 'quantity'];
     validateRequiredParams(selectionData, required);
-    return this.makeRequest('POST', '/bundle_selections', selectionData);
+    
+    // Convert numeric fields to proper types
+    const processedData = { ...selectionData };
+    processedData.bundle_id = parseInt(processedData.bundle_id, 10);
+    processedData.variant_id = parseInt(processedData.variant_id, 10);
+    processedData.quantity = parseInt(processedData.quantity, 10);
+    if (processedData.external_variant_id) {
+      processedData.external_variant_id = parseInt(processedData.external_variant_id, 10);
+    }
+    
+    return this.makeRequest('POST', '/bundle_selections', processedData);
   }
 
   /**
@@ -785,7 +851,20 @@ export class RechargeClient {
     if (!selectionData || Object.keys(selectionData).length === 0) {
       throw new Error('Bundle selection update data is required');
     }
-    return this.makeRequest('PUT', `/bundle_selections/${bundleSelectionId}`, selectionData);
+    
+    // Convert numeric fields to proper types
+    const processedData = { ...selectionData };
+    if (processedData.variant_id) {
+      processedData.variant_id = parseInt(processedData.variant_id, 10);
+    }
+    if (processedData.quantity) {
+      processedData.quantity = parseInt(processedData.quantity, 10);
+    }
+    if (processedData.external_variant_id) {
+      processedData.external_variant_id = parseInt(processedData.external_variant_id, 10);
+    }
+    
+    return this.makeRequest('PUT', `/bundle_selections/${bundleSelectionId}`, processedData);
   }
 
   /**
