@@ -67,8 +67,8 @@ export class RechargeClient {
     // Validate and clean store URL
     const cleanStoreUrl = this.storeUrl.replace(/\/+$/, '').toLowerCase();
     
-    // Construct the Recharge Storefront API base URL  
-    this.baseURL = `https://${cleanStoreUrl}/tools/recurring/shopify_proxy`;
+    // Construct the base URL to match your shopify_proxy routes
+    this.baseURL = `https://${cleanStoreUrl}/shopify_proxy`;
     
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] RechargeClient initialized with base URL:', this.baseURL);
