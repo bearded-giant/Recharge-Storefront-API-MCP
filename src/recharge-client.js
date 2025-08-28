@@ -136,12 +136,14 @@ export class RechargeClient {
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Creating session for customer: ${customerId}`);
       console.error(`[DEBUG] Using Admin API for session creation`);
+      console.error('[DEBUG] Session creation URL: https://api.rechargeapps.com/sessions');
+      console.error('[DEBUG] Admin token (first 10 chars):', this.merchantToken.substring(0, 10) + '...');
     }
     
     let response;
     try {
       // Use Admin API for session creation - correct endpoint
-      const apiResponse = await axios.post(`https://api.rechargeapps.com/sessions`, {
+      const apiResponse = await axios.post('https://api.rechargeapps.com/sessions', {
         customer_id: customerId,
         return_url: options.return_url
       }, {
@@ -159,6 +161,7 @@ export class RechargeClient {
       
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Session creation response status:', apiResponse.status);
+        console.error('[DEBUG] Session creation response headers:', JSON.stringify(apiResponse.headers, null, 2));
         console.error('[DEBUG] Session creation response data:', JSON.stringify(response, null, 2));
       }
     } catch (error) {
@@ -168,6 +171,17 @@ export class RechargeClient {
           console.error('[DEBUG] Error response status:', error.response.status);
           console.error('[DEBUG] Error response headers:', JSON.stringify(error.response.headers, null, 2));
           console.error('[DEBUG] Error response data:', JSON.stringify(error.response.data, null, 2));
+          
+          // Special handling for 302 redirects during session creation
+          if (error.response.status === 302) {
+            const location = error.response.headers.location;
+            console.error('[DEBUG] 302 Redirect during session creation to:', location);
+            console.error('[DEBUG] This usually indicates:');
+            console.error('[DEBUG] 1. Invalid Admin API token');
+            console.error('[DEBUG] 2. Token doesn\'t have session creation permissions');
+            console.error('[DEBUG] 3. Customer ID doesn\'t exist or access denied');
+            console.error('[DEBUG] 4. Wrong authentication method for Admin API');
+          }
         }
       }
       handleAPIError(error);
@@ -379,11 +393,13 @@ export class RechargeClient {
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] Looking up customer by email:', email);
       console.error('[DEBUG] Using Admin API for customer lookup');
+      console.error('[DEBUG] Admin API URL: https://api.rechargeapps.com/customers');
+      console.error('[DEBUG] Admin token (first 10 chars):', this.merchantToken.substring(0, 10) + '...');
     }
     
     try {
       // Use Admin API for customer lookup
-      const response = await axios.get(`https://api.rechargeapps.com/customers`, {
+      const response = await axios.get('https://api.rechargeapps.com/customers', {
         params: { email },
         headers: {
           'Content-Type': 'application/json',
@@ -392,12 +408,13 @@ export class RechargeClient {
           'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
         },
         timeout: 30000,
-        maxRedirects: 0,
+        maxRedirects: 0, // Disable redirects to catch 302s
         validateStatus: (status) => status < 500,
       });
       
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Customer lookup response status:', response.status);
+        console.error('[DEBUG] Customer lookup response headers:', JSON.stringify(response.headers, null, 2));
         console.error('[DEBUG] Customer lookup response data:', JSON.stringify(response.data, null, 2));
       }
       
@@ -409,6 +426,17 @@ export class RechargeClient {
           console.error('[DEBUG] Error response status:', error.response.status);
           console.error('[DEBUG] Error response headers:', JSON.stringify(error.response.headers, null, 2));
           console.error('[DEBUG] Error response data:', JSON.stringify(error.response.data, null, 2));
+          
+          // Special handling for 302 redirects during customer lookup
+          if (error.response.status === 302) {
+            const location = error.response.headers.location;
+            console.error('[DEBUG] 302 Redirect during customer lookup to:', location);
+            console.error('[DEBUG] This usually indicates:');
+            console.error('[DEBUG] 1. Invalid Admin API token');
+            console.error('[DEBUG] 2. Token doesn\'t have customer read permissions');
+            console.error('[DEBUG] 3. Wrong API endpoint or authentication method');
+            console.error('[DEBUG] 4. Token format issue (should NOT start with st_)');
+          }
         }
       }
       handleAPIError(error);
