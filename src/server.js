@@ -543,6 +543,8 @@ class RechargeStorefrontAPIMCPServer {
           console.error(`[DEBUG] Admin token: ${admin_token ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Customer ID: ${customer_id ? 'provided for auto-session' : 'not provided'}`);
           console.error(`[DEBUG] Customer email: ${customer_email ? 'provided for auto-lookup' : 'not provided'}`);
+          console.error(`[DEBUG] Final store URL: ${store_url || this.defaultStoreUrl}`);
+          console.error(`[DEBUG] Available tokens: Admin=${!!(admin_token || this.defaultAdminToken)}, Session=${!!(session_token || this.defaultSessionToken)}`);
           if (Object.keys(toolArgs).length > 0) {
             console.error(`[DEBUG] Tool arguments:`, JSON.stringify(toolArgs, null, 2));
           }

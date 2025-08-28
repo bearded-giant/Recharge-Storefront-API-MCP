@@ -238,42 +238,69 @@ export class RechargeClient {
         if (error.response && [301, 302, 303, 307, 308].includes(error.response.status)) {
           const location = error.response.headers.location;
           const originalUrl = `${error.config.baseURL}${error.config.url}`;
+          const requestHeaders = error.config.headers;
+          
           if (process.env.DEBUG === 'true') {
             console.error('[DEBUG] Redirect', error.response.status, 'to:', location);
             console.error('[DEBUG] Original URL:', originalUrl);
             console.error('[DEBUG] Base URL:', error.config.baseURL);
-            console.error('[DEBUG] Request headers:', JSON.stringify(error.config.headers, null, 2));
+            console.error('[DEBUG] Request headers:', JSON.stringify(requestHeaders, null, 2));
             console.error('[DEBUG] Response headers:', JSON.stringify(error.response.headers, null, 2));
+            console.error('[DEBUG] Request method:', error.config.method?.toUpperCase());
+            console.error('[DEBUG] Request data:', error.config.data ? JSON.stringify(error.config.data, null, 2) : 'None');
           }
           
           // Create a more descriptive error for redirects
           let redirectError;
           
           // Analyze redirect patterns to provide specific guidance
-          if (location && location.includes('/admin/oauth')) {
+          if (location && (location.includes('/admin/oauth') || location.includes('oauth'))) {
             redirectError = new Error(
               `Authentication redirect detected (${error.response.status}). ` +
-              `This usually means you're using an Admin API token instead of a Storefront API token, ` +
-              `or the token doesn't have the required permissions. ` +
-              `Please verify you're using a Storefront API token with proper permissions.`
+              `This usually means there's an authentication issue. Common causes:\n` +
+              `1. Invalid or expired token\n` +
+              `2. Wrong token type for this endpoint\n` +
+              `3. Token doesn't have required permissions\n` +
+              `Original URL: ${originalUrl}\n` +
+              `Redirect to: ${location}\n` +
+              `Token type: ${requestHeaders?.Authorization ? 'Bearer (session)' : requestHeaders?.['X-Recharge-Access-Token'] ? 'Admin API' : 'None'}`
             );
           } else if (location && location.includes('/account/login')) {
             redirectError = new Error(
               `Login redirect detected (${error.response.status}). ` +
-              `This indicates the session token is invalid or expired. ` +
-              `Please verify your session token or provide customer_id/customer_email for automatic session creation.`
+              `This indicates the customer session token is invalid or expired. ` +
+              `Original URL: ${originalUrl}\n` +
+              `Redirect to: ${location}\n` +
+              `Solution: Provide customer_id/customer_email for automatic session creation.`
+            );
+          } else if (location && location.includes('/tools/recurring/portal')) {
+            redirectError = new Error(
+              `Internal Recharge redirect detected (${error.response.status}). ` +
+              `This may indicate a URL structure issue or authentication problem. ` +
+              `Original URL: ${originalUrl}\n` +
+              `Redirect to: ${location}\n` +
+              `Check if the endpoint path is correct.`
             );
           } else if (location && !location.includes(error.config.baseURL)) {
             redirectError = new Error(
               `External redirect detected (${error.response.status}) to ${location}. ` +
-              `This may indicate the store URL is incorrect or Recharge is not properly installed. ` +
+              `This may indicate:\n` +
+              `1. Store URL is incorrect\n` +
+              `2. Recharge is not properly installed\n` +
+              `3. Store domain configuration issue\n` +
+              `Original URL: ${originalUrl}\n` +
               `Please verify your RECHARGE_STOREFRONT_DOMAIN setting.`
             );
           } else {
             redirectError = new Error(
               `API returned redirect ${error.response.status} to ${location}. ` +
               `Original URL: ${originalUrl}. ` +
-              `This may indicate an authentication issue or incorrect API endpoint. ` +
+              `This may indicate:\n` +
+              `1. Authentication issue\n` +
+              `2. Incorrect API endpoint\n` +
+              `3. Token permissions problem\n` +
+              `Request method: ${error.config.method?.toUpperCase()}\n` +
+              `Token type: ${requestHeaders?.Authorization ? 'Bearer (session)' : requestHeaders?.['X-Recharge-Access-Token'] ? 'Admin API' : 'None'}\n` +
               `Please verify your store URL and authentication tokens.`
             );
           }
