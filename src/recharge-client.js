@@ -114,33 +114,39 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Creating session for customer: ${customerId}`);
-      console.error(`[DEBUG] Using Admin API endpoint: /customers/${customerId}/sessions`);
+      console.error(`[DEBUG] Using Admin API endpoint: https://api.rechargeapps.com/customers/${customerId}/sessions`);
     }
-    
-    // Create temporary Admin API client for session creation
-    const adminClient = axios.create({
-      baseURL: 'https://api.rechargeapps.com',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Recharge-Access-Token': this.merchantToken,
-        'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
-      },
-      timeout: 30000,
-      maxRedirects: 0,
-      validateStatus: (status) => status < 500,
-    });
     
     let response;
     try {
-      // Use Admin API for session creation
-      const apiResponse = await adminClient.post(`/customers/${customerId}/sessions`, {
+      // Make direct request to Admin API for session creation
+      const apiResponse = await axios.post(`https://api.rechargeapps.com/customers/${customerId}/sessions`, {
         return_url: options.return_url
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Recharge-Access-Token': this.merchantToken,
+          'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
+        },
+        timeout: 30000,
+        maxRedirects: 0,
+        validateStatus: (status) => status < 500,
       });
       response = apiResponse.data;
+      
+      if (process.env.DEBUG === 'true') {
+        console.error('[DEBUG] Session creation response status:', apiResponse.status);
+        console.error('[DEBUG] Session creation response data:', JSON.stringify(response, null, 2));
+      }
     } catch (error) {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Session creation failed for customer ${customerId}:`, error.message);
+        if (error.response) {
+          console.error('[DEBUG] Error response status:', error.response.status);
+          console.error('[DEBUG] Error response headers:', JSON.stringify(error.response.headers, null, 2));
+          console.error('[DEBUG] Error response data:', JSON.stringify(error.response.data, null, 2));
+        }
       }
       handleAPIError(error);
     }
@@ -323,31 +329,38 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] Looking up customer by email:', email);
-      console.error('[DEBUG] Using Admin API endpoint: /customers with email parameter');
+      console.error('[DEBUG] Using Admin API endpoint: https://api.rechargeapps.com/customers');
     }
     
-    // Create temporary Admin API client for customer lookup
-    const adminClient = axios.create({
-      baseURL: 'https://api.rechargeapps.com',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Recharge-Access-Token': this.merchantToken,
-        'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
-      },
-      timeout: 30000,
-      maxRedirects: 0,
-      validateStatus: (status) => status < 500,
-    });
-    
     try {
-      const response = await adminClient.get('/customers', { 
-        params: { email, limit: 1 } 
+      // Make direct request to Admin API
+      const response = await axios.get('https://api.rechargeapps.com/customers', {
+        params: { email, limit: 1 },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Recharge-Access-Token': this.merchantToken,
+          'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
+        },
+        timeout: 30000,
+        maxRedirects: 0,
+        validateStatus: (status) => status < 500,
       });
+      
+      if (process.env.DEBUG === 'true') {
+        console.error('[DEBUG] Admin API response status:', response.status);
+        console.error('[DEBUG] Admin API response data:', JSON.stringify(response.data, null, 2));
+      }
+      
       return response.data;
     } catch (error) {
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Customer lookup failed for email', email + ':', error.message);
+        if (error.response) {
+          console.error('[DEBUG] Error response status:', error.response.status);
+          console.error('[DEBUG] Error response headers:', JSON.stringify(error.response.headers, null, 2));
+          console.error('[DEBUG] Error response data:', JSON.stringify(error.response.data, null, 2));
+        }
       }
       handleAPIError(error);
     }
