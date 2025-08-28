@@ -114,20 +114,35 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Creating session for customer: ${customerId}`);
-      console.error(`[DEBUG] Using endpoint: /customer_portal`);
+      console.error(`[DEBUG] Using Admin API endpoint: /customers/${customerId}/sessions`);
     }
+    
+    // Create temporary Admin API client for session creation
+    const adminClient = axios.create({
+      baseURL: 'https://api.rechargeapps.com',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Recharge-Access-Token': this.merchantToken,
+        'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
+      },
+      timeout: 30000,
+      maxRedirects: 0,
+      validateStatus: (status) => status < 500,
+    });
     
     let response;
     try {
-      // Use the correct Storefront API endpoint for session creation
-      response = await this.makeRequest('POST', `/customers/${customerId}/sessions`, {
+      // Use Admin API for session creation
+      const apiResponse = await adminClient.post(`/customers/${customerId}/sessions`, {
         return_url: options.return_url
       });
+      response = apiResponse.data;
     } catch (error) {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Session creation failed for customer ${customerId}:`, error.message);
       }
-      throw error;
+      handleAPIError(error);
     }
     
     if (process.env.DEBUG === 'true') {
@@ -308,16 +323,31 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] Looking up customer by email:', email);
-      console.error('[DEBUG] Using endpoint: /customer with email parameter');
+      console.error('[DEBUG] Using Admin API endpoint: /customers with email parameter');
     }
     
+    // Create temporary Admin API client for customer lookup
+    const adminClient = axios.create({
+      baseURL: 'https://api.rechargeapps.com',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Recharge-Access-Token': this.merchantToken,
+        'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
+      },
+      timeout: 30000,
+      maxRedirects: 0,
+      validateStatus: (status) => status < 500,
+    });
+    
     try {
-      return await this.makeRequest('GET', '/customer', null, { email });
+      const response = await adminClient.get('/customers', { params: { email } });
+      return response.data;
     } catch (error) {
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Customer lookup failed for email', email + ':', error.message);
       }
-      throw error;
+      handleAPIError(error);
     }
   }
 
