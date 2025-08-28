@@ -341,7 +341,9 @@ export class RechargeClient {
     });
     
     try {
-      const response = await adminClient.get('/customers', { params: { email } });
+      const response = await adminClient.get('/customers', { 
+        params: { email, limit: 1 } 
+      });
       return response.data;
     } catch (error) {
       if (process.env.DEBUG === 'true') {
