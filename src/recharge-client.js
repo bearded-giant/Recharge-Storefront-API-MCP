@@ -22,12 +22,14 @@ export class RechargeClient {
   constructor({ storeUrl, sessionToken, adminToken }) {
     validateRequiredParams({ storeUrl }, ['storeUrl']);
     
+    // We need at least one token, but ideally both for full functionality
     if (!sessionToken && !adminToken) {
       throw new Error(
-        'Authentication required: Either sessionToken or adminToken must be provided.\n' +
+        'Authentication required: At least one token must be provided.\n' +
         'Please provide one of:\n' +
-        '1. sessionToken - for customer-scoped operations\n' +
-        '2. adminToken - for admin operations and session creation'
+        '1. sessionToken - for customer-scoped Storefront API operations\n' +
+        '2. adminToken - for admin operations (customer lookup, session creation)\n' +
+        '3. Both tokens - for full functionality including automatic session creation'
       );
     }
     
@@ -57,6 +59,7 @@ export class RechargeClient {
       throw new Error('adminToken cannot be empty');
     }
     
+    // Store both tokens - they serve different purposes
     this.sessionToken = sessionToken;
     this.adminToken = adminToken;
     this.storeUrl = storeUrl;
@@ -70,7 +73,7 @@ export class RechargeClient {
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] RechargeClient initialized with base URL:', this.baseURL);
       console.error('[DEBUG] Session token:', this.sessionToken ? 'Present' : 'Not provided');
-      console.error('[DEBUG] Merchant token:', this.merchantToken ? 'Present' : 'Not provided');
+      console.error('[DEBUG] Admin token:', this.adminToken ? 'Present' : 'Not provided');
     }
     
     const headers = {
@@ -85,13 +88,13 @@ export class RechargeClient {
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Using session token authentication:', this.sessionToken.substring(0, 10) + '...');
       }
-    } else if (this.adminToken) {
-      // For admin operations, we'll set headers per request
+    }
+    
+    // Admin token is used for specific admin operations, not as default header
+    if (this.adminToken) {
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Admin token available for admin operations:', this.adminToken.substring(0, 10) + '...');
       }
-    } else {
-      throw new Error('No authentication token available - this should not happen');
     }
     
     this.client = axios.create({
