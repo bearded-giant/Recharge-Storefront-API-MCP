@@ -114,13 +114,13 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Creating session for customer: ${customerId}`);
-      console.error(`[DEBUG] Using endpoint: /customer_portal`);
+      console.error(`[DEBUG] Using endpoint: /customer_portal with customer_id parameter`);
     }
     
     let response;
     try {
       response = await this.makeRequest('POST', `/customer_portal`, {
-        customer_id: customerId,
+        customer_id: parseInt(customerId, 10),
         return_url: options.return_url || null
       });
     } catch (error) {
@@ -308,11 +308,11 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] Looking up customer by email:', email);
-      console.error('[DEBUG] Using endpoint: /customer with email parameter');
+      console.error('[DEBUG] Using endpoint: /customers with email parameter');
     }
     
     try {
-      return await this.makeRequest('GET', '/customer', null, { email });
+      return await this.makeRequest('GET', '/customers', null, { email });
     } catch (error) {
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Customer lookup failed for email', email + ':', error.message);
@@ -327,7 +327,7 @@ export class RechargeClient {
    * @throws {Error} If session token is invalid or expired
    */
   async getCustomer() {
-    const response = await this.makeRequest('GET', `/customer`);
+    const response = await this.makeRequest('GET', `/customers`);
     return response;
   }
 
@@ -341,7 +341,7 @@ export class RechargeClient {
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Customer update data is required');
     }
-    return this.makeRequest('PUT', `/customer`, data);
+    return this.makeRequest('PUT', `/customers`, data);
   }
 
   /**
