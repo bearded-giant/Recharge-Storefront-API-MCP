@@ -263,7 +263,7 @@ class RechargeStorefrontAPIMCPServer {
       // Create temporary client with admin token to look up customer
       const tempClient = new RechargeClient({
         storeUrl: validatedDomain,
-        merchantToken: adminTokenToUse,
+        adminToken: adminTokenToUse,
       });
       
       try {
@@ -334,7 +334,7 @@ class RechargeStorefrontAPIMCPServer {
       // Create temporary client with admin token to create session
       const tempClient = new RechargeClient({
         storeUrl: validatedDomain,
-        merchantToken: adminTokenToUse,
+        adminToken: adminTokenToUse,
       });
       
       try {
@@ -429,7 +429,7 @@ class RechargeStorefrontAPIMCPServer {
       
       return new RechargeClient({
         storeUrl: validatedDomain,
-        merchantToken: adminTokenToUse,
+        adminToken: adminTokenToUse,
       });
     }
     
