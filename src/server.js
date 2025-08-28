@@ -40,7 +40,7 @@ class RechargeStorefrontAPIMCPServer {
   constructor() {
     // Store environment variables for client creation
     this.defaultStoreUrl = process.env.RECHARGE_STOREFRONT_DOMAIN;
-    this.defaultSessionToken = process.env.RECHARGE_SESSION_TOKEN;
+    this.defaultSessionToken = process.env.RECHARGE_SESSION_TOKEN; // Customer session token (st_...)
     this.defaultAdminToken = process.env.RECHARGE_ADMIN_TOKEN;
     
     // Session cache for multi-customer support
@@ -689,9 +689,9 @@ class RechargeStorefrontAPIMCPServer {
     if (this.defaultStoreUrl) {
       console.error(`🔗 Store: ${this.defaultStoreUrl}`);
     }
-    console.error(`Default session token: ${this.defaultSessionToken ? 'Yes' : 'No'}`);
+    console.error(`Default session token (st_...): ${this.defaultSessionToken ? 'Yes' : 'No'}`);
     console.error(`Default admin token: ${this.defaultAdminToken ? 'Yes' : 'No'}`);
-    console.error(`🔐 Authentication: Session tokens (Bearer) + Admin API tokens (X-Recharge-Access-Token)`);
+    console.error(`🔐 Authentication: Customer session tokens (st_...) + Admin API tokens`);
     console.error(`🛠️  Available tools: ${toolCount}`);
     console.error(`📊 API Coverage: Complete Recharge Storefront API`);
     console.error(`🔌 Transport: stdio`);

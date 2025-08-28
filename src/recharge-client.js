@@ -26,7 +26,7 @@ export class RechargeClient {
     if (!sessionToken && !merchantToken) {
       throw new Error(
         'Authentication required: Please provide one of:\n' +
-        '1. sessionToken - Storefront API token for customer-scoped operations\n' +
+        '1. sessionToken - Customer session token (st_...) for customer-scoped operations\n' +
         '2. merchantToken - Admin API token for merchant operations (customer lookup, session creation)\n' +
         '3. Both tokens - for full functionality including automatic session creation'
       );
@@ -44,18 +44,18 @@ export class RechargeClient {
     // Validate that merchant token is NOT a storefront token
     if (merchantToken && merchantToken.startsWith('st_')) {
       throw new Error(
-        'Invalid token type: Storefront API tokens (st_) cannot be used as merchant tokens.\n' +
+        'Invalid token type: Customer session tokens (st_) cannot be used as merchant tokens.\n' +
         'Please provide an Admin API token for merchant operations (customer lookup, session creation).\n' +
         'Admin API tokens typically start with your store prefix or "sk_".'
       );
     }
     
-    // Validate that session token is NOT an admin token  
+    // Validate that session token format (customer session tokens start with st_)
     if (sessionToken && !sessionToken.startsWith('st_') && sessionToken.length > 50) {
       throw new Error(
         'Invalid token type: Admin API tokens cannot be used as session tokens.\n' +
         'Please provide one of:\n' +
-        '1. sessionToken - Storefront API session token (st_...)\n' +
+        '1. sessionToken - Customer session token (st_...)\n' +
         '2. Use customer_id or customer_email for automatic session creation with Admin token'
       );
     }
@@ -336,7 +336,8 @@ export class RechargeClient {
     if (!this.merchantToken) {
       throw new Error(
         'Admin API token required for customer lookup by email. Please provide an Admin API token when creating the RechargeClient:\n' +
-        'new RechargeClient({ storeUrl, merchantToken: "your_admin_api_token" })'
+        'new RechargeClient({ storeUrl, merchantToken: "your_admin_api_token" })\n' +
+        'Note: Admin API tokens are different from customer session tokens (st_...)'
       );
     }
     
