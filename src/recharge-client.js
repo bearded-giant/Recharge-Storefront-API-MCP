@@ -40,6 +40,15 @@ export class RechargeClient {
       throw new Error('merchantToken must be a string');
     }
     
+    // Validate merchant token type if provided
+    if (merchantToken && merchantToken.startsWith('strfnt_')) {
+      console.warn(
+        'WARNING: You provided a Storefront API token as merchantToken. ' +
+        'Storefront API tokens (starting with "strfnt_") have limited functionality. ' +
+        'For full Admin API access (customer lookup, session creation), use an Admin API token (typically starting with "sk_").'
+      );
+    }
+    
     // Basic token format validation
     if (sessionToken && sessionToken.trim().length === 0) {
       throw new Error('sessionToken cannot be empty');
@@ -107,7 +116,17 @@ export class RechargeClient {
    */
   async createCustomerSessionById(customerId, options = {}) {
     if (!this.merchantToken) {
-      throw new Error('Merchant token required for session creation');
+      throw new Error('Admin API token required for session creation');
+    }
+    
+    // Validate token type
+    if (this.merchantToken.startsWith('strfnt_')) {
+      throw new Error(
+        'Invalid token type: Storefront API token provided but Admin API token required for session creation.\n' +
+        'Storefront API tokens (starting with "strfnt_") cannot create customer sessions.\n' +
+        'Please provide an Admin API token (typically starting with "sk_") instead.\n' +
+        'You can create Admin API tokens in your Recharge admin panel under Apps & Integrations > API tokens.'
+      );
     }
     
     validateRequiredParams({ customerId }, ['customerId']);
@@ -314,8 +333,19 @@ export class RechargeClient {
   async getCustomerByEmail(email) {
     if (!this.merchantToken) {
       throw new Error(
-        'Merchant token required for customer lookup by email. Please provide a merchant token when creating the RechargeClient:\n' +
-        'new RechargeClient({ storeUrl, merchantToken: "your_merchant_token" })'
+        'Admin API token required for customer lookup by email. Please provide an Admin API token (not Storefront API token) when creating the RechargeClient:\n' +
+        'new RechargeClient({ storeUrl, merchantToken: "your_admin_api_token" })\n' +
+        'Note: Admin API tokens typically start with "sk_" while Storefront API tokens start with "strfnt_"'
+      );
+    }
+    
+    // Validate token type
+    if (this.merchantToken.startsWith('strfnt_')) {
+      throw new Error(
+        'Invalid token type: Storefront API token provided but Admin API token required for customer lookup.\n' +
+        'Storefront API tokens (starting with "strfnt_") cannot access Admin API endpoints.\n' +
+        'Please provide an Admin API token (typically starting with "sk_") instead.\n' +
+        'You can create Admin API tokens in your Recharge admin panel under Apps & Integrations > API tokens.'
       );
     }
     
