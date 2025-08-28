@@ -137,21 +137,21 @@ npm run coverage
 
 Recharge uses a two-step authentication process:
 
-1. **Merchant Token**: Authenticates your application with Recharge
-2. **Customer Session**: Scopes operations to a specific customer
+1. **Admin API Token**: Authenticates your application with Recharge
+2. **Customer Session Token**: Scopes operations to a specific customer
 
 ```
-Merchant Token + Customer ID → Customer Session → API Operations
+Admin API Token + Customer ID → Customer Session Token → API Operations
 ```
 
 ### Getting Your API Token
 
 1. **Log into Recharge**: Access your merchant portal
 2. **Navigate to API Tokens**: Go to Apps & integrations > API tokens
-3. **Create Storefront Token**: Create a new **Storefront API** token (not Admin API)
+3. **Create Admin Token**: Create a new **Admin API** token (not Storefront API)
 4. **Copy Token**: Save the token (starts with your store prefix)
 
-**Important**: Use **Storefront API** tokens, not Admin API tokens.
+**Important**: Use **Admin API** tokens, not Storefront API tokens.
 
 ### Authentication Methods
 
@@ -209,12 +209,12 @@ The server intelligently manages customer sessions:
 #### Session Creation Flow
 
 ```
-Customer Email/ID → Lookup → Session Creation → API Call → Cached Session
+Customer Email/ID → Lookup → Session Creation → API Call → Cached Session Token
 ```
 
 #### Session Persistence
 
-Sessions are cached within your MCP connection with automatic renewal:
+Customer session tokens are cached within your MCP connection with automatic renewal:
 
 ```json
 // First call - creates and caches session
@@ -237,16 +237,16 @@ Sessions are cached within your MCP connection with automatic renewal:
 
 #### Automatic Session Renewal
 
-- **Expiry Tracking**: Sessions expire after 1 hour, server tracks expiry times
-- **Auto Renewal**: Expired sessions automatically renewed on next API call
-- **Retry Logic**: Failed calls due to expired sessions automatically retried with fresh session
-- **Smart Caching**: Sessions renewed 5 minutes before expiry to prevent failures
+- **Expiry Tracking**: Customer session tokens expire after 1 hour, server tracks expiry times
+- **Auto Renewal**: Expired session tokens automatically renewed on next API call
+- **Retry Logic**: Failed calls due to expired tokens automatically retried with fresh session
+- **Smart Caching**: Session tokens renewed 5 minutes before expiry to prevent failures
 
 #### Performance Benefits
 
 - **Fast**: No repeated session creation
 - **Smart**: Email lookups cached too
-- **Isolated**: Each customer gets separate session
+- **Isolated**: Each customer gets separate session token
 - **Automatic**: Works transparently
 
 ### Multi-Customer Support
@@ -273,7 +273,7 @@ The server includes built-in security protections:
 
 ```json
 // Safe: Default session when no customer sessions exist
-{"name": "get_subscriptions", "arguments": {}}  // Uses default session
+{"name": "get_subscriptions", "arguments": {}}  // Uses default session token
 
 // Dangerous: Could expose wrong customer data
 {"name": "get_customer", "arguments": {"customer_email": "alice@example.com"}}
@@ -285,7 +285,7 @@ The server includes built-in security protections:
 
 **Security Error Message:**
 ```
-Security Error: Cannot use default session token when customer-specific sessions exist. 
+Security Error: Cannot use default session token when customer-specific session tokens exist. 
 Please specify 'customer_id', 'customer_email', or 'session_token' to ensure correct customer data access.
 ```
 
@@ -299,11 +299,11 @@ Create a `.env` file in the project root:
 # Required: Your Shopify domain
 RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
 
-# Required: Merchant token for session creation
-RECHARGE_MERCHANT_TOKEN=your_merchant_token_here
+# Required: Admin API token for session creation
+RECHARGE_ADMIN_TOKEN=your_admin_token_here
 
-# Optional: Default session token (if you have one)
-RECHARGE_SESSION_TOKEN=existing_session_token
+# Optional: Default customer session token (if you have one)
+RECHARGE_SESSION_TOKEN=existing_customer_session_token
 
 # Optional: Server configuration
 MCP_SERVER_NAME=recharge-storefront-api-mcp
@@ -318,8 +318,8 @@ DEBUG=true
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `RECHARGE_STOREFRONT_DOMAIN` | Yes* | Your Shopify domain | `shop.myshopify.com` |
-| `RECHARGE_MERCHANT_TOKEN` | Yes* | Merchant token for session creation | `your_token_here` |
-| `RECHARGE_SESSION_TOKEN` | No | Default session token | `session_abc123` |
+| `RECHARGE_ADMIN_TOKEN` | Yes* | Admin API token for session creation | `your_admin_token_here` |
+| `RECHARGE_SESSION_TOKEN` | No | Default customer session token | `st_abc123` |
 | `MCP_SERVER_NAME` | No | Server identification | `recharge-mcp` |
 | `MCP_SERVER_VERSION` | No | Server version | `1.0.0` |
 | `DEBUG` | No | Enable debug logging | `true` |
@@ -335,7 +335,7 @@ Override environment variables in individual tool calls:
   "name": "get_subscriptions",
   "arguments": {
     "store_url": "different-shop.myshopify.com",
-    "merchant_token": "different_token",
+    "admin_token": "different_admin_token",
     "customer_email": "customer@example.com"
   }
 }
@@ -783,7 +783,7 @@ See [DOCKER.md](DOCKER.md) for detailed deployment guide.
 **Problem**: `Invalid merchant token`
 ```bash
 # Solution: Verify token type and permissions
-# Use Storefront API token (not Admin API)
+# Use Admin API token (not Storefront API)
 # Check token hasn't expired or been revoked
 ```
 
@@ -822,9 +822,9 @@ DEBUG=true npm start
 # 4. Check if store has Recharge installed
 # Verify Recharge is properly installed on the Shopify store
 
-# 5. Token type mismatch
-# Ensure you're using Storefront API tokens, not Admin API tokens
-# Admin API tokens will cause OAuth redirects
+# 5. Token type mismatch  
+# Ensure you're using Admin API tokens, not Storefront API tokens
+# Storefront API tokens may cause OAuth redirects
 
 # 6. Domain validation issues
 # Ensure domain follows exact format: shop-name.myshopify.com
@@ -833,13 +833,13 @@ DEBUG=true npm start
 
 #### Session Issues
 
-**Problem**: `Session token expired`
+**Problem**: `Customer session token expired`
 ```bash
-# Solution: Sessions are automatically recreated
+# Solution: Customer session tokens are automatically recreated
 # Provide customer_id or customer_email in next call
 ```
 
-**Problem**: `Security Error: Cannot use default session token`
+**Problem**: `Security Error: Cannot use default customer session token`
 ```bash
 # Solution: Always specify customer identification
 # Add customer_email or customer_id to tool calls
@@ -856,7 +856,7 @@ DEBUG=true npm start
 Debug information includes:
 - Authentication flow details
 - API request/response logging
-- Session creation and caching
+- Customer session token creation and caching
 - Error stack traces
 - Performance metrics
 
@@ -893,7 +893,7 @@ Debug information includes:
 ### Security Features
 
 #### Built-in Protections
-- **Customer data isolation**: Each customer gets separate session
+- **Customer data isolation**: Each customer gets separate session token
 - **Wrong customer prevention**: Blocks ambiguous tool calls
 - **Input validation**: Zod schema validation for all inputs
 - **Error sanitization**: Sensitive data removed from logs
@@ -958,7 +958,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - **37 Tools**: Complete Recharge Storefront API coverage
 - **10 Categories**: Comprehensive subscription management
 - **Production Ready**: Docker, monitoring, error handling
-- **Secure**: Built-in customer data protection
+- **Secure**: Built-in customer data protection with session token isolation
 - **Well Documented**: Comprehensive guides and examples
 
 ---
