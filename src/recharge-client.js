@@ -42,11 +42,9 @@ export class RechargeClient {
     
     // Validate merchant token type if provided
     if (merchantToken && merchantToken.startsWith('strfnt_')) {
-      console.warn(
-        'WARNING: You provided a Storefront API token as merchantToken. ' +
-        'Storefront API tokens (starting with "strfnt_") have limited functionality. ' +
-        'For full Admin API access (customer lookup, session creation), use an Admin API token (typically starting with "sk_").'
-      );
+      if (process.env.DEBUG === 'true') {
+        console.error('[DEBUG] Using Storefront API token for merchant operations');
+      }
     }
     
     // Basic token format validation
@@ -116,36 +114,26 @@ export class RechargeClient {
    */
   async createCustomerSessionById(customerId, options = {}) {
     if (!this.merchantToken) {
-      throw new Error('Admin API token required for session creation');
-    }
-    
-    // Validate token type
-    if (this.merchantToken.startsWith('strfnt_')) {
-      throw new Error(
-        'Invalid token type: Storefront API token provided but Admin API token required for session creation.\n' +
-        'Storefront API tokens (starting with "strfnt_") cannot create customer sessions.\n' +
-        'Please provide an Admin API token (typically starting with "sk_") instead.\n' +
-        'You can create Admin API tokens in your Recharge admin panel under Apps & Integrations > API tokens.'
-      );
+      throw new Error('Merchant token required for session creation');
     }
     
     validateRequiredParams({ customerId }, ['customerId']);
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Creating session for customer: ${customerId}`);
-      console.error(`[DEBUG] Using Admin API endpoint: https://api.rechargeapps.com/customers/${customerId}/sessions`);
+      console.error(`[DEBUG] Using Storefront API endpoint for session creation`);
     }
     
     let response;
     try {
-      // Make direct request to Admin API for session creation
-      const apiResponse = await axios.post(`https://api.rechargeapps.com/customers/${customerId}/sessions`, {
+      // Use Storefront API for session creation
+      const apiResponse = await axios.post(`https://${this.storeUrl}/tools/recurring/portal/customers/${customerId}/sessions`, {
         return_url: options.return_url
       }, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'X-Recharge-Access-Token': this.merchantToken,
+          'Authorization': `Bearer ${this.merchantToken}`,
           'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
         },
         timeout: 30000,
@@ -333,19 +321,9 @@ export class RechargeClient {
   async getCustomerByEmail(email) {
     if (!this.merchantToken) {
       throw new Error(
-        'Admin API token required for customer lookup by email. Please provide an Admin API token (not Storefront API token) when creating the RechargeClient:\n' +
-        'new RechargeClient({ storeUrl, merchantToken: "your_admin_api_token" })\n' +
-        'Note: Admin API tokens typically start with "sk_" while Storefront API tokens start with "strfnt_"'
-      );
-    }
-    
-    // Validate token type
-    if (this.merchantToken.startsWith('strfnt_')) {
-      throw new Error(
-        'Invalid token type: Storefront API token provided but Admin API token required for customer lookup.\n' +
-        'Storefront API tokens (starting with "strfnt_") cannot access Admin API endpoints.\n' +
-        'Please provide an Admin API token (typically starting with "sk_") instead.\n' +
-        'You can create Admin API tokens in your Recharge admin panel under Apps & Integrations > API tokens.'
+        'Merchant token required for customer lookup by email. Please provide a merchant token when creating the RechargeClient:\n' +
+        'new RechargeClient({ storeUrl, merchantToken: "your_merchant_token" })\n' +
+        'Note: For Storefront API operations, use your Storefront API token (strfnt_...)'
       );
     }
     
@@ -359,17 +337,17 @@ export class RechargeClient {
     
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] Looking up customer by email:', email);
-      console.error('[DEBUG] Using Admin API endpoint: https://api.rechargeapps.com/customers');
+      console.error('[DEBUG] Using Storefront API endpoint for customer lookup');
     }
     
     try {
-      // Make direct request to Admin API
-      const response = await axios.get('https://api.rechargeapps.com/customers', {
-        params: { email, limit: 1 },
+      // Use Storefront API for customer lookup
+      const response = await axios.get(`https://${this.storeUrl}/tools/recurring/portal/customers/search`, {
+        params: { email },
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'X-Recharge-Access-Token': this.merchantToken,
+          'Authorization': `Bearer ${this.merchantToken}`,
           'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
         },
         timeout: 30000,
@@ -378,8 +356,8 @@ export class RechargeClient {
       });
       
       if (process.env.DEBUG === 'true') {
-        console.error('[DEBUG] Admin API response status:', response.status);
-        console.error('[DEBUG] Admin API response data:', JSON.stringify(response.data, null, 2));
+        console.error('[DEBUG] Customer lookup response status:', response.status);
+        console.error('[DEBUG] Customer lookup response data:', JSON.stringify(response.data, null, 2));
       }
       
       return response.data;
