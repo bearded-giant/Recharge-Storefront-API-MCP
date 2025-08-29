@@ -78,8 +78,8 @@ export class RechargeClient {
     const cleanStoreUrl = this.storeUrl.replace(/\/+$/, '').toLowerCase();
     
     // Construct the base URL for Recharge Storefront API
-    this.baseURL = `https://${cleanStoreUrl}/tools/recurring/portal`;
-    
+    this.baseURL = `https://api.rechargeapps.com`;
+
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] RechargeClient initialized with base URL:', this.baseURL);
       console.error('[DEBUG] Session token:', this.sessionToken ? 'Present' : 'Not provided');
@@ -136,14 +136,14 @@ export class RechargeClient {
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Creating session for customer: ${customerId}`);
       console.error(`[DEBUG] Using Admin API for session creation`);
-      console.error('[DEBUG] Session creation URL: https://api.rechargeapps.com/sessions');
+      console.error(`[DEBUG] Session creation URL: https://api.rechargeapps.com/customers/${customerId}/sessions`);
       console.error('[DEBUG] Admin token (first 10 chars):', this.adminToken.substring(0, 10) + '...');
     }
     
     let response;
     try {
       // Use Admin API for session creation - correct endpoint
-      const apiResponse = await axios.post('https://api.rechargeapps.com/sessions', {
+      const apiResponse = await axios.post(`https://api.rechargeapps.com/customers/${customerId}/sessions`, {
         customer_id: customerId,
         return_url: options.return_url
       }, {
@@ -151,6 +151,7 @@ export class RechargeClient {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'X-Recharge-Access-Token': this.adminToken,
+          'X-Recharge-Version': '2021-11',
           'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
         },
         timeout: 30000,
@@ -191,9 +192,9 @@ export class RechargeClient {
       console.error(`[DEBUG] Session creation response:`, JSON.stringify(response, null, 2));
     }
     
-    if (response.session && response.session.token) {
+    if (response.customer_session && response.customer_session.apiToken) {
       // Update client to use the new session token
-      this.sessionToken = response.session.token;
+      this.sessionToken = response.customer_session.apiToken;
       this.client.defaults.headers['Authorization'] = `Bearer ${this.sessionToken}`;
       // Remove admin token header since we now have a session token
       delete this.client.defaults.headers['X-Recharge-Access-Token'];
@@ -448,7 +449,7 @@ export class RechargeClient {
    * @throws {Error} If session token is invalid or expired
    */
   async getCustomer() {
-    const response = await this.makeRequest('GET', `/customer`);
+    const response = await this.makeRequest('GET', `/customers`);
     return response;
   }
 
