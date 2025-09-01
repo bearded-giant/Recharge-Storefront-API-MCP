@@ -59,13 +59,8 @@ export const addressTools = [
     name: 'get_addresses',
     description: 'Get addresses for a specific customer',
     inputSchema: baseSchema,
-    execute: async (client, args, context) => {
-      let addresses;
-      if (context?.customerId || context?.customerEmail) {
-        addresses = await client.getAddresses({}, context.customerId, context.customerEmail);
-      } else {
-        addresses = await client.getAddresses({}, args.customer_id, args.customer_email);
-      }
+    execute: async (client, args) => {
+      const addresses = await client.getAddresses({}, args.customer_id, args.customer_email);
       return {
         content: [
           {
@@ -80,15 +75,9 @@ export const addressTools = [
     name: 'get_address',
     description: 'Get detailed information about a specific address',
     inputSchema: addressSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { address_id } = args;
-      
-      let address;
-      if (context?.customerId || context?.customerEmail) {
-        address = await client.getAddress(address_id, context.customerId, context.customerEmail);
-      } else {
-        address = await client.getAddress(address_id, args.customer_id, args.customer_email);
-      }
+      const address = await client.getAddress(address_id, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -104,20 +93,14 @@ export const addressTools = [
     name: 'create_address',
     description: 'Create a new address',
     inputSchema: createAddressSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const addressData = { ...args };
       delete addressData.customer_id;
       delete addressData.customer_email;
       delete addressData.session_token;
       delete addressData.admin_token;
       delete addressData.store_url;
-      
-      let address;
-      if (context?.customerId || context?.customerEmail) {
-        address = await client.createAddress(addressData, context.customerId, context.customerEmail);
-      } else {
-        address = await client.createAddress(addressData, args.customer_id, args.customer_email);
-      }
+      const address = await client.createAddress(addressData, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -133,7 +116,7 @@ export const addressTools = [
     name: 'update_address',
     description: 'Update an existing address',
     inputSchema: updateAddressSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { address_id } = args;
       const addressData = { ...args };
       delete addressData.address_id;
@@ -142,13 +125,7 @@ export const addressTools = [
       delete addressData.session_token;
       delete addressData.admin_token;
       delete addressData.store_url;
-      
-      let updatedAddress;
-      if (context?.customerId || context?.customerEmail) {
-        updatedAddress = await client.updateAddress(address_id, addressData, context.customerId, context.customerEmail);
-      } else {
-        updatedAddress = await client.updateAddress(address_id, addressData, args.customer_id, args.customer_email);
-      }
+      const updatedAddress = await client.updateAddress(address_id, addressData, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -164,15 +141,9 @@ export const addressTools = [
     name: 'delete_address',
     description: 'Delete an address',
     inputSchema: addressSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { address_id } = args;
-      
-      let result;
-      if (context?.customerId || context?.customerEmail) {
-        result = await client.deleteAddress(address_id, context.customerId, context.customerEmail);
-      } else {
-        result = await client.deleteAddress(address_id, args.customer_id, args.customer_email);
-      }
+      const result = await client.deleteAddress(address_id, args.customer_id, args.customer_email);
       
       return {
         content: [

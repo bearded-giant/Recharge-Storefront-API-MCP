@@ -339,8 +339,8 @@ npm run validate
 # Test environment setup
 npm run test:api-keys
 
-# Check configuration format
-node -e "require('dotenv').config(); console.log('Configuration loaded')"
+# Check project health
+npm run health
 ```
 
 ## Usage

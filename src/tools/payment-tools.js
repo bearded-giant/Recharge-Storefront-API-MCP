@@ -43,13 +43,8 @@ export const paymentTools = [
     name: 'get_payment_methods',
     description: 'Get payment methods for a specific customer',
     inputSchema: baseSchema,
-    execute: async (client, args, context) => {
-      let paymentMethods;
-      if (context?.customerId || context?.customerEmail) {
-        paymentMethods = await client.getPaymentMethods({}, context.customerId, context.customerEmail);
-      } else {
-        paymentMethods = await client.getPaymentMethods({}, args.customer_id, args.customer_email);
-      }
+    execute: async (client, args) => {
+      const paymentMethods = await client.getPaymentMethods({}, args.customer_id, args.customer_email);
       return {
         content: [
           {
@@ -64,15 +59,9 @@ export const paymentTools = [
     name: 'get_payment_method',
     description: 'Get detailed information about a specific payment method',
     inputSchema: paymentMethodSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { payment_method_id } = args;
-      
-      let paymentMethod;
-      if (context?.customerId || context?.customerEmail) {
-        paymentMethod = await client.getPaymentMethod(payment_method_id, context.customerId, context.customerEmail);
-      } else {
-        paymentMethod = await client.getPaymentMethod(payment_method_id, args.customer_id, args.customer_email);
-      }
+      const paymentMethod = await client.getPaymentMethod(payment_method_id, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -88,7 +77,7 @@ export const paymentTools = [
     name: 'update_payment_method',
     description: 'Update payment method billing information',
     inputSchema: updatePaymentMethodSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { payment_method_id } = args;
       const paymentData = { ...args };
       delete paymentData.payment_method_id;
@@ -97,13 +86,7 @@ export const paymentTools = [
       delete paymentData.session_token;
       delete paymentData.admin_token;
       delete paymentData.store_url;
-      
-      let updatedPaymentMethod;
-      if (context?.customerId || context?.customerEmail) {
-        updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData, context.customerId, context.customerEmail);
-      } else {
-        updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData, args.customer_id, args.customer_email);
-      }
+      const updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData, args.customer_id, args.customer_email);
       
       return {
         content: [

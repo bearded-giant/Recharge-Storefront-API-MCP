@@ -33,20 +33,14 @@ export const chargeTools = [
     name: 'get_charges',
     description: 'Get charges for a specific customer',
     inputSchema: chargeListSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const params = { ...args };
       delete params.customer_id;
       delete params.customer_email;
       delete params.session_token;
       delete params.admin_token;
       delete params.store_url;
-      
-      let charges;
-      if (context?.customerId || context?.customerEmail) {
-        charges = await client.getCharges(params, context.customerId, context.customerEmail);
-      } else {
-        charges = await client.getCharges(params, args.customer_id, args.customer_email);
-      }
+      const charges = await client.getCharges(params, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -62,15 +56,9 @@ export const chargeTools = [
     name: 'get_charge',
     description: 'Get detailed information about a specific charge',
     inputSchema: chargeSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { charge_id } = args;
-      
-      let charge;
-      if (context?.customerId || context?.customerEmail) {
-        charge = await client.getCharge(charge_id, context.customerId, context.customerEmail);
-      } else {
-        charge = await client.getCharge(charge_id, args.customer_id, args.customer_email);
-      }
+      const charge = await client.getCharge(charge_id, args.customer_id, args.customer_email);
       
       return {
         content: [

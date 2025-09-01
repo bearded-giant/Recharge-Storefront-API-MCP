@@ -33,20 +33,14 @@ export const orderTools = [
     name: 'get_orders',
     description: 'Get orders for a specific customer',
     inputSchema: orderListSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const params = { ...args };
       delete params.customer_id;
       delete params.customer_email;
       delete params.session_token;
       delete params.admin_token;
       delete params.store_url;
-      
-      let orders;
-      if (context?.customerId || context?.customerEmail) {
-        orders = await client.getOrders(params, context.customerId, context.customerEmail);
-      } else {
-        orders = await client.getOrders(params, args.customer_id, args.customer_email);
-      }
+      const orders = await client.getOrders(params, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -62,15 +56,9 @@ export const orderTools = [
     name: 'get_order',
     description: 'Get detailed information about a specific order',
     inputSchema: orderSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { order_id } = args;
-      
-      let order;
-      if (context?.customerId || context?.customerEmail) {
-        order = await client.getOrder(order_id, context.customerId, context.customerEmail);
-      } else {
-        order = await client.getOrder(order_id, args.customer_id, args.customer_email);
-      }
+      const order = await client.getOrder(order_id, args.customer_id, args.customer_email);
       
       return {
         content: [

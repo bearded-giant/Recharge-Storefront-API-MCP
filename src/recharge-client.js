@@ -144,7 +144,7 @@ export class RechargeClient {
   /**
    * Make authenticated request with automatic session management
    */
-  async makeCustomerRequest(method, endpoint, data = null, params = null, customerId = null, customerEmail = null) {
+  async makeRequest(method, endpoint, data = null, params = null, customerId = null, customerEmail = null) {
     const sessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
     
     const config = {
@@ -249,179 +249,179 @@ export class RechargeClient {
 
   // Customer methods
   async getCustomer(customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', '/customer', null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', '/customer', null, null, customerId, customerEmail);
   }
 
   async updateCustomer(updateData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('PUT', '/customer', updateData, null, customerId, customerEmail);
+    return await this.makeRequest('PUT', '/customer', updateData, null, customerId, customerEmail);
   }
 
   // Subscription methods
   async getSubscriptions(params = {}, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', '/subscriptions', null, params, customerId, customerEmail);
+    return await this.makeRequest('GET', '/subscriptions', null, params, customerId, customerEmail);
   }
 
   async getSubscription(subscriptionId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/subscriptions/${subscriptionId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', `/subscriptions/${subscriptionId}`, null, null, customerId, customerEmail);
   }
 
   async createSubscription(subscriptionData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', '/subscriptions', subscriptionData, null, customerId, customerEmail);
+    return await this.makeRequest('POST', '/subscriptions', subscriptionData, null, customerId, customerEmail);
   }
 
   async updateSubscription(subscriptionId, updateData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('PUT', `/subscriptions/${subscriptionId}`, updateData, null, customerId, customerEmail);
+    return await this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, updateData, null, customerId, customerEmail);
   }
 
   async skipSubscription(subscriptionId, date, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/skip`, { date }, null, customerId, customerEmail);
+    return await this.makeRequest('POST', `/subscriptions/${subscriptionId}/skip`, { date }, null, customerId, customerEmail);
   }
 
   async unskipSubscription(subscriptionId, date, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/unskip`, { date }, null, customerId, customerEmail);
+    return await this.makeRequest('POST', `/subscriptions/${subscriptionId}/unskip`, { date }, null, customerId, customerEmail);
   }
 
   async swapSubscription(subscriptionId, swapData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/swap`, swapData, null, customerId, customerEmail);
+    return await this.makeRequest('POST', `/subscriptions/${subscriptionId}/swap`, swapData, null, customerId, customerEmail);
   }
 
   async cancelSubscription(subscriptionId, cancelData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/cancel`, cancelData, null, customerId, customerEmail);
+    return await this.makeRequest('POST', `/subscriptions/${subscriptionId}/cancel`, cancelData, null, customerId, customerEmail);
   }
 
   async activateSubscription(subscriptionId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/activate`, {}, null, customerId, customerEmail);
+    return await this.makeRequest('POST', `/subscriptions/${subscriptionId}/activate`, {}, null, customerId, customerEmail);
   }
 
   async setNextChargeDate(subscriptionId, date, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/set_next_charge_date`, { date }, null, customerId, customerEmail);
+    return await this.makeRequest('POST', `/subscriptions/${subscriptionId}/set_next_charge_date`, { date }, null, customerId, customerEmail);
   }
 
   // Address methods
   async getAddresses(params = {}, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', '/addresses', null, params, customerId, customerEmail);
+    return await this.makeRequest('GET', '/addresses', null, params, customerId, customerEmail);
   }
 
   async getAddress(addressId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/addresses/${addressId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', `/addresses/${addressId}`, null, null, customerId, customerEmail);
   }
 
   async createAddress(addressData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', '/addresses', addressData, null, customerId, customerEmail);
+    return await this.makeRequest('POST', '/addresses', addressData, null, customerId, customerEmail);
   }
 
   async updateAddress(addressId, addressData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('PUT', `/addresses/${addressId}`, addressData, null, customerId, customerEmail);
+    return await this.makeRequest('PUT', `/addresses/${addressId}`, addressData, null, customerId, customerEmail);
   }
 
   async deleteAddress(addressId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('DELETE', `/addresses/${addressId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('DELETE', `/addresses/${addressId}`, null, null, customerId, customerEmail);
   }
 
   // Payment methods
   async getPaymentMethods(params = {}, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', '/payment_methods', null, params, customerId, customerEmail);
+    return await this.makeRequest('GET', '/payment_methods', null, params, customerId, customerEmail);
   }
 
   async getPaymentMethod(paymentMethodId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/payment_methods/${paymentMethodId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', `/payment_methods/${paymentMethodId}`, null, null, customerId, customerEmail);
   }
 
   async updatePaymentMethod(paymentMethodId, paymentData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('PUT', `/payment_methods/${paymentMethodId}`, paymentData, null, customerId, customerEmail);
+    return await this.makeRequest('PUT', `/payment_methods/${paymentMethodId}`, paymentData, null, customerId, customerEmail);
   }
 
   // Product methods
   async getProducts(params = {}, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', '/products', null, params, customerId, customerEmail);
+    return await this.makeRequest('GET', '/products', null, params, customerId, customerEmail);
   }
 
   async getProduct(productId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/products/${productId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', `/products/${productId}`, null, null, customerId, customerEmail);
   }
 
   // Order methods
   async getOrders(params = {}, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', '/orders', null, params, customerId, customerEmail);
+    return await this.makeRequest('GET', '/orders', null, params, customerId, customerEmail);
   }
 
   async getOrder(orderId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/orders/${orderId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', `/orders/${orderId}`, null, null, customerId, customerEmail);
   }
 
   // Charge methods
   async getCharges(params = {}, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', '/charges', null, params, customerId, customerEmail);
+    return await this.makeRequest('GET', '/charges', null, params, customerId, customerEmail);
   }
 
   async getCharge(chargeId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/charges/${chargeId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', `/charges/${chargeId}`, null, null, customerId, customerEmail);
   }
 
   // One-time product methods
   async getOnetimes(params = {}, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', '/onetimes', null, params, customerId, customerEmail);
+    return await this.makeRequest('GET', '/onetimes', null, params, customerId, customerEmail);
   }
 
   async getOnetime(onetimeId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/onetimes/${onetimeId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', `/onetimes/${onetimeId}`, null, null, customerId, customerEmail);
   }
 
   async createOnetime(onetimeData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', '/onetimes', onetimeData, null, customerId, customerEmail);
+    return await this.makeRequest('POST', '/onetimes', onetimeData, null, customerId, customerEmail);
   }
 
   async updateOnetime(onetimeId, onetimeData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('PUT', `/onetimes/${onetimeId}`, onetimeData, null, customerId, customerEmail);
+    return await this.makeRequest('PUT', `/onetimes/${onetimeId}`, onetimeData, null, customerId, customerEmail);
   }
 
   async deleteOnetime(onetimeId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('DELETE', `/onetimes/${onetimeId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('DELETE', `/onetimes/${onetimeId}`, null, null, customerId, customerEmail);
   }
 
   // Bundle methods
   async getBundles(params = {}, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', '/bundles', null, params, customerId, customerEmail);
+    return await this.makeRequest('GET', '/bundles', null, params, customerId, customerEmail);
   }
 
   async getBundle(bundleId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/bundles/${bundleId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', `/bundles/${bundleId}`, null, null, customerId, customerEmail);
   }
 
   async getBundleSelections(bundleId, params = {}, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/bundles/${bundleId}/bundle_selections`, null, params, customerId, customerEmail);
+    return await this.makeRequest('GET', `/bundles/${bundleId}/bundle_selections`, null, params, customerId, customerEmail);
   }
 
   async getBundleSelection(bundleSelectionId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/bundle_selections/${bundleSelectionId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', `/bundle_selections/${bundleSelectionId}`, null, null, customerId, customerEmail);
   }
 
   async createBundleSelection(selectionData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', '/bundle_selections', selectionData, null, customerId, customerEmail);
+    return await this.makeRequest('POST', '/bundle_selections', selectionData, null, customerId, customerEmail);
   }
 
   async updateBundleSelection(bundleSelectionId, selectionData, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('PUT', `/bundle_selections/${bundleSelectionId}`, selectionData, null, customerId, customerEmail);
+    return await this.makeRequest('PUT', `/bundle_selections/${bundleSelectionId}`, selectionData, null, customerId, customerEmail);
   }
 
   async deleteBundleSelection(bundleSelectionId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('DELETE', `/bundle_selections/${bundleSelectionId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('DELETE', `/bundle_selections/${bundleSelectionId}`, null, null, customerId, customerEmail);
   }
 
   // Discount methods
   async getDiscounts(params = {}, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', '/discounts', null, params, customerId, customerEmail);
+    return await this.makeRequest('GET', '/discounts', null, params, customerId, customerEmail);
   }
 
   async getDiscount(discountId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('GET', `/discounts/${discountId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('GET', `/discounts/${discountId}`, null, null, customerId, customerEmail);
   }
 
   async applyDiscount(discountCode, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('POST', '/discounts', { discount_code: discountCode }, null, customerId, customerEmail);
+    return await this.makeRequest('POST', '/discounts', { discount_code: discountCode }, null, customerId, customerEmail);
   }
 
   async removeDiscount(discountId, customerId = null, customerEmail = null) {
-    return await this.makeCustomerRequest('DELETE', `/discounts/${discountId}`, null, null, customerId, customerEmail);
+    return await this.makeRequest('DELETE', `/discounts/${discountId}`, null, null, customerId, customerEmail);
   }
 }

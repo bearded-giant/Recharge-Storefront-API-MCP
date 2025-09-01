@@ -167,7 +167,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     
     // Execute the tool
-    const result = await tool.execute(client, validatedArgs, context);
+    const result = await tool.execute(client, validatedArgs);
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Tool ${name} executed successfully`);

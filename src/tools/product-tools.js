@@ -33,20 +33,14 @@ export const productTools = [
     name: 'get_products',
     description: 'Get available products with optional filtering',
     inputSchema: productListSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const params = { ...args };
       delete params.customer_id;
       delete params.customer_email;
       delete params.session_token;
       delete params.admin_token;
       delete params.store_url;
-      
-      let products;
-      if (context?.customerId || context?.customerEmail) {
-        products = await client.getProducts(params, context.customerId, context.customerEmail);
-      } else {
-        products = await client.getProducts(params, args.customer_id, args.customer_email);
-      }
+      const products = await client.getProducts(params, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -62,15 +56,9 @@ export const productTools = [
     name: 'get_product',
     description: 'Get detailed information about a specific product',
     inputSchema: productSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { product_id } = args;
-      
-      let product;
-      if (context?.customerId || context?.customerEmail) {
-        product = await client.getProduct(product_id, context.customerId, context.customerEmail);
-      } else {
-        product = await client.getProduct(product_id, args.customer_id, args.customer_email);
-      }
+      const product = await client.getProduct(product_id, args.customer_id, args.customer_email);
       
       return {
         content: [

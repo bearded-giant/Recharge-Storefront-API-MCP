@@ -54,13 +54,8 @@ export const onetimeTools = [
     name: 'get_onetimes',
     description: 'Get one-time products for a specific customer',
     inputSchema: baseSchema,
-    execute: async (client, args, context) => {
-      let onetimes;
-      if (context?.customerId || context?.customerEmail) {
-        onetimes = await client.getOnetimes({}, context.customerId, context.customerEmail);
-      } else {
-        onetimes = await client.getOnetimes({}, args.customer_id, args.customer_email);
-      }
+    execute: async (client, args) => {
+      const onetimes = await client.getOnetimes({}, args.customer_id, args.customer_email);
       return {
         content: [
           {
@@ -75,15 +70,9 @@ export const onetimeTools = [
     name: 'get_onetime',
     description: 'Get detailed information about a specific one-time product',
     inputSchema: onetimeSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { onetime_id } = args;
-      
-      let onetime;
-      if (context?.customerId || context?.customerEmail) {
-        onetime = await client.getOnetime(onetime_id, context.customerId, context.customerEmail);
-      } else {
-        onetime = await client.getOnetime(onetime_id, args.customer_id, args.customer_email);
-      }
+      const onetime = await client.getOnetime(onetime_id, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -99,20 +88,14 @@ export const onetimeTools = [
     name: 'create_onetime',
     description: 'Create a one-time product to add to next delivery',
     inputSchema: createOnetimeSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const onetimeData = { ...args };
       delete onetimeData.customer_id;
       delete onetimeData.customer_email;
       delete onetimeData.session_token;
       delete onetimeData.admin_token;
       delete onetimeData.store_url;
-      
-      let onetime;
-      if (context?.customerId || context?.customerEmail) {
-        onetime = await client.createOnetime(onetimeData, context.customerId, context.customerEmail);
-      } else {
-        onetime = await client.createOnetime(onetimeData, args.customer_id, args.customer_email);
-      }
+      const onetime = await client.createOnetime(onetimeData, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -128,7 +111,7 @@ export const onetimeTools = [
     name: 'update_onetime',
     description: 'Update a one-time product',
     inputSchema: updateOnetimeSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { onetime_id } = args;
       const onetimeData = { ...args };
       delete onetimeData.onetime_id;
@@ -137,13 +120,7 @@ export const onetimeTools = [
       delete onetimeData.session_token;
       delete onetimeData.admin_token;
       delete onetimeData.store_url;
-      
-      let updatedOnetime;
-      if (context?.customerId || context?.customerEmail) {
-        updatedOnetime = await client.updateOnetime(onetime_id, onetimeData, context.customerId, context.customerEmail);
-      } else {
-        updatedOnetime = await client.updateOnetime(onetime_id, onetimeData, args.customer_id, args.customer_email);
-      }
+      const updatedOnetime = await client.updateOnetime(onetime_id, onetimeData, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -159,15 +136,9 @@ export const onetimeTools = [
     name: 'delete_onetime',
     description: 'Delete a one-time product',
     inputSchema: onetimeSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { onetime_id } = args;
-      
-      let result;
-      if (context?.customerId || context?.customerEmail) {
-        result = await client.deleteOnetime(onetime_id, context.customerId, context.customerEmail);
-      } else {
-        result = await client.deleteOnetime(onetime_id, args.customer_id, args.customer_email);
-      }
+      const result = await client.deleteOnetime(onetime_id, args.customer_id, args.customer_email);
       
       return {
         content: [

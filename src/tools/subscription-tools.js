@@ -155,20 +155,14 @@ export const subscriptionTools = [
     name: 'create_subscription',
     description: 'Create a new subscription',
     inputSchema: createSubscriptionSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const subscriptionData = { ...args };
       delete subscriptionData.customer_id;
       delete subscriptionData.customer_email;
       delete subscriptionData.session_token;
       delete subscriptionData.admin_token;
       delete subscriptionData.store_url;
-      
-      let subscription;
-      if (context?.customerId || context?.customerEmail) {
-        subscription = await client.createSubscription(subscriptionData, context.customerId, context.customerEmail);
-      } else {
-        subscription = await client.createSubscription(subscriptionData, args.customer_id, args.customer_email);
-      }
+      const subscription = await client.createSubscription(subscriptionData, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -184,15 +178,9 @@ export const subscriptionTools = [
     name: 'get_subscription',
     description: 'Get detailed information about a specific subscription',
     inputSchema: subscriptionSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { subscription_id } = args;
-      
-      let subscription;
-      if (context?.customerId || context?.customerEmail) {
-        subscription = await client.getSubscription(subscription_id, context.customerId, context.customerEmail);
-      } else {
-        subscription = await client.getSubscription(subscription_id, args.customer_id, args.customer_email);
-      }
+      const subscription = await client.getSubscription(subscription_id, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -208,7 +196,7 @@ export const subscriptionTools = [
     name: 'update_subscription',
     description: 'Update subscription details like frequency, quantity, or next charge date',
     inputSchema: updateSubscriptionSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { subscription_id } = args;
       const updateData = { ...args };
       delete updateData.subscription_id;
@@ -217,13 +205,7 @@ export const subscriptionTools = [
       delete updateData.session_token;
       delete updateData.admin_token;
       delete updateData.store_url;
-      
-      let updatedSubscription;
-      if (context?.customerId || context?.customerEmail) {
-        updatedSubscription = await client.updateSubscription(subscription_id, updateData, context.customerId, context.customerEmail);
-      } else {
-        updatedSubscription = await client.updateSubscription(subscription_id, updateData, args.customer_id, args.customer_email);
-      }
+      const updatedSubscription = await client.updateSubscription(subscription_id, updateData, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -239,15 +221,9 @@ export const subscriptionTools = [
     name: 'skip_subscription',
     description: 'Skip a subscription delivery for a specific date',
     inputSchema: skipSubscriptionSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { subscription_id, date } = args;
-      
-      let result;
-      if (context?.customerId || context?.customerEmail) {
-        result = await client.skipSubscription(subscription_id, date, context.customerId, context.customerEmail);
-      } else {
-        result = await client.skipSubscription(subscription_id, date, args.customer_id, args.customer_email);
-      }
+      const result = await client.skipSubscription(subscription_id, date, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -263,15 +239,9 @@ export const subscriptionTools = [
     name: 'unskip_subscription',
     description: 'Unskip a previously skipped subscription delivery',
     inputSchema: unskipSubscriptionSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { subscription_id, date } = args;
-      
-      let result;
-      if (context?.customerId || context?.customerEmail) {
-        result = await client.unskipSubscription(subscription_id, date, context.customerId, context.customerEmail);
-      } else {
-        result = await client.unskipSubscription(subscription_id, date, args.customer_id, args.customer_email);
-      }
+      const result = await client.unskipSubscription(subscription_id, date, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -287,7 +257,7 @@ export const subscriptionTools = [
     name: 'swap_subscription',
     description: 'Swap the variant of a subscription',
     inputSchema: swapSubscriptionSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { subscription_id } = args;
       const swapData = { ...args };
       delete swapData.subscription_id;
@@ -296,13 +266,7 @@ export const subscriptionTools = [
       delete swapData.admin_token;
       delete swapData.store_url;
       delete swapData.customer_email;
-      
-      let swappedSubscription;
-      if (context?.customerId || context?.customerEmail) {
-        swappedSubscription = await client.swapSubscription(subscription_id, swapData, context.customerId, context.customerEmail);
-      } else {
-        swappedSubscription = await client.swapSubscription(subscription_id, swapData, args.customer_id, args.customer_email);
-      }
+      const swappedSubscription = await client.swapSubscription(subscription_id, swapData, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -318,7 +282,7 @@ export const subscriptionTools = [
     name: 'cancel_subscription',
     description: 'Cancel a subscription',
     inputSchema: cancelSubscriptionSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { subscription_id } = args;
       const cancelData = { ...args };
       delete cancelData.subscription_id;
@@ -327,13 +291,7 @@ export const subscriptionTools = [
       delete cancelData.admin_token;
       delete cancelData.store_url;
       delete cancelData.customer_email;
-      
-      let cancelledSubscription;
-      if (context?.customerId || context?.customerEmail) {
-        cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData, context.customerId, context.customerEmail);
-      } else {
-        cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData, args.customer_id, args.customer_email);
-      }
+      const cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -349,15 +307,9 @@ export const subscriptionTools = [
     name: 'activate_subscription',
     description: 'Activate a cancelled subscription',
     inputSchema: activateSubscriptionSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { subscription_id } = args;
-      
-      let activatedSubscription;
-      if (context?.customerId || context?.customerEmail) {
-        activatedSubscription = await client.activateSubscription(subscription_id, context.customerId, context.customerEmail);
-      } else {
-        activatedSubscription = await client.activateSubscription(subscription_id, args.customer_id, args.customer_email);
-      }
+      const activatedSubscription = await client.activateSubscription(subscription_id, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -373,15 +325,9 @@ export const subscriptionTools = [
     name: 'set_subscription_next_charge_date',
     description: 'Set the next charge date for a subscription',
     inputSchema: setNextChargeDateSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { subscription_id, date } = args;
-      
-      let updatedSubscription;
-      if (context?.customerId || context?.customerEmail) {
-        updatedSubscription = await client.setNextChargeDate(subscription_id, date, context.customerId, context.customerEmail);
-      } else {
-        updatedSubscription = await client.setNextChargeDate(subscription_id, date, args.customer_id, args.customer_email);
-      }
+      const updatedSubscription = await client.setNextChargeDate(subscription_id, date, args.customer_id, args.customer_email);
       
       return {
         content: [

@@ -41,20 +41,14 @@ export const discountTools = [
     name: 'get_discounts',
     description: 'Get discounts for a specific customer',
     inputSchema: discountListSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const params = { ...args };
       delete params.customer_id;
       delete params.customer_email;
       delete params.session_token;
       delete params.admin_token;
       delete params.store_url;
-      
-      let discounts;
-      if (context?.customerId || context?.customerEmail) {
-        discounts = await client.getDiscounts(params, context.customerId, context.customerEmail);
-      } else {
-        discounts = await client.getDiscounts(params, args.customer_id, args.customer_email);
-      }
+      const discounts = await client.getDiscounts(params, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -70,15 +64,9 @@ export const discountTools = [
     name: 'get_discount',
     description: 'Get detailed information about a specific discount',
     inputSchema: discountSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { discount_id } = args;
-      
-      let discount;
-      if (context?.customerId || context?.customerEmail) {
-        discount = await client.getDiscount(discount_id, context.customerId, context.customerEmail);
-      } else {
-        discount = await client.getDiscount(discount_id, args.customer_id, args.customer_email);
-      }
+      const discount = await client.getDiscount(discount_id, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -94,15 +82,9 @@ export const discountTools = [
     name: 'apply_discount',
     description: 'Apply a discount code',
     inputSchema: applyDiscountSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { discount_code } = args;
-      
-      let discount;
-      if (context?.customerId || context?.customerEmail) {
-        discount = await client.applyDiscount(discount_code, context.customerId, context.customerEmail);
-      } else {
-        discount = await client.applyDiscount(discount_code, args.customer_id, args.customer_email);
-      }
+      const discount = await client.applyDiscount(discount_code, args.customer_id, args.customer_email);
       
       return {
         content: [
@@ -118,15 +100,9 @@ export const discountTools = [
     name: 'remove_discount',
     description: 'Remove a discount',
     inputSchema: discountSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const { discount_id } = args;
-      
-      let result;
-      if (context?.customerId || context?.customerEmail) {
-        result = await client.removeDiscount(discount_id, context.customerId, context.customerEmail);
-      } else {
-        result = await client.removeDiscount(discount_id, args.customer_id, args.customer_email);
-      }
+      const result = await client.removeDiscount(discount_id, args.customer_id, args.customer_email);
       
       return {
         content: [
