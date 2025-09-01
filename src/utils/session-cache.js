@@ -1,38 +1,22 @@
 /**
  * Session Cache Manager
- * Handles caching and automatic renewal of customer session tokens
+ * Handles caching of customer session tokens with automatic renewal on failure
  */
 
 export class SessionCache {
   constructor() {
-    this.sessions = new Map(); // customer_id -> { token, expiresAt, email }
+    this.sessions = new Map(); // customer_id -> { token, email }
     this.emailToCustomerId = new Map(); // email -> customer_id
-    
-    // Session tokens expire after 1 hour, we'll refresh 5 minutes early
-    this.SESSION_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
-    this.REFRESH_BUFFER = 5 * 60 * 1000; // 5 minutes in milliseconds
   }
 
   /**
    * Get cached session token for customer
    * @param {string} customerId - Customer ID
-   * @returns {string|null} Session token if valid, null if expired/missing
+   * @returns {string|null} Session token if cached, null if not found
    */
   getSessionToken(customerId) {
     const session = this.sessions.get(customerId);
-    if (!session) {
-      return null;
-    }
-
-    // Check if session is expired or needs refresh
-    const now = Date.now();
-    if (now >= session.expiresAt - this.REFRESH_BUFFER) {
-      // Session expired or needs refresh
-      this.sessions.delete(customerId);
-      return null;
-    }
-
-    return session.token;
+    return session ? session.token : null;
   }
 
   /**
@@ -50,11 +34,8 @@ export class SessionCache {
       throw new Error('Session token is required and must be a string');
     }
     
-    const expiresAt = Date.now() + this.SESSION_DURATION;
-    
     this.sessions.set(customerId, {
       token: sessionToken,
-      expiresAt,
       email
     });
 
@@ -65,7 +46,7 @@ export class SessionCache {
 
     if (process.env.DEBUG === 'true') {
       // Don't log the actual session token for security
-      console.error(`[DEBUG] Cached session for customer ${customerId}, expires at ${new Date(expiresAt).toISOString()}`);
+      console.error(`[DEBUG] Cached session for customer ${customerId}`);
     }
   }
 
@@ -99,7 +80,7 @@ export class SessionCache {
   }
 
   /**
-   * Clear session for customer
+   * Clear session for customer (called when session fails/expires)
    * @param {string} customerId - Customer ID
    */
   clearSession(customerId) {
@@ -131,40 +112,15 @@ export class SessionCache {
   }
 
   /**
-   * Clean up expired sessions
-   * Should be called periodically to prevent memory leaks
-   */
-  cleanupExpiredSessions() {
-    const now = Date.now();
-    let cleanedCount = 0;
-    
-    for (const [customerId, session] of this.sessions.entries()) {
-      if (now >= session.expiresAt) {
-        if (session.email) {
-          this.emailToCustomerId.delete(session.email);
-        }
-        this.sessions.delete(customerId);
-        cleanedCount++;
-      }
-    }
-    
-    if (process.env.DEBUG === 'true' && cleanedCount > 0) {
-      console.error(`[DEBUG] Cleaned up ${cleanedCount} expired sessions`);
-    }
-    
-    return cleanedCount;
-  }
-
-  /**
-   * Check if customer has valid cached session
+   * Check if customer has cached session
    * @param {string} customerId - Customer ID
-   * @returns {boolean} True if valid session exists
+   * @returns {boolean} True if session exists in cache
    */
   hasValidSession(customerId) {
     if (!customerId || typeof customerId !== 'string') {
       return false;
     }
-    return this.getSessionToken(customerId) !== null;
+    return this.sessions.has(customerId);
   }
 
   /**
@@ -180,22 +136,8 @@ export class SessionCache {
    * @returns {Object} Cache statistics
    */
   getStats() {
-    const now = Date.now();
-    let validSessions = 0;
-    let expiredSessions = 0;
-
-    for (const session of this.sessions.values()) {
-      if (now >= session.expiresAt - this.REFRESH_BUFFER) {
-        expiredSessions++;
-      } else {
-        validSessions++;
-      }
-    }
-
     return {
       totalSessions: this.sessions.size,
-      validSessions,
-      expiredSessions,
       emailMappings: this.emailToCustomerId.size
     };
   }

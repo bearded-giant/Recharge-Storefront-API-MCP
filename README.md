@@ -228,10 +228,8 @@ Customer session tokens are cached within your MCP connection with automatic ren
 
 #### Automatic Session Renewal
 
-- **Expiry Tracking**: Customer session tokens expire after 1 hour, server tracks expiry times
-- **Auto Renewal**: Expired session tokens automatically renewed on next API call
+- **Reactive Renewal**: Expired session tokens automatically renewed when API calls fail due to expiration
 - **Retry Logic**: Failed calls due to expired tokens automatically retried with fresh session
-- **Smart Caching**: Session tokens renewed 5 minutes before expiry to prevent failures
 
 #### Performance Benefits
 

@@ -139,9 +139,6 @@ export class RechargeClient {
     this.setupInterceptors();
     
     // Start cleanup interval for expired sessions
-    this.cleanupInterval = setInterval(() => {
-      this.sessionCache.cleanupExpiredSessions();
-    }, 5 * 60 * 1000); // Clean up every 5 minutes
   }
 
   /**
@@ -1206,9 +1203,6 @@ export class RechargeClient {
    * Cleanup resources
    */
   destroy() {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval);
-    }
     this.sessionCache.clearAll();
   }
 }
