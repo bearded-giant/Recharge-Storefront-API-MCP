@@ -326,7 +326,7 @@ Override environment variables in individual tool calls:
   "name": "get_subscriptions",
   "arguments": {
     "store_url": "different-shop.myshopify.com",
-    "admin_token": "different_admin_token", 
+    "admin_token": "different_admin_token",
     "customer_email": "customer@example.com"
   }
 }
@@ -802,8 +802,8 @@ Debug information includes:
 1. **Check Documentation**: Review this README
 2. **Enable Debug Mode**: Use `DEBUG=true` for detailed logging
 3. **Validate Setup**: Run `npm run validate`
-4. **Check Issues**: Search existing GitHub issues
-5. **Create Issue**: Provide debug logs and reproduction steps
+4. **Test API Keys**: Run `npm run test:api-keys`
+5. **Check Coverage**: Run `npm run coverage`
 
 ## Security
 
@@ -856,7 +856,7 @@ For security issues, please follow responsible disclosure practices and contact 
 - **Error handling**: Comprehensive error handling required
 - **Input validation**: Use Zod schemas for all inputs
 - **Documentation**: JSDoc comments for all functions
-- **Testing**: Include validation for new functionality
+- **Validation**: Include validation for new functionality
 
 #### Pull Request Process
 - **Descriptive title**: Clear description of changes
@@ -864,7 +864,7 @@ For security issues, please follow responsible disclosure practices and contact 
 - **Documentation**: Update README if needed
 - **No breaking changes**: Or clearly document them
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
 
 ## License
 
@@ -875,15 +875,15 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Support
 
 ### Resources
-- **Documentation**: This README
-- **Security**: [SECURITY.md](SECURITY.md) for security guidelines
-- **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md) for development
+- **Documentation**: This README and inline code documentation
+- **Security**: [SECURITY.md](SECURITY.md) for security guidelines  
+- **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md) for version history
 
 ### Getting Help
-- **GitHub Issues**: Bug reports and feature requests
-- **GitHub Discussions**: Questions and community support
 - **Debug Mode**: Enable with `DEBUG=true` for troubleshooting
+- **Validation**: Run `npm run validate` to check setup
+- **Coverage**: Run `npm run coverage` to see API coverage
 
 ### Project Statistics
 - **37 Tools**: Complete Recharge Storefront API coverage
