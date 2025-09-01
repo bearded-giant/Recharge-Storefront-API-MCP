@@ -96,11 +96,34 @@ fi
 # Copy environment file if it doesn't exist
 if [ ! -f .env ]; then
     print_info "Creating .env file from template..."
-    cp .env.example .env
+    if [ -f .env.example ]; then
+        cp .env.example .env
+    else
+        print_warning ".env.example not found, creating basic .env file..."
+        cat > .env << 'EOF'
+# Recharge Storefront API Configuration
+
+# Store Configuration
+RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com
+
+# Authentication
+RECHARGE_ADMIN_TOKEN=your_admin_api_token_here
+
+# Optional: Default customer session token
+RECHARGE_SESSION_TOKEN=
+
+# MCP Server Configuration
+MCP_SERVER_NAME=recharge-storefront-api-mcp
+MCP_SERVER_VERSION=1.0.0
+
+# Development Configuration
+DEBUG=false
+EOF
+    fi
     print_warning "Please edit .env file with your Recharge API credentials"
     print_info "Required variables:"
     print_info "  - RECHARGE_STOREFRONT_DOMAIN=your-shop.myshopify.com"
-    print_info "  - RECHARGE_ACCESS_TOKEN=your_access_token_here (optional)"
+    print_info "  - RECHARGE_ADMIN_TOKEN=your_admin_token_here"
 else
     print_status ".env file already exists"
 fi
@@ -117,6 +140,17 @@ if [ -f .env ]; then
         fi
     else
         print_warning "RECHARGE_STOREFRONT_DOMAIN not found in .env file"
+    fi
+    
+    if grep -q "RECHARGE_ADMIN_TOKEN=" .env; then
+        token=$(grep "RECHARGE_ADMIN_TOKEN=" .env | cut -d'=' -f2)
+        if [ "$token" = "your_admin_api_token_here" ] || [ -z "$token" ]; then
+            print_warning "Please update RECHARGE_ADMIN_TOKEN with your actual admin token"
+        else
+            print_status "Admin token configured"
+        fi
+    else
+        print_warning "RECHARGE_ADMIN_TOKEN not found in .env file"
     fi
 fi
 

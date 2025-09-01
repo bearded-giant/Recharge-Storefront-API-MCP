@@ -105,6 +105,9 @@ run_test "Setup script permissions" "test -x scripts/setup.sh" "optional"
 # Test source file structure
 run_test "Server file exists" "test -f src/server.js" "required"
 run_test "Client file exists" "test -f src/recharge-client.js" "required"
+run_test "Tools index exists" "test -f src/tools/index.js" "required"
+run_test "Error handler exists" "test -f src/utils/error-handler.js" "required"
+run_test "Session cache exists" "test -f src/utils/session-cache.js" "required"
 
 # Count tool files
 TOOL_FILES=$(find src/tools -name "*-tools.js" | wc -l)
@@ -151,10 +154,15 @@ fi
 
 # Test MCP protocol
 print_info "Testing MCP protocol startup..."
-if run_test "MCP server startup test" "timeout 20s node -e '
+if run_test "MCP server startup test" "timeout 10s node -e '
     const { spawn } = require('child_process');
-    const server = spawn(\"node\", [\"src/server.js\"], { 
-        env: { ...process.env, RECHARGE_STOREFRONT_DOMAIN: \"test.myshopify.com\" }
+    const server = spawn(\"node\", [\"src/server.js\"], {
+        env: { 
+            ...process.env, 
+            RECHARGE_STOREFRONT_DOMAIN: \"test.myshopify.com\",
+            RECHARGE_ADMIN_TOKEN: \"test_token\"
+        },
+        stdio: [\"pipe\", \"pipe\", \"pipe\"]
     });
     let serverReady = false;
     
@@ -176,6 +184,11 @@ if run_test "MCP server startup test" "timeout 20s node -e '
         }
     });
     
+    server.on(\"error\", (error) => {
+        console.error(\"Server startup error:\", error.message);
+        process.exit(1);
+    });
+    
     setTimeout(() => {
         server.kill();
         if (serverReady) {
@@ -184,7 +197,7 @@ if run_test "MCP server startup test" "timeout 20s node -e '
             console.error(\"Server did not start within timeout\");
             process.exit(1);
         }
-    }, 18000);
+    }, 8000);
 ' 2>/dev/null" "optional"; then
     print_status "MCP server startup test passed"
 fi

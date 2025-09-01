@@ -233,6 +233,30 @@ process.on('SIGTERM', async () => {
  */
 async function main() {
   try {
+    // Validate Node.js version
+    const nodeVersion = process.version.slice(1).split('.').map(Number);
+    const requiredVersion = [18, 0, 0];
+    const isValidVersion = nodeVersion[0] > requiredVersion[0] || 
+      (nodeVersion[0] === requiredVersion[0] && nodeVersion[1] > requiredVersion[1]) ||
+      (nodeVersion[0] === requiredVersion[0] && nodeVersion[1] === requiredVersion[1] && nodeVersion[2] >= requiredVersion[2]);
+    
+    if (!isValidVersion) {
+      console.error(`[FATAL] Node.js version ${process.version} is not supported. Please install Node.js 18.0.0 or higher.`);
+      process.exit(1);
+    }
+    
+    // Validate required dependencies
+    try {
+      require('@modelcontextprotocol/sdk/server/index.js');
+      require('zod');
+      require('axios');
+      require('dotenv');
+    } catch (error) {
+      console.error('[FATAL] Missing required dependencies. Please run: npm install');
+      console.error('[DEBUG] Missing dependency:', error.message);
+      process.exit(1);
+    }
+    
     // Validate environment
     if (!process.env.RECHARGE_STOREFRONT_DOMAIN && !process.env.RECHARGE_ADMIN_TOKEN) {
       console.error('[WARNING] No environment variables configured. Tools will require parameters for each call.');

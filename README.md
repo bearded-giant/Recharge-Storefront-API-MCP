@@ -87,6 +87,9 @@ Model Context Protocol (MCP) is a standardized way for AI assistants to interact
 ### Quick Start
 
 ```bash
+# Clone or download the project
+# cd recharge-storefront-api-mcp
+
 # Install dependencies
 npm install
 
@@ -101,6 +104,9 @@ npm start
 ### Automated Setup
 
 ```bash
+# Make setup script executable (Linux/macOS)
+chmod +x scripts/setup.sh
+
 # Run the setup script
 npm run setup
 ```
@@ -280,6 +286,31 @@ Please specify 'customer_id', 'customer_email', or 'session_token' to ensure cor
 
 ## Configuration
 
+### MCP Client Configuration
+
+To use this server with an MCP client, you'll need to configure your client to connect to this server. Here's an example configuration:
+
+**For Claude Desktop (config.json):**
+```json
+{
+  "mcpServers": {
+    "recharge-storefront-api": {
+      "command": "node",
+      "args": ["path/to/recharge-storefront-api-mcp/src/server.js"],
+      "env": {
+        "RECHARGE_STOREFRONT_DOMAIN": "your-shop.myshopify.com",
+        "RECHARGE_ADMIN_TOKEN": "your_admin_token_here"
+      }
+    }
+  }
+}
+```
+
+**For other MCP clients:**
+- **Command**: `node src/server.js` (from project directory)
+- **Working Directory**: Path to this project
+- **Environment Variables**: Set in client config or .env file
+
 ### Environment Variables
 
 Create a `.env` file in the project root:
@@ -363,8 +394,10 @@ DEBUG=true npm start
 
 ### Basic Usage Pattern
 
-1. **Start Server**: `npm start`
-2. **Connect MCP Client**: Point your MCP client to the server
+1. **Install Dependencies**: `npm install`
+2. **Configure Environment**: Edit `.env` file with your credentials
+3. **Start Server**: `npm start`
+4. **Connect MCP Client**: Point your MCP client to the server process
 3. **Make Tool Calls**: Use any of the 37 available tools
 4. **Automatic Sessions**: Server handles authentication automatically
 
