@@ -1,203 +1,309 @@
 import { z } from 'zod';
 
 const baseSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
-const bundleListSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+const subscriptionListSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  subscription_id: z.string().optional().describe('Filter bundles by subscription ID'),
-  limit: z.number().max(250).default(50).describe('Number of bundles to return'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  status: z.enum(['active', 'cancelled', 'expired']).optional().describe('Filter by subscription status'),
+  limit: z.number().max(250).default(50).describe('Number of subscriptions to return'),
   page: z.number().default(1).describe('Page number for pagination'),
 });
 
-const bundleSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+const subscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  bundle_id: z.string().describe('The bundle ID'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
 });
 
-const bundleSelectionSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+const updateSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  bundle_selection_id: z.string().describe('The bundle selection ID'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  next_charge_scheduled_at: z.string().optional().describe('Next charge date (ISO format)'),
+  order_interval_frequency: z.number().optional().describe('Order interval frequency (e.g., 1, 2, 3)'),
+  order_interval_unit: z.enum(['day', 'week', 'month']).optional().describe('Order interval unit'),
+  quantity: z.number().optional().describe('Subscription quantity'),
+  variant_id: z.number().optional().describe('Product variant ID'),
+  properties: z.array(z.object({
+    name: z.string(),
+    value: z.string(),
+  })).optional().describe('Product properties'),
 });
 
-const createBundleSelectionSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+const skipSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  bundle_id: z.string().describe('The bundle ID'),
-  variant_id: z.number().describe('Selected variant ID'),
-  quantity: z.number().describe('Quantity selected'),
-  external_variant_id: z.string().optional().describe('External variant ID'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  date: z.string().describe('Date to skip (YYYY-MM-DD format)'),
 });
 
-const updateBundleSelectionSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+const unskipSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  bundle_selection_id: z.string().describe('The bundle selection ID'),
-  variant_id: z.number().optional().describe('New variant ID'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  date: z.string().describe('Date to unskip (YYYY-MM-DD format)'),
+});
+
+const swapSubscriptionSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  variant_id: z.number().describe('New variant ID to swap to'),
   quantity: z.number().optional().describe('New quantity'),
-  external_variant_id: z.string().optional().describe('External variant ID'),
 });
 
-const bundleSelectionListSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+const cancelSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  bundle_id: z.string().describe('The bundle ID'),
-  limit: z.number().max(250).default(50).describe('Number of selections to return'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  cancellation_reason: z.string().optional().describe('Reason for cancellation'),
+  cancellation_reason_comments: z.string().optional().describe('Additional comments for cancellation'),
 });
 
-export const bundleTools = [
+const setNextChargeDateSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  date: z.string().describe('Next charge date (YYYY-MM-DD format)'),
+});
+
+const activateSubscriptionSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+});
+
+const createSubscriptionSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  address_id: z.string().describe('The address ID for the subscription'),
+  next_charge_scheduled_at: z.string().describe('Next charge date (YYYY-MM-DD format)'),
+  order_interval_frequency: z.number().describe('Order interval frequency (e.g., 1, 2, 3)'),
+  order_interval_unit: z.enum(['day', 'week', 'month']).describe('Order interval unit'),
+  quantity: z.number().describe('Subscription quantity'),
+  variant_id: z.number().describe('Product variant ID'),
+  properties: z.array(z.object({
+    name: z.string(),
+    value: z.string(),
+  })).optional().describe('Product properties'),
+});
+
+export const subscriptionTools = [
   {
-    name: 'get_bundles',
-    description: 'Get bundles for a specific customer',
-    inputSchema: bundleListSchema,
+    name: 'get_subscriptions',
+    description: 'Get subscriptions for a specific customer',
+    inputSchema: subscriptionListSchema,
     execute: async (client, args) => {
-      const bundles = await client.getBundles(args);
+      const subscriptions = await client.getSubscriptions(args);
       return {
         content: [
           {
             type: 'text',
-            text: `Bundles:\n${JSON.stringify(bundles, null, 2)}`,
+            text: `Subscriptions:\n${JSON.stringify(subscriptions, null, 2)}`,
           },
         ],
       };
     },
   },
   {
-    name: 'get_bundle',
-    description: 'Get detailed information about a specific bundle',
-    inputSchema: bundleSchema,
+    name: 'create_subscription',
+    description: 'Create a new subscription',
+    inputSchema: createSubscriptionSchema,
     execute: async (client, args) => {
-      const { bundle_id } = args;
-      const bundle = await client.getBundle(bundle_id);
+      const subscriptionData = { ...args };
+      delete subscriptionData.customer_id;
+      delete subscriptionData.session_token;
+      delete subscriptionData.admin_token;
+      delete subscriptionData.store_url;
+      const subscription = await client.createSubscription(subscriptionData);
       return {
         content: [
           {
             type: 'text',
-            text: `Bundle Details:\n${JSON.stringify(bundle, null, 2)}`,
+            text: `Created Subscription:\n${JSON.stringify(subscription, null, 2)}`,
           },
         ],
       };
     },
   },
   {
-    name: 'get_bundle_selections',
-    description: 'Get all selections for a specific bundle',
-    inputSchema: bundleSelectionListSchema,
+    name: 'get_subscription',
+    description: 'Get detailed information about a specific subscription',
+    inputSchema: subscriptionSchema,
     execute: async (client, args) => {
-      const { bundle_id } = args;
-      const params = { ...args };
-      delete params.bundle_id;
-      delete params.session_token;
-      delete params.merchant_token;
-      delete params.store_url;
-      delete params.customer_id;
-      delete params.customer_email;
-      const selections = await client.getBundleSelections(bundle_id, params);
+      const { subscription_id } = args;
+      const subscription = await client.getSubscription(subscription_id);
       return {
         content: [
           {
             type: 'text',
-            text: `Bundle Selections:\n${JSON.stringify(selections, null, 2)}`,
+            text: `Subscription Details:\n${JSON.stringify(subscription, null, 2)}`,
           },
         ],
       };
     },
   },
   {
-    name: 'get_bundle_selection',
-    description: 'Get detailed information about a specific bundle selection',
-    inputSchema: bundleSelectionSchema,
+    name: 'update_subscription',
+    description: 'Update subscription details like frequency, quantity, or next charge date',
+    inputSchema: updateSubscriptionSchema,
     execute: async (client, args) => {
-      const { bundle_selection_id } = args;
-      const selection = await client.getBundleSelection(bundle_selection_id);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Bundle Selection Details:\n${JSON.stringify(selection, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'create_bundle_selection',
-    description: 'Create a new bundle selection',
-    inputSchema: createBundleSelectionSchema,
-    execute: async (client, args) => {
-      const selectionData = { ...args };
-      delete selectionData.session_token;
-      delete selectionData.merchant_token;
-      delete selectionData.store_url;
-      delete selectionData.customer_id;
-      delete selectionData.customer_email;
-      const selection = await client.createBundleSelection(selectionData);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Created Bundle Selection:\n${JSON.stringify(selection, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'update_bundle_selection',
-    description: 'Update an existing bundle selection',
-    inputSchema: updateBundleSelectionSchema,
-    execute: async (client, args) => {
-      const { bundle_selection_id } = args;
+      const { subscription_id } = args;
       const updateData = { ...args };
-      delete updateData.bundle_selection_id;
-      delete updateData.session_token;
-      delete updateData.merchant_token;
-      delete updateData.store_url;
+      delete updateData.subscription_id;
       delete updateData.customer_id;
-      delete updateData.customer_email;
-      const updatedSelection = await client.updateBundleSelection(bundle_selection_id, updateData);
+      delete updateData.session_token;
+      delete updateData.admin_token;
+      delete updateData.store_url;
+      const updatedSubscription = await client.updateSubscription(subscription_id, updateData);
       return {
         content: [
           {
             type: 'text',
-            text: `Updated Bundle Selection:\n${JSON.stringify(updatedSelection, null, 2)}`,
+            text: `Updated Subscription:\n${JSON.stringify(updatedSubscription, null, 2)}`,
           },
         ],
       };
     },
   },
   {
-    name: 'delete_bundle_selection',
-    description: 'Delete a bundle selection',
-    inputSchema: bundleSelectionSchema,
+    name: 'skip_subscription',
+    description: 'Skip a subscription delivery for a specific date',
+    inputSchema: skipSubscriptionSchema,
     execute: async (client, args) => {
-      const { bundle_selection_id } = args;
-      const result = await client.deleteBundleSelection(bundle_selection_id);
+      const { subscription_id, date } = args;
+      const result = await client.skipSubscription(subscription_id, date);
       return {
         content: [
           {
             type: 'text',
-            text: `Deleted Bundle Selection:\n${JSON.stringify(result, null, 2)}`,
+            text: `Skipped Subscription:\n${JSON.stringify(result, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'unskip_subscription',
+    description: 'Unskip a previously skipped subscription delivery',
+    inputSchema: unskipSubscriptionSchema,
+    execute: async (client, args) => {
+      const { subscription_id, date } = args;
+      const result = await client.unskipSubscription(subscription_id, date);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Unskipped Subscription:\n${JSON.stringify(result, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'swap_subscription',
+    description: 'Swap the variant of a subscription',
+    inputSchema: swapSubscriptionSchema,
+    execute: async (client, args) => {
+      const { subscription_id } = args;
+      const swapData = { ...args };
+      delete swapData.subscription_id;
+      delete swapData.customer_id;
+      delete swapData.session_token;
+      delete swapData.admin_token;
+      delete swapData.store_url;
+      delete swapData.customer_email;
+      const swappedSubscription = await client.swapSubscription(subscription_id, swapData);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Swapped Subscription Product:\n${JSON.stringify(swappedSubscription, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'cancel_subscription',
+    description: 'Cancel a subscription',
+    inputSchema: cancelSubscriptionSchema,
+    execute: async (client, args) => {
+      const { subscription_id } = args;
+      const cancelData = { ...args };
+      delete cancelData.subscription_id;
+      delete cancelData.customer_id;
+      delete cancelData.session_token;
+      delete cancelData.admin_token;
+      delete cancelData.store_url;
+      delete cancelData.customer_email;
+      const cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Cancelled Subscription:\n${JSON.stringify(cancelledSubscription, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'activate_subscription',
+    description: 'Activate a cancelled subscription',
+    inputSchema: activateSubscriptionSchema,
+    execute: async (client, args) => {
+      const { subscription_id } = args;
+      const activatedSubscription = await client.activateSubscription(subscription_id);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Activated Subscription:\n${JSON.stringify(activatedSubscription, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'set_subscription_next_charge_date',
+    description: 'Set the next charge date for a subscription',
+    inputSchema: setNextChargeDateSchema,
+    execute: async (client, args) => {
+      const { subscription_id, date } = args;
+      const updatedSubscription = await client.setNextChargeDate(subscription_id, date);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Updated Subscription Next Charge Date:\n${JSON.stringify(updatedSubscription, null, 2)}`,
           },
         ],
       };
