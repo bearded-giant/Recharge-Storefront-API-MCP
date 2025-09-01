@@ -77,6 +77,8 @@ export function handleAPIError(error) {
     } else if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
       const firstError = data.errors[0];
       message = typeof firstError === 'string' ? firstError : firstError?.message || JSON.stringify(firstError);
+    } else if (data?.error_description) {
+      message = data.error_description;
     } else if (status) {
       message = `HTTP ${status} Error`;
     } else {
@@ -162,6 +164,8 @@ export function formatErrorResponse(error) {
       errorText += '\n\nTip: Check your API access token and ensure it has the required permissions.';
     } else if (error.statusCode === 404) {
       errorText += '\n\nTip: Verify the resource ID exists and you have access to it.';
+    } else if (error.statusCode === 422) {
+      errorText += '\n\nTip: Check the request parameters - some required fields may be missing or invalid.';
     } else if (error.statusCode === 429) {
       errorText += '\n\nTip: You have exceeded the API rate limit. Please wait before making more requests.';
     } else if (error.statusCode >= 500) {
