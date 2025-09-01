@@ -158,14 +158,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       serverStats.customers.add(validatedArgs.customer_email);
     }
     
-    // Create context for customer identification
-    const context = {
-      customerId: validatedArgs.customer_id,
-      customerEmail: validatedArgs.customer_email,
-    };
-    
     // Execute the tool
-    const result = await tool.execute(client, validatedArgs, context);
+    const result = await tool.execute(client, validatedArgs);
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Tool ${name} executed successfully`);
@@ -195,7 +189,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 process.on('SIGINT', async () => {
   if (process.env.DEBUG === 'true') {
     console.error('[DEBUG] Received SIGINT, shutting down gracefully...');
-    console.error('[DEBUG] Final statistics:', getHealthStatus());
+    console.error('[DEBUG] Final statistics:', serverStats);
   }
   
   try {

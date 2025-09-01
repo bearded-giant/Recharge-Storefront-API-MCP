@@ -46,13 +46,8 @@ export const customerTools = [
     name: 'get_customer',
     description: 'Retrieve current customer information',
     inputSchema: customerSchema,
-    execute: async (client, args, context) => {
-      let customer;
-      if (context?.customerId || context?.customerEmail) {
-        customer = await client.makeCustomerRequest('GET', '/customer', null, null, context.customerId, context.customerEmail);
-      } else {
-        customer = await client.getCustomer();
-      }
+    execute: async (client, args) => {
+      const customer = await client.getCustomer(args.customer_id, args.customer_email);
       return {
         content: [
           {
@@ -67,7 +62,7 @@ export const customerTools = [
     name: 'update_customer',
     description: 'Update customer information',
     inputSchema: updateCustomerSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const updateData = { ...args };
       delete updateData.session_token;
       delete updateData.admin_token;
@@ -75,12 +70,7 @@ export const customerTools = [
       delete updateData.customer_id;
       delete updateData.customer_email;
       
-      let updatedCustomer;
-      if (context?.customerId || context?.customerEmail) {
-        updatedCustomer = await client.makeCustomerRequest('PUT', '/customer', updateData, null, context.customerId, context.customerEmail);
-      } else {
-        updatedCustomer = await client.updateCustomer(updateData);
-      }
+      const updatedCustomer = await client.updateCustomer(updateData, args.customer_id, args.customer_email);
       
       return {
         content: [

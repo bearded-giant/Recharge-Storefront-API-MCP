@@ -220,7 +220,7 @@ export function validateRequiredParams(params, required) {
     params[param] === undefined || 
     params[param] === null || 
     (typeof params[param] === 'string' && params[param].trim() === '') ||
-    (typeof params[param] === 'number' && isNaN(params[param]))
+    (typeof params[param] === 'number' && (isNaN(params[param]) || !isFinite(params[param])))
   );
   
   if (missing.length > 0) {
@@ -228,12 +228,15 @@ export function validateRequiredParams(params, required) {
   }
   
   // Validate email format if email parameter exists
-  if (params.email && typeof params.email === 'string') {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(params.email)) {
-      throw new Error('Invalid email format');
+  const emailFields = ['email', 'customer_email'];
+  emailFields.forEach(field => {
+    if (params[field] && typeof params[field] === 'string') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(params[field])) {
+        throw new Error(`Invalid email format for ${field}`);
+      }
     }
-  }
+  });
   
   // Validate date format if date parameters exist
   const dateFields = ['date', 'next_charge_scheduled_at'];
@@ -243,6 +246,39 @@ export function validateRequiredParams(params, required) {
       const dateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?)?$/;
       if (!dateRegex.test(params[field])) {
         throw new Error(`Invalid date format for ${field}. Expected YYYY-MM-DD or ISO datetime format`);
+      }
+    }
+  });
+  
+  // Validate numeric fields
+  const numericFields = ['limit', 'page', 'quantity', 'order_interval_frequency', 'variant_id'];
+  numericFields.forEach(field => {
+    if (params[field] !== undefined && params[field] !== null) {
+      const num = Number(params[field]);
+      if (isNaN(num) || !isFinite(num)) {
+        throw new Error(`Invalid numeric value for ${field}: ${params[field]}`);
+      }
+      if (field === 'limit' && (num < 1 || num > 250)) {
+        throw new Error(`Limit must be between 1 and 250, got: ${num}`);
+      }
+      if (field === 'page' && num < 1) {
+        throw new Error(`Page must be 1 or greater, got: ${num}`);
+      }
+      if (['quantity', 'order_interval_frequency'].includes(field) && num < 1) {
+        throw new Error(`${field} must be 1 or greater, got: ${num}`);
+      }
+    }
+  });
+  
+  // Validate ID fields (should be strings or convertible to strings)
+  const idFields = ['customer_id', 'subscription_id', 'address_id', 'order_id', 'charge_id', 'onetime_id', 'bundle_id', 'bundle_selection_id', 'payment_method_id', 'discount_id', 'product_id'];
+  idFields.forEach(field => {
+    if (params[field] !== undefined && params[field] !== null) {
+      if (typeof params[field] !== 'string' && typeof params[field] !== 'number') {
+        throw new Error(`${field} must be a string or number, got: ${typeof params[field]}`);
+      }
+      if (typeof params[field] === 'string' && params[field].trim() === '') {
+        throw new Error(`${field} cannot be empty`);
       }
     }
   });

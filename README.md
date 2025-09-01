@@ -139,10 +139,10 @@ Admin API Token + Customer ID → Customer Session Token → API Operations
 
 1. **Log into Recharge**: Access your merchant portal
 2. **Navigate to API Tokens**: Go to Apps & integrations > API tokens
-3. **Create Admin Token**: Create a new **Admin API** token (not Storefront API)
+3. **Create Admin Token**: Create a new **Admin API** token (not Storefront API token)
 4. **Copy Token**: Save the token (starts with your store prefix)
 
-**Important**: Use **Admin API** tokens, not Storefront API tokens.
+**Critical**: You must use **Admin API** tokens. Storefront API tokens will not work for session creation.
 
 ### Authentication Methods
 

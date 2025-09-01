@@ -45,7 +45,7 @@
     "@modelcontextprotocol/sdk": "latest",
     "zod": "latest",
     "axios": "latest",
-    "dotenv": "latest"
+    "dotenv": "^16.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

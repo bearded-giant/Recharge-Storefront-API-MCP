@@ -120,7 +120,7 @@ export const subscriptionTools = [
     name: 'get_subscriptions',
     description: 'Get subscriptions for a specific customer',
     inputSchema: subscriptionListSchema,
-    execute: async (client, args, context) => {
+    execute: async (client, args) => {
       const params = { ...args };
       delete params.customer_id;
       delete params.customer_email;
@@ -128,12 +128,7 @@ export const subscriptionTools = [
       delete params.admin_token;
       delete params.store_url;
       
-      let subscriptions;
-      if (context?.customerId || context?.customerEmail) {
-        subscriptions = await client.makeCustomerRequest('GET', '/subscriptions', null, params, context.customerId, context.customerEmail);
-      } else {
-        subscriptions = await client.getSubscriptions(params);
-      }
+      const subscriptions = await client.getSubscriptions(params, args.customer_id, args.customer_email);
       
       return {
         content: [

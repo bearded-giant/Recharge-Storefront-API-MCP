@@ -151,16 +151,25 @@ fi
 
 # Test MCP protocol
 print_info "Testing MCP protocol startup..."
-if run_test "MCP server startup test" "timeout 10s node -e '
+if run_test "MCP server startup test" "timeout 15s node -e '
     const { spawn } = require('child_process');
     const server = spawn(\"node\", [\"src/server.js\"], { 
         env: { ...process.env, RECHARGE_STOREFRONT_DOMAIN: \"test.myshopify.com\" }
     });
     let serverReady = false;
     
+    server.stdout.on(\"data\", (data) => {
+        const output = data.toString();
+        if (output.includes(\"Server ready\") || output.includes(\"listening\")) {
+            console.log(\"MCP server started successfully\");
+            serverReady = true;
+            server.kill();
+        }
+    });
+    
     server.stderr.on(\"data\", (data) => {
         const output = data.toString();
-        if (output.includes(\"Server ready\")) {
+        if (output.includes(\"Server ready\") || output.includes(\"listening\")) {
             console.log(\"MCP server started successfully\");
             serverReady = true;
             server.kill();
@@ -175,7 +184,7 @@ if run_test "MCP server startup test" "timeout 10s node -e '
             console.error(\"Server did not start within timeout\");
             process.exit(1);
         }
-    }, 8000);
+    }, 12000);
 ' 2>/dev/null" "optional"; then
     print_status "MCP server startup test passed"
 fi

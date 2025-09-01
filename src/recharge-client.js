@@ -48,19 +48,21 @@ export class RechargeClient {
     // Validate that admin token is NOT a customer session token
     if (adminToken && adminToken.startsWith('st_')) {
       throw new Error(
-        'Invalid token type: Customer session tokens (st_) cannot be used as admin tokens.\n' +
+        'CRITICAL ERROR: Customer session tokens (st_) cannot be used as admin tokens.\n' +
         'Please provide an Admin API token for admin operations (customer lookup, session creation).\n' +
-        'Admin API tokens typically start with your store prefix or "sk_".'
+        'Admin API tokens typically start with your store prefix and are found in Recharge Admin > API Tokens.\n' +
+        'Do NOT use Storefront API tokens - they will not work for session creation.'
       );
     }
     
     // Validate that session token format (customer session tokens start with st_)
     if (sessionToken && !sessionToken.startsWith('st_') && sessionToken.length > 50) {
       throw new Error(
-        'Invalid token type: Admin API tokens cannot be used as session tokens.\n' +
+        'CRITICAL ERROR: Admin API tokens cannot be used as session tokens.\n' +
         'Please provide one of:\n' +
         '1. sessionToken - Customer session token (st_...)\n' +
-        '2. Use customer_id or customer_email for automatic session creation with admin token'
+        '2. Use customer_id or customer_email for automatic session creation with admin token\n' +
+        'Session tokens are created automatically - you typically do not need to provide them manually.'
       );
     }
     
@@ -588,25 +590,29 @@ export class RechargeClient {
 
   /**
    * Get customer information (uses current session context)
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Customer data
    * @throws {Error} If session token is invalid or expired
    */
-  async getCustomer() {
-    const response = await this.makeRequest('GET', `/customer`);
+  async getCustomer(customerId = null, customerEmail = null) {
+    const response = await this.makeCustomerRequest('GET', '/customer', null, null, customerId, customerEmail);
     return response;
   }
 
   /**
    * Update customer information
    * @param {Object} data - Customer update data
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Updated customer data
    * @throws {Error} If update data is empty or invalid
    */
-  async updateCustomer(data) {
+  async updateCustomer(data, customerId = null, customerEmail = null) {
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Customer update data is required');
     }
-    return this.makeRequest('PUT', `/customer`, data);
+    return this.makeCustomerRequest('PUT', '/customer', data, null, customerId, customerEmail);
   }
 
   /**
@@ -615,11 +621,13 @@ export class RechargeClient {
    * @param {string} [params.status] - Filter by subscription status
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Subscriptions data
    * @throws {Error} If API request fails
    */
-  async getSubscriptions(params = {}) {
-    const response = await this.makeRequest('GET', '/subscriptions', null, params);
+  async getSubscriptions(params = {}, customerId = null, customerEmail = null) {
+    const response = await this.makeCustomerRequest('GET', '/subscriptions', null, params, customerId, customerEmail);
     return response;
   }
 
@@ -646,9 +654,6 @@ export class RechargeClient {
     
     // Convert string IDs to integers where needed
     const processedData = { ...subscriptionData };
-    if (processedData.address_id) {
-      processedData.address_id = parseInt(processedData.address_id, 10);
-    }
     if (processedData.variant_id) {
       processedData.variant_id = parseInt(processedData.variant_id, 10);
     }
