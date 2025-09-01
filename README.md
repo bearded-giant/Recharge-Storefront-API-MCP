@@ -958,10 +958,10 @@ Debug information includes:
 - **Monitor for unusual access patterns**
 
 #### Network Security
-- **Use HTTPS** for all API communications
+- **Use HTTPS** for all API communications (handled automatically by axios)
 - **Implement proper firewall rules**
 - **Monitor API usage** for anomalies
-- **Set up rate limiting** if needed
+- **Be aware of Recharge API rate limits**
 
 ### Security Features
 
@@ -969,7 +969,10 @@ Debug information includes:
 - **Customer data isolation**: Each customer gets separate session token
 - **Wrong customer prevention**: Blocks ambiguous tool calls
 - **Input validation**: Zod schema validation for all inputs
-- **Error sanitization**: Sensitive data removed from logs
+- **Error sanitization**: Sensitive data removed from logs and error messages
+- **Session token caching**: Secure in-memory session management
+- **Automatic session renewal**: Expired sessions recreated transparently
+- **Parameter cleanup**: Sensitive parameters removed from API requests
 
 ### Reporting Security Issues
 
