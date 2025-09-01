@@ -73,24 +73,20 @@ Model Context Protocol (MCP) is a standardized way for AI assistants to interact
 - **Node.js**: Version 18.0.0 or higher
 - **Shopify Store**: Must have a Shopify store with Recharge installed
 - **Recharge Account**: Active Recharge merchant account
-- **API Access**: Recharge Storefront API access token
+- **API Access**: Recharge Admin API token for session creation
 
 ### System Requirements
 
-- **Memory**: Minimum 256MB RAM (512MB recommended for production)
-- **Storage**: 100MB available disk space
+- **Memory**: Minimum 256MB RAM
+- **Storage**: 50MB available disk space
 - **Network**: Internet connection for API access
-- **Platform**: Linux, macOS, or Windows
+- **Platform**: Linux, macOS, or Windows (WebContainer compatible)
 
 ## Installation
 
 ### Quick Start
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd recharge-storefront-api-mcp
-
 # Install dependencies
 npm install
 
@@ -121,9 +117,6 @@ The setup script will:
 ```bash
 # Validate installation
 npm run validate
-
-# Run comprehensive tests
-npm run test:full
 
 # Check API coverage
 npm run coverage
@@ -643,9 +636,7 @@ DEBUG=true npm start
 ### Development Setup
 
 ```bash
-# Clone and install
-git clone <repository-url>
-cd recharge-storefront-api-mcp
+# Install dependencies
 npm install
 
 # Setup environment
@@ -661,20 +652,17 @@ npm run dev
 # Development with file watching
 npm run dev
 
-# Development with debug logging  
+# Development with debug logging
 npm run dev:debug
 
 # Validate code and configuration
 npm run validate
 
-# Run comprehensive tests
-npm run test:full
-
 # Check API coverage
 npm run coverage
 
 # View project statistics
-npm run stats
+npm run health
 ```
 
 ### Code Quality
@@ -699,7 +687,7 @@ npm run health
 2. **Follow patterns**: Use existing tools as templates
 3. **Add to index**: Export from `src/tools/index.js`
 4. **Add client methods**: Implement in `src/recharge-client.js`
-5. **Test thoroughly**: Use `npm run test:full`
+5. **Test thoroughly**: Use `npm run validate`
 
 ### Debugging
 
@@ -811,9 +799,9 @@ Debug information includes:
 
 ### Getting Help
 
-1. **Check Documentation**: Review this README and [DOCKER.md](DOCKER.md)
+1. **Check Documentation**: Review this README
 2. **Enable Debug Mode**: Use `DEBUG=true` for detailed logging
-3. **Validate Setup**: Run `npm run validate` and `npm run test:full`
+3. **Validate Setup**: Run `npm run validate`
 4. **Check Issues**: Search existing GitHub issues
 5. **Create Issue**: Provide debug logs and reproduction steps
 
@@ -855,14 +843,10 @@ For security issues, please follow responsible disclosure practices and contact 
 
 ### Getting Started
 
-1. **Use environment variables** for sensitive data
-2. **Rotate tokens regularly** (recommended: every 90 days)
-3. **Use minimum required permissions**
-4. **Monitor API usage** for anomalies
 1. **Fork repository**: Create your own fork
 2. **Create branch**: `git checkout -b feature/your-feature`
 3. **Make changes**: Follow existing code patterns
-4. **Test thoroughly**: Run `npm run test:full`
+4. **Test thoroughly**: Run `npm run validate`
 5. **Submit PR**: Include description and tests
 
 ### Development Guidelines
@@ -872,11 +856,11 @@ For security issues, please follow responsible disclosure practices and contact 
 - **Error handling**: Comprehensive error handling required
 - **Input validation**: Use Zod schemas for all inputs
 - **Documentation**: JSDoc comments for all functions
-- **Testing**: Include tests for new functionality
+- **Testing**: Include validation for new functionality
 
 #### Pull Request Process
 - **Descriptive title**: Clear description of changes
-- **Test coverage**: All tests must pass
+- **Validation**: All validation must pass
 - **Documentation**: Update README if needed
 - **No breaking changes**: Or clearly document them
 
