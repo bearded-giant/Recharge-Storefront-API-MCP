@@ -220,7 +220,7 @@ export function validateRequiredParams(params, required) {
     params[param] === undefined || 
     params[param] === null || 
     (typeof params[param] === 'string' && params[param].trim() === '') ||
-    (typeof params[param] === 'number' && (isNaN(params[param]) || params[param] < 0))
+    (typeof params[param] === 'number' && isNaN(params[param]))
   );
   
   if (missing.length > 0) {

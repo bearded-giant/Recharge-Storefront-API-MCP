@@ -79,7 +79,22 @@ export class RechargeClient {
     this.storeUrl = storeUrl;
     
     // Validate and clean store URL
-    const cleanStoreUrl = this.storeUrl.replace(/\/+$/, '').toLowerCase();
+    let cleanStoreUrl = this.storeUrl.replace(/\/+$/, '').toLowerCase();
+    
+    // Remove protocol if present
+    if (cleanStoreUrl.startsWith('http://') || cleanStoreUrl.startsWith('https://')) {
+      const urlObj = new URL(cleanStoreUrl);
+      cleanStoreUrl = urlObj.hostname;
+    }
+    
+    // Validate domain format
+    if (!cleanStoreUrl.includes('.myshopify.com')) {
+      throw new Error(
+        `Invalid store URL format: ${storeUrl}\n` +
+        'Store URL must be a Shopify domain ending with .myshopify.com\n' +
+        'Example: your-shop.myshopify.com'
+      );
+    }
     
     // Construct the base URL for Recharge Storefront API
     this.baseURL = `https://${cleanStoreUrl}/tools/recurring/portal/api/storefront`;

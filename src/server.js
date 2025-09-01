@@ -185,18 +185,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 /**
- * Handle server statistics and health check requests
+ * Handle health check requests
  */
-server.setRequestHandler('health', async () => {
-  return {
-    content: [
-      {
-        type: 'text',
-        text: `Server Health Status:\n${JSON.stringify(getHealthStatus(), null, 2)}`,
-      },
-    ],
-  };
-});
+// Note: Health check would be handled by MCP client, not as a custom request handler
 
 /**
  * Graceful shutdown handling
