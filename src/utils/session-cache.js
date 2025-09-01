@@ -42,6 +42,14 @@ export class SessionCache {
    * @param {string} [email] - Customer email for reverse lookup
    */
   setSessionToken(customerId, sessionToken, email = null) {
+    // Validate inputs
+    if (!customerId || typeof customerId !== 'string') {
+      throw new Error('Customer ID is required and must be a string');
+    }
+    if (!sessionToken || typeof sessionToken !== 'string') {
+      throw new Error('Session token is required and must be a string');
+    }
+    
     const expiresAt = Date.now() + this.SESSION_DURATION;
     
     this.sessions.set(customerId, {
@@ -56,6 +64,7 @@ export class SessionCache {
     }
 
     if (process.env.DEBUG === 'true') {
+      // Don't log the actual session token for security
       console.error(`[DEBUG] Cached session for customer ${customerId}, expires at ${new Date(expiresAt).toISOString()}`);
     }
   }
@@ -66,6 +75,9 @@ export class SessionCache {
    * @returns {string|null} Customer ID if cached, null otherwise
    */
   getCustomerIdByEmail(email) {
+    if (!email || typeof email !== 'string') {
+      return null;
+    }
     return this.emailToCustomerId.get(email) || null;
   }
 
@@ -75,6 +87,10 @@ export class SessionCache {
    * @param {string} customerId - Customer ID
    */
   setCustomerIdByEmail(email, customerId) {
+    if (!email || !customerId || typeof email !== 'string' || typeof customerId !== 'string') {
+      throw new Error('Both email and customer ID are required and must be strings');
+    }
+    
     this.emailToCustomerId.set(email, customerId);
     
     if (process.env.DEBUG === 'true') {
@@ -87,6 +103,10 @@ export class SessionCache {
    * @param {string} customerId - Customer ID
    */
   clearSession(customerId) {
+    if (!customerId || typeof customerId !== 'string') {
+      return; // Silently ignore invalid input
+    }
+    
     const session = this.sessions.get(customerId);
     if (session && session.email) {
       this.emailToCustomerId.delete(session.email);
@@ -108,6 +128,43 @@ export class SessionCache {
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] Cleared all cached sessions');
     }
+  }
+
+  /**
+   * Clean up expired sessions
+   * Should be called periodically to prevent memory leaks
+   */
+  cleanupExpiredSessions() {
+    const now = Date.now();
+    let cleanedCount = 0;
+    
+    for (const [customerId, session] of this.sessions.entries()) {
+      if (now >= session.expiresAt) {
+        if (session.email) {
+          this.emailToCustomerId.delete(session.email);
+        }
+        this.sessions.delete(customerId);
+        cleanedCount++;
+      }
+    }
+    
+    if (process.env.DEBUG === 'true' && cleanedCount > 0) {
+      console.error(`[DEBUG] Cleaned up ${cleanedCount} expired sessions`);
+    }
+    
+    return cleanedCount;
+  }
+
+  /**
+   * Check if customer has valid cached session
+   * @param {string} customerId - Customer ID
+   * @returns {boolean} True if valid session exists
+   */
+  hasValidSession(customerId) {
+    if (!customerId || typeof customerId !== 'string') {
+      return false;
+    }
+    return this.getSessionToken(customerId) !== null;
   }
 
   /**
