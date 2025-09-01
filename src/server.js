@@ -41,7 +41,7 @@ class RechargeStorefrontAPIMCPServer {
     // Store environment variables for client creation
     this.defaultStoreUrl = process.env.RECHARGE_STOREFRONT_DOMAIN;
     this.defaultSessionToken = process.env.RECHARGE_SESSION_TOKEN; // Customer session token (st_...)
-    this.defaultAdminToken = process.env.RECHARGE_ADMIN_TOKEN;
+    this.defaultAdminToken = process.env.RECHARGE_ADMIN_TOKEN; // Admin API token for session creation
     
     // Session cache for multi-customer support
     this.sessionCache = new Map(); // customerId -> sessionToken

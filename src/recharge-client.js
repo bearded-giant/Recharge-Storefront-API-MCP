@@ -368,6 +368,95 @@ export class RechargeClient {
   }
 
   /**
+   * Create a customer session using customer ID (merchant token required)
+   * @param {string} customerId - Customer ID
+   * @param {Object} [options={}] - Session options
+   * @param {string} [options.return_url] - URL to redirect to after session
+   * @returns {Promise<Object>} Session data including token
+   * @throws {Error} If Admin API token is not available
+   */
+  async createCustomerSessionById(customerId, options = {}) {
+    if (!this.adminToken) {
+      throw new Error('Admin API token required for session creation');
+    }
+    
+    validateRequiredParams({ customerId }, ['customerId']);
+    
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] Creating session for customer: ${customerId}`);
+      console.error(`[DEBUG] Using Admin API for session creation`);
+      console.error(`[DEBUG] Session creation URL: https://api.rechargeapps.com/customers/${customerId}/sessions`);
+      console.error('[DEBUG] Admin token (first 10 chars):', this.adminToken.substring(0, 10) + '...');
+    }
+    
+    let response;
+    try {
+      // Use Admin API for session creation - correct endpoint
+      const apiResponse = await axios.post(`https://api.rechargeapps.com/customers/${customerId}/sessions`, {
+        customer_id: customerId,
+        return_url: options.return_url
+      }, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-Recharge-Access-Token': this.adminToken,
+          'X-Recharge-Version': '2021-11',
+          'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
+        },
+        timeout: 30000,
+        maxRedirects: 0,
+        validateStatus: (status) => status < 500,
+      });
+      response = apiResponse.data;
+      
+      if (process.env.DEBUG === 'true') {
+        console.error('[DEBUG] Session creation response status:', apiResponse.status);
+        console.error('[DEBUG] Session creation response headers:', JSON.stringify(apiResponse.headers, null, 2));
+        console.error('[DEBUG] Session creation response data:', JSON.stringify(response, null, 2));
+      }
+    } catch (error) {
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Session creation failed for customer ${customerId}:`, error.message);
+        if (error.response) {
+          console.error('[DEBUG] Error response status:', error.response.status);
+          console.error('[DEBUG] Error response headers:', JSON.stringify(error.response.headers, null, 2));
+          console.error('[DEBUG] Error response data:', JSON.stringify(error.response.data, null, 2));
+          
+          // Special handling for 302 redirects during session creation
+          if (error.response.status === 302) {
+            const location = error.response.headers.location;
+            console.error('[DEBUG] 302 Redirect during session creation to:', location);
+            console.error('[DEBUG] This usually indicates:');
+            console.error('[DEBUG] 1. Invalid Admin API token');
+            console.error('[DEBUG] 2. Token doesn\'t have session creation permissions');
+            console.error('[DEBUG] 3. Customer ID doesn\'t exist or access denied');
+            console.error('[DEBUG] 4. Wrong authentication method for Admin API');
+          }
+        }
+      }
+      handleAPIError(error);
+    }
+    
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] Session creation response:`, JSON.stringify(response, null, 2));
+    }
+    
+    if (response.customer_session && response.customer_session.apiToken) {
+      // Update client to use the new session token
+      this.sessionToken = response.customer_session.apiToken;
+      this.client.defaults.headers['Authorization'] = `Bearer ${this.sessionToken}`;
+      // Remove admin token header since we now have a session token
+      delete this.client.defaults.headers['X-Recharge-Access-Token'];
+      
+      if (process.env.DEBUG === 'true') {
+        console.error('[DEBUG] Client updated to use session token:', this.sessionToken.substring(0, 10) + '...');
+      }
+    }
+    
+    return response;
+  }
+
+  /**
    * Get customer by email address (requires Admin API token)
    * @param {string} email Customer email address
    * @returns {Promise<Object>} Customer data including customer ID
