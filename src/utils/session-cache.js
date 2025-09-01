@@ -100,6 +100,21 @@ export class SessionCache {
   }
 
   /**
+   * Clear session by email (helper method)
+   * @param {string} email - Customer email
+   */
+  clearSessionByEmail(email) {
+    if (!email || typeof email !== 'string') {
+      return;
+    }
+    
+    const customerId = this.emailToCustomerId.get(email);
+    if (customerId) {
+      this.clearSession(customerId);
+    }
+  }
+
+  /**
    * Clear all cached sessions
    */
   clearAll() {

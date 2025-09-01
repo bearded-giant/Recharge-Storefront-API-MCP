@@ -178,6 +178,9 @@ export class RechargeClient {
         const finalCustomerId = customerId || this.sessionCache.getCustomerIdByEmail(customerEmail);
         if (finalCustomerId) {
           this.sessionCache.clearSession(finalCustomerId);
+        } else if (customerEmail) {
+          // Clear by email if we don't have customer ID
+          this.sessionCache.clearSessionByEmail(customerEmail);
         }
         
         // Retry with new session
@@ -217,6 +220,12 @@ export class RechargeClient {
       
       return response.data.customers[0];
     } catch (error) {
+      // Handle case where customer lookup fails due to expired/invalid admin token
+      if (error.response?.status === 401) {
+        throw new Error(
+          'Admin token authentication failed. Please verify your admin token is valid and has not expired.'
+        );
+      }
       handleAPIError(error);
     }
   }
@@ -246,6 +255,15 @@ export class RechargeClient {
       
       return response.data;
     } catch (error) {
+      // Handle case where session creation fails due to invalid customer ID
+      if (error.response?.status === 404) {
+        throw new Error(`Customer not found with ID: ${customerId}. Please verify the customer ID exists.`);
+      }
+      if (error.response?.status === 401) {
+        throw new Error(
+          'Admin token authentication failed. Please verify your admin token is valid and has not expired.'
+        );
+      }
       handleAPIError(error);
     }
   }

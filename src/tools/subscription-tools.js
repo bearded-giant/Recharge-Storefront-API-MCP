@@ -264,6 +264,7 @@ export const subscriptionTools = [
       delete swapData.customer_email;
       delete swapData.session_token;
       delete swapData.admin_token;
+      delete swapData.store_url;
       const swappedSubscription = await client.swapSubscription(subscription_id, swapData, args.customer_id, args.customer_email);
       
       return {
@@ -288,6 +289,7 @@ export const subscriptionTools = [
       delete cancelData.customer_email;
       delete cancelData.session_token;
       delete cancelData.admin_token;
+      delete cancelData.store_url;
       const cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData, args.customer_id, args.customer_email);
       
       return {
