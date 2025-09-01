@@ -168,6 +168,14 @@ export class SessionCache {
   }
 
   /**
+   * Check if any customer sessions exist (for security validation)
+   * @returns {boolean} True if any customer sessions are cached
+   */
+  hasCustomerSessions() {
+    return this.sessions.size > 0;
+  }
+
+  /**
    * Get cache statistics
    * @returns {Object} Cache statistics
    */

@@ -6,7 +6,7 @@ import { SessionCache } from './utils/session-cache.js';
  * Recharge Storefront API Client
  * 
  * Provides methods for interacting with the Recharge Storefront API.
- * Supports both session token authentication and direct customer session creation.
+ * Supports both session token authentication and automatic session creation with caching.
  * 
  * @class RechargeClient
  */
@@ -82,12 +82,12 @@ export class RechargeClient {
     const cleanStoreUrl = this.storeUrl.replace(/\/+$/, '').toLowerCase();
     
     // Construct the base URL for Recharge Storefront API
-    this.baseURL = `https://api.rechargeapps.com`;
+    this.baseURL = `https://${cleanStoreUrl}/tools/recurring/portal/api/storefront`;
 
     if (process.env.DEBUG === 'true') {
       console.error('[DEBUG] RechargeClient initialized with base URL:', this.baseURL);
       console.error('[DEBUG] Session token:', this.sessionToken ? 'Present' : 'Not provided');
-      console.error('[DEBUG] Merchant token:', this.merchantToken ? 'Present' : 'Not provided');
+      console.error('[DEBUG] Admin token:', this.adminToken ? 'Present' : 'Not provided');
     }
     
     const headers = {
@@ -100,14 +100,14 @@ export class RechargeClient {
     if (this.sessionToken) {
       headers['Authorization'] = `Bearer ${this.sessionToken}`;
       if (process.env.DEBUG === 'true') {
-        console.error('[DEBUG] Using session token authentication:', this.sessionToken.substring(0, 10) + '...');
+        console.error('[DEBUG] Using session token authentication');
       }
     }
     
     // Admin token is used for specific admin operations, not as default header
     if (this.adminToken) {
       if (process.env.DEBUG === 'true') {
-        console.error('[DEBUG] Admin token available for admin operations:', this.adminToken.substring(0, 10) + '...');
+        console.error('[DEBUG] Admin token available for admin operations');
       }
     }
     
@@ -120,6 +120,11 @@ export class RechargeClient {
     });
 
     this.setupInterceptors();
+    
+    // Start cleanup interval for expired sessions
+    this.cleanupInterval = setInterval(() => {
+      this.sessionCache.cleanupExpiredSessions();
+    }, 5 * 60 * 1000); // Clean up every 5 minutes
   }
 
   /**
@@ -129,6 +134,14 @@ export class RechargeClient {
    * @returns {Promise<string>} Session token
    */
   async getOrCreateSessionToken(customerId = null, customerEmail = null) {
+    // Security check: prevent using default session when customer sessions exist
+    if (!customerId && !customerEmail && this.sessionCache.hasCustomerSessions()) {
+      throw new Error(
+        'Security Error: Cannot use default session token when customer-specific session tokens exist. ' +
+        'Please specify \'customer_id\', \'customer_email\', or \'session_token\' to ensure correct customer data access.'
+      );
+    }
+    
     // If we have a default session token and no specific customer requested, use it
     if (!customerId && !customerEmail && this.sessionToken) {
       return this.sessionToken;
@@ -173,20 +186,86 @@ export class RechargeClient {
   }
 
   /**
-   * Create a client instance for a specific customer
-   * @param {string} [customerId] - Customer ID
-   * @param {string} [customerEmail] - Customer email
-   * @returns {Promise<RechargeClient>} Client instance with customer session
+   * Make an API request with automatic session management
+   * @param {string} method - HTTP method
+   * @param {string} endpoint - API endpoint
+   * @param {Object} data - Request data
+   * @param {Object} params - Query parameters
+   * @param {string} [customerId] - Customer ID for session
+   * @param {string} [customerEmail] - Customer email for session
+   * @returns {Promise<Object>} API response data
    */
-  async createCustomerClient(customerId = null, customerEmail = null) {
+  async makeCustomerRequest(method, endpoint, data = null, params = null, customerId = null, customerEmail = null) {
+    // Get appropriate session token
     const sessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
     
-    // Create new client instance with the session token
-    return new RechargeClient({
-      storeUrl: this.storeUrl,
-      sessionToken,
-      adminToken: this.adminToken
-    });
+    // Create request config with session token
+    const config = {
+      method: method.toLowerCase(),
+      url: endpoint,
+      headers: {
+        'Authorization': `Bearer ${sessionToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
+      }
+    };
+    
+    if (data) {
+      config.data = data;
+    }
+    
+    if (params) {
+      config.params = params;
+    }
+    
+    try {
+      const response = await axios.request({
+        ...config,
+        baseURL: this.baseURL,
+        timeout: 30000,
+        maxRedirects: 0,
+        validateStatus: (status) => status < 500,
+      });
+      
+      return response.data;
+    } catch (error) {
+      // If session expired, clear cache and retry once
+      if (error.response?.status === 401 && customerId) {
+        this.sessionCache.clearSession(customerId);
+        
+        if (process.env.DEBUG === 'true') {
+          console.error('[DEBUG] Session expired, retrying with new session...');
+        }
+        
+        // Retry with fresh session
+        const newSessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
+        config.headers['Authorization'] = `Bearer ${newSessionToken}`;
+        
+        try {
+          const retryResponse = await axios.request({
+            ...config,
+            baseURL: this.baseURL,
+            timeout: 30000,
+            maxRedirects: 0,
+            validateStatus: (status) => status < 500,
+          });
+          
+          if (process.env.DEBUG === 'true') {
+            console.error('[DEBUG] Retry with fresh session successful');
+          }
+          
+          return retryResponse.data;
+        } catch (retryError) {
+          if (process.env.DEBUG === 'true') {
+            console.error('[DEBUG] Retry with fresh session also failed');
+          }
+          handleAPIError(retryError);
+        }
+      }
+      
+      handleAPIError(error);
+    }
   }
 
   /**
@@ -208,7 +287,6 @@ export class RechargeClient {
       console.error(`[DEBUG] Creating session for customer: ${customerId}`);
       console.error(`[DEBUG] Using Admin API for session creation`);
       console.error(`[DEBUG] Session creation URL: https://api.rechargeapps.com/customers/${customerId}/sessions`);
-      console.error('[DEBUG] Admin token (first 10 chars):', this.adminToken.substring(0, 10) + '...');
     }
     
     let response;
@@ -233,16 +311,13 @@ export class RechargeClient {
       
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Session creation response status:', apiResponse.status);
-        console.error('[DEBUG] Session creation response headers:', JSON.stringify(apiResponse.headers, null, 2));
-        console.error('[DEBUG] Session creation response data:', JSON.stringify(response, null, 2));
+        console.error('[DEBUG] Session creation successful');
       }
     } catch (error) {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Session creation failed for customer ${customerId}:`, error.message);
         if (error.response) {
           console.error('[DEBUG] Error response status:', error.response.status);
-          console.error('[DEBUG] Error response headers:', JSON.stringify(error.response.headers, null, 2));
-          console.error('[DEBUG] Error response data:', JSON.stringify(error.response.data, null, 2));
           
           // Special handling for 302 redirects during session creation
           if (error.response.status === 302) {
@@ -260,17 +335,18 @@ export class RechargeClient {
     }
     
     if (process.env.DEBUG === 'true') {
-      console.error(`[DEBUG] Session creation response:`, JSON.stringify(response, null, 2));
+      console.error(`[DEBUG] Session creation response received`);
     }
     
     if (response.customer_session && response.customer_session.apiToken) {
       if (process.env.DEBUG === 'true') {
-        console.error('[DEBUG] Session created successfully:', response.customer_session.apiToken.substring(0, 10) + '...');
+        console.error('[DEBUG] Session created successfully');
       }
     }
     
     return response;
   }
+
   /**
    * Setup axios interceptors for logging and error handling
    */
@@ -291,7 +367,6 @@ export class RechargeClient {
         
         if (process.env.DEBUG === 'true') {
           console.error('[DEBUG]', config.method?.toUpperCase(), config.baseURL + config.url);
-          console.error('[DEBUG] Headers:', JSON.stringify(config.headers, null, 2));
           if (config.data) {
             console.error('[DEBUG] Request body:', JSON.stringify(config.data, null, 2));
           }
@@ -306,10 +381,6 @@ export class RechargeClient {
       (response) => {
         if (process.env.DEBUG === 'true') {
           console.error('[DEBUG] Response', response.status, 'from', response.config.method?.toUpperCase(), response.config.url);
-          console.error('[DEBUG] Response headers:', JSON.stringify(response.headers, null, 2));
-          if (response.data) {
-            console.error('[DEBUG] Response body:', JSON.stringify(response.data, null, 2));
-          }
         }
         return response;
       },
@@ -324,10 +395,7 @@ export class RechargeClient {
             console.error('[DEBUG] Redirect', error.response.status, 'to:', location);
             console.error('[DEBUG] Original URL:', originalUrl);
             console.error('[DEBUG] Base URL:', error.config.baseURL);
-            console.error('[DEBUG] Request headers:', JSON.stringify(requestHeaders, null, 2));
-            console.error('[DEBUG] Response headers:', JSON.stringify(error.response.headers, null, 2));
             console.error('[DEBUG] Request method:', error.config.method?.toUpperCase());
-            console.error('[DEBUG] Request data:', error.config.data ? JSON.stringify(error.config.data, null, 2) : 'None');
           }
           
           // Create a more descriptive error for redirects
@@ -433,78 +501,6 @@ export class RechargeClient {
   }
 
   /**
-   * Make an API request with automatic session management
-   * @param {string} method - HTTP method
-   * @param {string} endpoint - API endpoint
-   * @param {Object} data - Request data
-   * @param {Object} params - Query parameters
-   * @param {string} [customerId] - Customer ID for session
-   * @param {string} [customerEmail] - Customer email for session
-   * @returns {Promise<Object>} API response data
-   */
-  async makeCustomerRequest(method, endpoint, data = null, params = null, customerId = null, customerEmail = null) {
-    // Get appropriate session token
-    const sessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
-    
-    // Create request config with session token
-    const config = {
-      method: method.toLowerCase(),
-      url: endpoint,
-      headers: {
-        'Authorization': `Bearer ${sessionToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
-      }
-    };
-    
-    if (data) {
-      config.data = data;
-    }
-    
-    if (params) {
-      config.params = params;
-    }
-    
-    try {
-      const response = await axios.request({
-        ...config,
-        baseURL: this.baseURL,
-        timeout: 30000,
-        maxRedirects: 0,
-        validateStatus: (status) => status < 500,
-      });
-      
-      return response.data;
-    } catch (error) {
-      // If session expired, clear cache and retry once
-      if (error.response?.status === 401 && customerId) {
-        this.sessionCache.clearSession(customerId);
-        
-        if (process.env.DEBUG === 'true') {
-          console.error('[DEBUG] Session expired, retrying with new session...');
-        }
-        
-        // Retry with fresh session
-        const newSessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
-        config.headers['Authorization'] = `Bearer ${newSessionToken}`;
-        
-        const retryResponse = await axios.request({
-          ...config,
-          baseURL: this.baseURL,
-          timeout: 30000,
-          maxRedirects: 0,
-          validateStatus: (status) => status < 500,
-        });
-        
-        return retryResponse.data;
-      }
-      
-      handleAPIError(error);
-    }
-  }
-
-  /**
    * Get customer by email address (requires Admin API token)
    * @param {string} email Customer email address
    * @returns {Promise<Object>} Customer data including customer ID
@@ -532,7 +528,6 @@ export class RechargeClient {
       console.error('[DEBUG] Looking up customer by email:', email);
       console.error('[DEBUG] Using Admin API for customer lookup');
       console.error('[DEBUG] Admin API URL: https://api.rechargeapps.com/customers');
-      console.error('[DEBUG] Admin token (first 10 chars):', this.adminToken.substring(0, 10) + '...');
     }
     
     try {
@@ -551,8 +546,6 @@ export class RechargeClient {
       
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Customer lookup response status:', response.status);
-        console.error('[DEBUG] Customer lookup response headers:', JSON.stringify(response.headers, null, 2));
-        console.error('[DEBUG] Customer lookup response data:', JSON.stringify(response.data, null, 2));
       }
       
       return response.data;
@@ -561,8 +554,6 @@ export class RechargeClient {
         console.error('[DEBUG] Customer lookup failed for email', email + ':', error.message);
         if (error.response) {
           console.error('[DEBUG] Error response status:', error.response.status);
-          console.error('[DEBUG] Error response headers:', JSON.stringify(error.response.headers, null, 2));
-          console.error('[DEBUG] Error response data:', JSON.stringify(error.response.data, null, 2));
           
           // Special handling for 302 redirects during customer lookup
           if (error.response.status === 302) {
@@ -586,7 +577,7 @@ export class RechargeClient {
    * @throws {Error} If session token is invalid or expired
    */
   async getCustomer() {
-    const response = await this.makeRequest('GET', `/customers`);
+    const response = await this.makeRequest('GET', `/customer`);
     return response;
   }
 
@@ -1183,4 +1174,21 @@ export class RechargeClient {
     return this.makeRequest('DELETE', `/discounts/${discountId}`);
   }
 
+  /**
+   * Get server statistics
+   * @returns {Object} Server statistics
+   */
+  getStats() {
+    return this.sessionCache.getStats();
+  }
+
+  /**
+   * Cleanup resources
+   */
+  destroy() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+    }
+    this.sessionCache.clearAll();
+  }
 }

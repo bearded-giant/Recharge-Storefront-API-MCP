@@ -1,324 +1,303 @@
-import { z } from 'zod';
+#!/usr/bin/env node
 
-const baseSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-});
+/**
+ * Recharge Storefront API MCP Server
+ * 
+ * A comprehensive Model Context Protocol server that provides complete access 
+ * to the Recharge Storefront API for subscription management.
+ */
 
-const subscriptionListSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  status: z.enum(['active', 'cancelled', 'expired']).optional().describe('Filter by subscription status'),
-  limit: z.number().max(250).default(50).describe('Number of subscriptions to return'),
-  page: z.number().default(1).describe('Page number for pagination'),
-});
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import dotenv from 'dotenv';
+import { RechargeClient } from './recharge-client.js';
+import { tools } from './tools/index.js';
+import { formatErrorResponse } from './utils/error-handler.js';
 
-const subscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
-});
+// Load environment variables
+dotenv.config();
 
-const updateSubscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
-  next_charge_scheduled_at: z.string().optional().describe('Next charge date (ISO format)'),
-  order_interval_frequency: z.number().optional().describe('Order interval frequency (e.g., 1, 2, 3)'),
-  order_interval_unit: z.enum(['day', 'week', 'month']).optional().describe('Order interval unit'),
-  quantity: z.number().optional().describe('Subscription quantity'),
-  variant_id: z.number().optional().describe('Product variant ID'),
-  properties: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
-  })).optional().describe('Product properties'),
-});
+/**
+ * Server statistics tracking
+ */
+const serverStats = {
+  startTime: new Date(),
+  toolCalls: 0,
+  errors: 0,
+  customers: new Set(),
+  lastActivity: new Date(),
+};
 
-const skipSubscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
-  date: z.string().describe('Date to skip (YYYY-MM-DD format)'),
-});
-
-const unskipSubscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
-  date: z.string().describe('Date to unskip (YYYY-MM-DD format)'),
-});
-
-const swapSubscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
-  variant_id: z.number().describe('New variant ID to swap to'),
-  quantity: z.number().optional().describe('New quantity'),
-});
-
-const cancelSubscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
-  cancellation_reason: z.string().optional().describe('Reason for cancellation'),
-  cancellation_reason_comments: z.string().optional().describe('Additional comments for cancellation'),
-});
-
-const setNextChargeDateSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
-  date: z.string().describe('Next charge date (YYYY-MM-DD format)'),
-});
-
-const activateSubscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
-});
-
-const createSubscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  address_id: z.string().describe('The address ID for the subscription'),
-  next_charge_scheduled_at: z.string().describe('Next charge date (YYYY-MM-DD format)'),
-  order_interval_frequency: z.number().describe('Order interval frequency (e.g., 1, 2, 3)'),
-  order_interval_unit: z.enum(['day', 'week', 'month']).describe('Order interval unit'),
-  quantity: z.number().describe('Subscription quantity'),
-  variant_id: z.number().describe('Product variant ID'),
-  properties: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
-  })).optional().describe('Product properties'),
-});
-
-export const subscriptionTools = [
+/**
+ * MCP Server instance
+ */
+const server = new Server(
   {
-    name: 'get_subscriptions',
-    description: 'Get subscriptions for a specific customer',
-    inputSchema: subscriptionListSchema,
-    execute: async (client, args) => {
-      const subscriptions = await client.getSubscriptions(args);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Subscriptions:\n${JSON.stringify(subscriptions, null, 2)}`,
-          },
-        ],
-      };
-    },
+    name: process.env.MCP_SERVER_NAME || 'recharge-storefront-api-mcp',
+    version: process.env.MCP_SERVER_VERSION || '1.0.0',
   },
   {
-    name: 'create_subscription',
-    description: 'Create a new subscription',
-    inputSchema: createSubscriptionSchema,
-    execute: async (client, args) => {
-      const subscriptionData = { ...args };
-      delete subscriptionData.customer_id;
-      delete subscriptionData.session_token;
-      delete subscriptionData.merchant_token;
-      delete subscriptionData.store_url;
-      delete subscriptionData.customer_email;
-      const subscription = await client.createSubscription(subscriptionData);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Created Subscription:\n${JSON.stringify(subscription, null, 2)}`,
-          },
-        ],
-      };
+    capabilities: {
+      tools: {},
     },
-  },
-  {
-    name: 'get_subscription',
-    description: 'Get detailed information about a specific subscription',
-    inputSchema: subscriptionSchema,
-    execute: async (client, args) => {
-      const { subscription_id } = args;
-      const subscription = await client.getSubscription(subscription_id);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Subscription Details:\n${JSON.stringify(subscription, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'update_subscription',
-    description: 'Update subscription details like frequency, quantity, or next charge date',
-    inputSchema: updateSubscriptionSchema,
-    execute: async (client, args) => {
-      const { subscription_id } = args;
-      const updateData = { ...args };
-      delete updateData.subscription_id;
-      delete updateData.customer_id;
-      delete updateData.session_token;
-      delete updateData.merchant_token;
-      delete updateData.store_url;
-      delete updateData.customer_email;
-      const updatedSubscription = await client.updateSubscription(subscription_id, updateData);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Updated Subscription:\n${JSON.stringify(updatedSubscription, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'skip_subscription',
-    description: 'Skip a subscription delivery for a specific date',
-    inputSchema: skipSubscriptionSchema,
-    execute: async (client, args) => {
-      const { subscription_id, date } = args;
-      const result = await client.skipSubscription(subscription_id, date);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Skipped Subscription:\n${JSON.stringify(result, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'unskip_subscription',
-    description: 'Unskip a previously skipped subscription delivery',
-    inputSchema: unskipSubscriptionSchema,
-    execute: async (client, args) => {
-      const { subscription_id, date } = args;
-      const result = await client.unskipSubscription(subscription_id, date);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Unskipped Subscription:\n${JSON.stringify(result, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'swap_subscription',
-    description: 'Swap the variant of a subscription',
-    inputSchema: swapSubscriptionSchema,
-    execute: async (client, args) => {
-      const { subscription_id } = args;
-      const swapData = { ...args };
-      delete swapData.subscription_id;
-      delete swapData.customer_id;
-      delete swapData.session_token;
-      delete swapData.merchant_token;
-      delete swapData.store_url;
-      delete swapData.customer_email;
-      const swappedSubscription = await client.swapSubscription(subscription_id, swapData);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Swapped Subscription Product:\n${JSON.stringify(swappedSubscription, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'cancel_subscription',
-    description: 'Cancel a subscription',
-    inputSchema: cancelSubscriptionSchema,
-    execute: async (client, args) => {
-      const { subscription_id } = args;
-      const cancelData = { ...args };
-      delete cancelData.subscription_id;
-      delete cancelData.customer_id;
-      delete cancelData.session_token;
-      delete cancelData.merchant_token;
-      delete cancelData.store_url;
-      delete cancelData.customer_email;
-      const cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Cancelled Subscription:\n${JSON.stringify(cancelledSubscription, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'activate_subscription',
-    description: 'Activate a cancelled subscription',
-    inputSchema: activateSubscriptionSchema,
-    execute: async (client, args) => {
-      const { subscription_id } = args;
-      const activatedSubscription = await client.activateSubscription(subscription_id);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Activated Subscription:\n${JSON.stringify(activatedSubscription, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'set_subscription_next_charge_date',
-    description: 'Set the next charge date for a subscription',
-    inputSchema: setNextChargeDateSchema,
-    execute: async (client, args) => {
-      const { subscription_id, date } = args;
-      const updatedSubscription = await client.setNextChargeDate(subscription_id, date);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Updated Subscription Next Charge Date:\n${JSON.stringify(updatedSubscription, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-];
+  }
+);
+
+/**
+ * Health check function
+ */
+function getHealthStatus() {
+  const uptime = Date.now() - serverStats.startTime.getTime();
+  const uptimeHours = Math.floor(uptime / (1000 * 60 * 60));
+  const uptimeMinutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+  
+  return {
+    status: 'healthy',
+    uptime: `${uptimeHours}h ${uptimeMinutes}m`,
+    toolCalls: serverStats.toolCalls,
+    errors: serverStats.errors,
+    uniqueCustomers: serverStats.customers.size,
+    lastActivity: serverStats.lastActivity.toISOString(),
+    memoryUsage: process.memoryUsage(),
+    nodeVersion: process.version,
+    serverName: process.env.MCP_SERVER_NAME || 'recharge-storefront-api-mcp',
+    serverVersion: process.env.MCP_SERVER_VERSION || '1.0.0',
+  };
+}
+
+/**
+ * List available tools
+ */
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  if (process.env.DEBUG === 'true') {
+    console.error(`[DEBUG] Listing ${tools.length} available tools`);
+  }
+  
+  return {
+    tools: tools.map(tool => ({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.inputSchema,
+    })),
+  };
+});
+
+/**
+ * Handle tool execution
+ */
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+  
+  // Update statistics
+  serverStats.toolCalls++;
+  serverStats.lastActivity = new Date();
+  
+  if (process.env.DEBUG === 'true') {
+    console.error(`[DEBUG] Executing tool: ${name}`);
+    console.error(`[DEBUG] Arguments:`, JSON.stringify(args, null, 2));
+  }
+
+  // Find the requested tool
+  const tool = tools.find(t => t.name === name);
+  if (!tool) {
+    serverStats.errors++;
+    const error = new Error(`Tool not found: ${name}`);
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] Tool not found: ${name}`);
+    }
+    return formatErrorResponse(error);
+  }
+
+  try {
+    // Validate input schema
+    const validatedArgs = tool.inputSchema.parse(args);
+    
+    // Extract authentication and configuration
+    const storeUrl = validatedArgs.store_url || process.env.RECHARGE_STOREFRONT_DOMAIN;
+    const sessionToken = validatedArgs.session_token || process.env.RECHARGE_SESSION_TOKEN;
+    const adminToken = validatedArgs.admin_token || process.env.RECHARGE_ADMIN_TOKEN;
+    
+    // Validate required configuration
+    if (!storeUrl) {
+      throw new Error(
+        'No store URL available. Please provide store_url parameter in your tool call or set RECHARGE_STOREFRONT_DOMAIN environment variable.\n' +
+        'Example: your-shop.myshopify.com'
+      );
+    }
+    
+    // Validate store URL format
+    let domain;
+    if (storeUrl.startsWith('http://') || storeUrl.startsWith('https://')) {
+      const urlObj = new URL(storeUrl);
+      domain = urlObj.hostname;
+    } else {
+      domain = storeUrl;
+    }
+    
+    if (!domain.includes('.myshopify.com')) {
+      throw new Error(
+        `Invalid store URL format: ${storeUrl}\n` +
+        'Store URL must be a Shopify domain ending with .myshopify.com\n' +
+        'Example: your-shop.myshopify.com'
+      );
+    }
+    
+    // Create client with available tokens
+    const client = new RechargeClient({
+      storeUrl: domain,
+      sessionToken,
+      adminToken
+    });
+    
+    // Track customer for statistics
+    if (validatedArgs.customer_id) {
+      serverStats.customers.add(validatedArgs.customer_id);
+    }
+    if (validatedArgs.customer_email) {
+      serverStats.customers.add(validatedArgs.customer_email);
+    }
+    
+    // Create context for customer identification
+    const context = {
+      customerId: validatedArgs.customer_id,
+      customerEmail: validatedArgs.customer_email,
+    };
+    
+    // Execute the tool
+    const result = await tool.execute(client, validatedArgs, context);
+    
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] Tool ${name} executed successfully`);
+    }
+    
+    return result;
+  } catch (error) {
+    serverStats.errors++;
+    
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] Tool ${name} failed:`, error.message);
+      console.error(`[DEBUG] Error stack:`, error.stack);
+    }
+    
+    return formatErrorResponse(error);
+  }
+});
+
+/**
+ * Handle server statistics and health check requests
+ */
+server.setRequestHandler('health', async () => {
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `Server Health Status:\n${JSON.stringify(getHealthStatus(), null, 2)}`,
+      },
+    ],
+  };
+});
+
+/**
+ * Graceful shutdown handling
+ */
+process.on('SIGINT', async () => {
+  if (process.env.DEBUG === 'true') {
+    console.error('[DEBUG] Received SIGINT, shutting down gracefully...');
+    console.error('[DEBUG] Final statistics:', getHealthStatus());
+  }
+  
+  try {
+    await server.close();
+    if (process.env.DEBUG === 'true') {
+      console.error('[DEBUG] Server closed successfully');
+    }
+  } catch (error) {
+    console.error('[ERROR] Error during shutdown:', error.message);
+  }
+  
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  if (process.env.DEBUG === 'true') {
+    console.error('[DEBUG] Received SIGTERM, shutting down gracefully...');
+  }
+  
+  try {
+    await server.close();
+  } catch (error) {
+    console.error('[ERROR] Error during shutdown:', error.message);
+  }
+  
+  process.exit(0);
+});
+
+/**
+ * Start the server
+ */
+async function main() {
+  try {
+    // Validate environment
+    if (!process.env.RECHARGE_STOREFRONT_DOMAIN && !process.env.RECHARGE_ADMIN_TOKEN) {
+      console.error('[WARNING] No environment variables configured. Tools will require parameters for each call.');
+    }
+    
+    if (process.env.RECHARGE_STOREFRONT_DOMAIN === 'your-shop.myshopify.com') {
+      console.error('[WARNING] Please update RECHARGE_STOREFRONT_DOMAIN with your actual domain');
+    }
+    
+    if (process.env.RECHARGE_ADMIN_TOKEN === 'your_admin_token_here') {
+      console.error('[WARNING] Please update RECHARGE_ADMIN_TOKEN with your actual admin token');
+    }
+    
+    // Start server
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    
+    if (process.env.DEBUG === 'true') {
+      console.error('[DEBUG] Recharge Storefront API MCP Server started');
+      console.error('[DEBUG] Server name:', process.env.MCP_SERVER_NAME || 'recharge-storefront-api-mcp');
+      console.error('[DEBUG] Server version:', process.env.MCP_SERVER_VERSION || '1.0.0');
+      console.error('[DEBUG] Available tools:', tools.length);
+      console.error('[DEBUG] Store domain:', process.env.RECHARGE_STOREFRONT_DOMAIN || 'Not configured');
+      console.error('[DEBUG] Admin token:', process.env.RECHARGE_ADMIN_TOKEN ? 'Configured' : 'Not configured');
+      console.error('[DEBUG] Session token:', process.env.RECHARGE_SESSION_TOKEN ? 'Configured' : 'Not configured');
+    }
+    
+    console.error('[INFO] Server ready - listening for MCP requests');
+    
+  } catch (error) {
+    console.error('[FATAL] Failed to start server:', error.message);
+    if (process.env.DEBUG === 'true') {
+      console.error('[DEBUG] Error stack:', error.stack);
+    }
+    process.exit(1);
+  }
+}
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('[FATAL] Uncaught exception:', error.message);
+  if (process.env.DEBUG === 'true') {
+    console.error('[DEBUG] Error stack:', error.stack);
+  }
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled rejection at:', promise, 'reason:', reason);
+  if (process.env.DEBUG === 'true') {
+    console.error('[DEBUG] Rejection details:', reason);
+  }
+  process.exit(1);
+});
+
+// Start the server
+main().catch((error) => {
+  console.error('[FATAL] Server startup failed:', error.message);
+  if (process.env.DEBUG === 'true') {
+    console.error('[DEBUG] Startup error stack:', error.stack);
+  }
+  process.exit(1);
+});

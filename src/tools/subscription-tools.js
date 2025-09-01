@@ -149,13 +149,21 @@ export const subscriptionTools = [
     name: 'create_subscription',
     description: 'Create a new subscription',
     inputSchema: createSubscriptionSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const subscriptionData = { ...args };
       delete subscriptionData.customer_id;
+      delete subscriptionData.customer_email;
       delete subscriptionData.session_token;
       delete subscriptionData.admin_token;
       delete subscriptionData.store_url;
-      const subscription = await client.createSubscription(subscriptionData);
+      
+      let subscription;
+      if (context?.customerId || context?.customerEmail) {
+        subscription = await client.makeCustomerRequest('POST', '/subscriptions', subscriptionData, null, context.customerId, context.customerEmail);
+      } else {
+        subscription = await client.createSubscription(subscriptionData);
+      }
+      
       return {
         content: [
           {
@@ -194,15 +202,23 @@ export const subscriptionTools = [
     name: 'update_subscription',
     description: 'Update subscription details like frequency, quantity, or next charge date',
     inputSchema: updateSubscriptionSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const { subscription_id } = args;
       const updateData = { ...args };
       delete updateData.subscription_id;
       delete updateData.customer_id;
+      delete updateData.customer_email;
       delete updateData.session_token;
       delete updateData.admin_token;
       delete updateData.store_url;
-      const updatedSubscription = await client.updateSubscription(subscription_id, updateData);
+      
+      let updatedSubscription;
+      if (context?.customerId || context?.customerEmail) {
+        updatedSubscription = await client.makeCustomerRequest('PUT', `/subscriptions/${subscription_id}`, updateData, null, context.customerId, context.customerEmail);
+      } else {
+        updatedSubscription = await client.updateSubscription(subscription_id, updateData);
+      }
+      
       return {
         content: [
           {
@@ -217,9 +233,16 @@ export const subscriptionTools = [
     name: 'skip_subscription',
     description: 'Skip a subscription delivery for a specific date',
     inputSchema: skipSubscriptionSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const { subscription_id, date } = args;
-      const result = await client.skipSubscription(subscription_id, date);
+      
+      let result;
+      if (context?.customerId || context?.customerEmail) {
+        result = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/skip`, { date }, null, context.customerId, context.customerEmail);
+      } else {
+        result = await client.skipSubscription(subscription_id, date);
+      }
+      
       return {
         content: [
           {
@@ -234,9 +257,16 @@ export const subscriptionTools = [
     name: 'unskip_subscription',
     description: 'Unskip a previously skipped subscription delivery',
     inputSchema: unskipSubscriptionSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const { subscription_id, date } = args;
-      const result = await client.unskipSubscription(subscription_id, date);
+      
+      let result;
+      if (context?.customerId || context?.customerEmail) {
+        result = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/unskip`, { date }, null, context.customerId, context.customerEmail);
+      } else {
+        result = await client.unskipSubscription(subscription_id, date);
+      }
+      
       return {
         content: [
           {
@@ -251,7 +281,7 @@ export const subscriptionTools = [
     name: 'swap_subscription',
     description: 'Swap the variant of a subscription',
     inputSchema: swapSubscriptionSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const { subscription_id } = args;
       const swapData = { ...args };
       delete swapData.subscription_id;
@@ -260,7 +290,14 @@ export const subscriptionTools = [
       delete swapData.admin_token;
       delete swapData.store_url;
       delete swapData.customer_email;
-      const swappedSubscription = await client.swapSubscription(subscription_id, swapData);
+      
+      let swappedSubscription;
+      if (context?.customerId || context?.customerEmail) {
+        swappedSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/swap`, swapData, null, context.customerId, context.customerEmail);
+      } else {
+        swappedSubscription = await client.swapSubscription(subscription_id, swapData);
+      }
+      
       return {
         content: [
           {
@@ -275,7 +312,7 @@ export const subscriptionTools = [
     name: 'cancel_subscription',
     description: 'Cancel a subscription',
     inputSchema: cancelSubscriptionSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const { subscription_id } = args;
       const cancelData = { ...args };
       delete cancelData.subscription_id;
@@ -284,7 +321,14 @@ export const subscriptionTools = [
       delete cancelData.admin_token;
       delete cancelData.store_url;
       delete cancelData.customer_email;
-      const cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData);
+      
+      let cancelledSubscription;
+      if (context?.customerId || context?.customerEmail) {
+        cancelledSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/cancel`, cancelData, null, context.customerId, context.customerEmail);
+      } else {
+        cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData);
+      }
+      
       return {
         content: [
           {
@@ -299,9 +343,16 @@ export const subscriptionTools = [
     name: 'activate_subscription',
     description: 'Activate a cancelled subscription',
     inputSchema: activateSubscriptionSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const { subscription_id } = args;
-      const activatedSubscription = await client.activateSubscription(subscription_id);
+      
+      let activatedSubscription;
+      if (context?.customerId || context?.customerEmail) {
+        activatedSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/activate`, {}, null, context.customerId, context.customerEmail);
+      } else {
+        activatedSubscription = await client.activateSubscription(subscription_id);
+      }
+      
       return {
         content: [
           {
@@ -316,9 +367,16 @@ export const subscriptionTools = [
     name: 'set_subscription_next_charge_date',
     description: 'Set the next charge date for a subscription',
     inputSchema: setNextChargeDateSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const { subscription_id, date } = args;
-      const updatedSubscription = await client.setNextChargeDate(subscription_id, date);
+      
+      let updatedSubscription;
+      if (context?.customerId || context?.customerEmail) {
+        updatedSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/set_next_charge_date`, { date }, null, context.customerId, context.customerEmail);
+      } else {
+        updatedSubscription = await client.setNextChargeDate(subscription_id, date);
+      }
+      
       return {
         content: [
           {
