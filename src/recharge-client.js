@@ -183,7 +183,6 @@ export class RechargeClient {
         // Retry with new session
         const newSessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
         config.headers['X-Recharge-Access-Token'] = newSessionToken;
-        config.headers['X-Recharge-Version'] = '2021-11';
         
         const retryResponse = await this.storefrontApi.request(config);
         return retryResponse.data;

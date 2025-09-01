@@ -118,14 +118,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const sessionToken = validatedArgs.session_token || process.env.RECHARGE_SESSION_TOKEN;
     const adminToken = validatedArgs.admin_token || process.env.RECHARGE_ADMIN_TOKEN;
     
-    // SECURITY: Create context for customer identification
-    // This ensures tools always know which customer they're operating on
-    const context = {
-      customerId: validatedArgs.customer_id || null,
-      customerEmail: validatedArgs.customer_email || null,
-      hasCustomerIdentification: !!(validatedArgs.customer_id || validatedArgs.customer_email || validatedArgs.session_token)
-    };
-    
     // Validate required configuration
     if (!storeUrl) {
       throw new Error(

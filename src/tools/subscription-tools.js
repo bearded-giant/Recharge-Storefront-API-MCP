@@ -134,7 +134,6 @@ export const subscriptionTools = [
       const params = { ...args };
       delete params.customer_id;
       delete params.customer_email;
-      delete params.customer_email;
       delete params.session_token;
       delete params.admin_token;
       delete params.store_url;
@@ -262,10 +261,9 @@ export const subscriptionTools = [
       const swapData = { ...args };
       delete swapData.subscription_id;
       delete swapData.customer_id;
+      delete swapData.customer_email;
       delete swapData.session_token;
       delete swapData.admin_token;
-      delete swapData.store_url;
-      delete swapData.customer_email;
       const swappedSubscription = await client.swapSubscription(subscription_id, swapData, args.customer_id, args.customer_email);
       
       return {
@@ -287,10 +285,9 @@ export const subscriptionTools = [
       const cancelData = { ...args };
       delete cancelData.subscription_id;
       delete cancelData.customer_id;
+      delete cancelData.customer_email;
       delete cancelData.session_token;
       delete cancelData.admin_token;
-      delete cancelData.store_url;
-      delete cancelData.customer_email;
       const cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData, args.customer_id, args.customer_email);
       
       return {
