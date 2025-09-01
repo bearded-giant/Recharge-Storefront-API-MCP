@@ -152,6 +152,7 @@ export class RechargeClient {
       url: endpoint,
       headers: {
         'X-Recharge-Access-Token': sessionToken,
+        'X-Recharge-Version': '2021-11',
       },
     };
     
@@ -182,6 +183,7 @@ export class RechargeClient {
         // Retry with new session
         const newSessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
         config.headers['X-Recharge-Access-Token'] = newSessionToken;
+        config.headers['X-Recharge-Version'] = '2021-11';
         
         const retryResponse = await this.storefrontApi.request(config);
         return retryResponse.data;
@@ -251,221 +253,221 @@ export class RechargeClient {
 
   // Customer methods
   async getCustomer(customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', '/customer', null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', '/storefront/customer', null, null, customerId, customerEmail);
     return response.customer || response;
   }
 
   async updateCustomer(updateData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('PUT', '/customer', updateData, null, customerId, customerEmail);
+    const response = await this.makeRequest('PUT', '/storefront/customer', updateData, null, customerId, customerEmail);
     return response.customer || response;
   }
 
   // Subscription methods
   async getSubscriptions(params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', '/subscriptions', null, params, customerId, customerEmail);
+    const response = await this.makeRequest('GET', '/storefront/subscriptions', null, params, customerId, customerEmail);
     return response.subscriptions || response;
   }
 
   async getSubscription(subscriptionId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/subscriptions/${subscriptionId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/subscriptions/${subscriptionId}`, null, null, customerId, customerEmail);
     return response.subscription || response;
   }
 
   async createSubscription(subscriptionData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('POST', '/subscriptions', subscriptionData, null, customerId, customerEmail);
+    const response = await this.makeRequest('POST', '/storefront/subscriptions', subscriptionData, null, customerId, customerEmail);
     return response.subscription || response;
   }
 
   async updateSubscription(subscriptionId, updateData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, updateData, null, customerId, customerEmail);
+    const response = await this.makeRequest('PUT', `/storefront/subscriptions/${subscriptionId}`, updateData, null, customerId, customerEmail);
     return response.subscription || response;
   }
 
   async skipSubscription(subscriptionId, date, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('POST', `/subscriptions/${subscriptionId}/skip`, { date }, null, customerId, customerEmail);
+    const response = await this.makeRequest('POST', `/storefront/subscriptions/${subscriptionId}/skip`, { date }, null, customerId, customerEmail);
     return response.subscription || response;
   }
 
   async unskipSubscription(subscriptionId, date, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('POST', `/subscriptions/${subscriptionId}/unskip`, { date }, null, customerId, customerEmail);
+    const response = await this.makeRequest('POST', `/storefront/subscriptions/${subscriptionId}/unskip`, { date }, null, customerId, customerEmail);
     return response.subscription || response;
   }
 
   async swapSubscription(subscriptionId, swapData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('POST', `/subscriptions/${subscriptionId}/swap`, swapData, null, customerId, customerEmail);
+    const response = await this.makeRequest('POST', `/storefront/subscriptions/${subscriptionId}/swap`, swapData, null, customerId, customerEmail);
     return response.subscription || response;
   }
 
   async cancelSubscription(subscriptionId, cancelData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('POST', `/subscriptions/${subscriptionId}/cancel`, cancelData, null, customerId, customerEmail);
+    const response = await this.makeRequest('POST', `/storefront/subscriptions/${subscriptionId}/cancel`, cancelData, null, customerId, customerEmail);
     return response.subscription || response;
   }
 
   async activateSubscription(subscriptionId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('POST', `/subscriptions/${subscriptionId}/activate`, {}, null, customerId, customerEmail);
+    const response = await this.makeRequest('POST', `/storefront/subscriptions/${subscriptionId}/activate`, {}, null, customerId, customerEmail);
     return response.subscription || response;
   }
 
   async setNextChargeDate(subscriptionId, date, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, { next_charge_scheduled_at: date }, null, customerId, customerEmail);
+    const response = await this.makeRequest('PUT', `/storefront/subscriptions/${subscriptionId}`, { next_charge_scheduled_at: date }, null, customerId, customerEmail);
     return response.subscription || response;
   }
 
   // Address methods
   async getAddresses(params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', '/addresses', null, params, customerId, customerEmail);
+    const response = await this.makeRequest('GET', '/storefront/addresses', null, params, customerId, customerEmail);
     return response.addresses || response;
   }
 
   async getAddress(addressId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/addresses/${addressId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/addresses/${addressId}`, null, null, customerId, customerEmail);
     return response.address || response;
   }
 
   async createAddress(addressData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('POST', '/addresses', addressData, null, customerId, customerEmail);
+    const response = await this.makeRequest('POST', '/storefront/addresses', addressData, null, customerId, customerEmail);
     return response.address || response;
   }
 
   async updateAddress(addressId, addressData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('PUT', `/addresses/${addressId}`, addressData, null, customerId, customerEmail);
+    const response = await this.makeRequest('PUT', `/storefront/addresses/${addressId}`, addressData, null, customerId, customerEmail);
     return response.address || response;
   }
 
   async deleteAddress(addressId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('DELETE', `/addresses/${addressId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('DELETE', `/storefront/addresses/${addressId}`, null, null, customerId, customerEmail);
     return response;
   }
 
   // Payment methods
   async getPaymentMethods(params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', '/payment_methods', null, params, customerId, customerEmail);
+    const response = await this.makeRequest('GET', '/storefront/payment_methods', null, params, customerId, customerEmail);
     return response.payment_methods || response;
   }
 
   async getPaymentMethod(paymentMethodId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/payment_methods/${paymentMethodId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/payment_methods/${paymentMethodId}`, null, null, customerId, customerEmail);
     return response.payment_method || response;
   }
 
   async updatePaymentMethod(paymentMethodId, paymentData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('PUT', `/payment_methods/${paymentMethodId}`, paymentData, null, customerId, customerEmail);
+    const response = await this.makeRequest('PUT', `/storefront/payment_methods/${paymentMethodId}`, paymentData, null, customerId, customerEmail);
     return response.payment_method || response;
   }
 
   // Product methods
   async getProducts(params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', '/products', null, params, customerId, customerEmail);
+    const response = await this.makeRequest('GET', '/storefront/products', null, params, customerId, customerEmail);
     return response.products || response;
   }
 
   async getProduct(productId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/products/${productId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/products/${productId}`, null, null, customerId, customerEmail);
     return response.product || response;
   }
 
   // Order methods
   async getOrders(params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', '/orders', null, params, customerId, customerEmail);
+    const response = await this.makeRequest('GET', '/storefront/orders', null, params, customerId, customerEmail);
     return response.orders || response;
   }
 
   async getOrder(orderId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/orders/${orderId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/orders/${orderId}`, null, null, customerId, customerEmail);
     return response.order || response;
   }
 
   // Charge methods
   async getCharges(params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', '/charges', null, params, customerId, customerEmail);
+    const response = await this.makeRequest('GET', '/storefront/charges', null, params, customerId, customerEmail);
     return response.charges || response;
   }
 
   async getCharge(chargeId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/charges/${chargeId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/charges/${chargeId}`, null, null, customerId, customerEmail);
     return response.charge || response;
   }
 
   // One-time product methods
   async getOnetimes(params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', '/onetimes', null, params, customerId, customerEmail);
+    const response = await this.makeRequest('GET', '/storefront/onetimes', null, params, customerId, customerEmail);
     return response.onetimes || response;
   }
 
   async getOnetime(onetimeId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/onetimes/${onetimeId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/onetimes/${onetimeId}`, null, null, customerId, customerEmail);
     return response.onetime || response;
   }
 
   async createOnetime(onetimeData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('POST', '/onetimes', onetimeData, null, customerId, customerEmail);
+    const response = await this.makeRequest('POST', '/storefront/onetimes', onetimeData, null, customerId, customerEmail);
     return response.onetime || response;
   }
 
   async updateOnetime(onetimeId, onetimeData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('PUT', `/onetimes/${onetimeId}`, onetimeData, null, customerId, customerEmail);
+    const response = await this.makeRequest('PUT', `/storefront/onetimes/${onetimeId}`, onetimeData, null, customerId, customerEmail);
     return response.onetime || response;
   }
 
   async deleteOnetime(onetimeId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('DELETE', `/onetimes/${onetimeId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('DELETE', `/storefront/onetimes/${onetimeId}`, null, null, customerId, customerEmail);
     return response;
   }
 
   // Bundle methods
   async getBundles(params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', '/bundles', null, params, customerId, customerEmail);
+    const response = await this.makeRequest('GET', '/storefront/bundles', null, params, customerId, customerEmail);
     return response.bundles || response;
   }
 
   async getBundle(bundleId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/bundles/${bundleId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/bundles/${bundleId}`, null, null, customerId, customerEmail);
     return response.bundle || response;
   }
 
   async getBundleSelections(bundleId, params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/bundles/${bundleId}/bundle_selections`, null, params, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/bundles/${bundleId}/bundle_selections`, null, params, customerId, customerEmail);
     return response.bundle_selections || response;
   }
 
   async getBundleSelection(bundleSelectionId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/bundle_selections/${bundleSelectionId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/bundle_selections/${bundleSelectionId}`, null, null, customerId, customerEmail);
     return response.bundle_selection || response;
   }
 
   async createBundleSelection(selectionData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('POST', '/bundle_selections', selectionData, null, customerId, customerEmail);
+    const response = await this.makeRequest('POST', '/storefront/bundle_selections', selectionData, null, customerId, customerEmail);
     return response.bundle_selection || response;
   }
 
   async updateBundleSelection(bundleSelectionId, selectionData, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('PUT', `/bundle_selections/${bundleSelectionId}`, selectionData, null, customerId, customerEmail);
+    const response = await this.makeRequest('PUT', `/storefront/bundle_selections/${bundleSelectionId}`, selectionData, null, customerId, customerEmail);
     return response.bundle_selection || response;
   }
 
   async deleteBundleSelection(bundleSelectionId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('DELETE', `/bundle_selections/${bundleSelectionId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('DELETE', `/storefront/bundle_selections/${bundleSelectionId}`, null, null, customerId, customerEmail);
     return response;
   }
 
   // Discount methods
   async getDiscounts(params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', '/discounts', null, params, customerId, customerEmail);
+    const response = await this.makeRequest('GET', '/storefront/discounts', null, params, customerId, customerEmail);
     return response.discounts || response;
   }
 
   async getDiscount(discountId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('GET', `/discounts/${discountId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('GET', `/storefront/discounts/${discountId}`, null, null, customerId, customerEmail);
     return response.discount || response;
   }
 
   async applyDiscount(discountCode, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('POST', '/discounts', { discount_code: discountCode }, null, customerId, customerEmail);
+    const response = await this.makeRequest('POST', '/storefront/discounts', { discount_code: discountCode }, null, customerId, customerEmail);
     return response.discount || response;
   }
 
   async removeDiscount(discountId, customerId = null, customerEmail = null) {
-    const response = await this.makeRequest('DELETE', `/discounts/${discountId}`, null, null, customerId, customerEmail);
+    const response = await this.makeRequest('DELETE', `/storefront/discounts/${discountId}`, null, null, customerId, customerEmail);
     return response;
   }
 }
