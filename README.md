@@ -14,7 +14,6 @@ A comprehensive Model Context Protocol (MCP) server that provides complete acces
 - [Available Tools](#available-tools)
 - [Examples](#examples)
 - [Development](#development)
-- [Docker Deployment](#docker-deployment)
 - [Troubleshooting](#troubleshooting)
 - [Security](#security)
 - [Contributing](#contributing)
@@ -36,7 +35,7 @@ Model Context Protocol (MCP) is a standardized way for AI assistants to interact
 
 - **Complete API Coverage**: All 37 Recharge Storefront API endpoints
 - **Intelligent Authentication**: Automatic session management with multi-customer support
-- **Production Ready**: Docker support, error handling, logging, and monitoring
+- **Production Ready**: Error handling, logging, and monitoring
 - **Developer Friendly**: Comprehensive documentation, examples, and debugging tools
 - **Secure**: Built-in security protections and customer data isolation
 
@@ -81,8 +80,7 @@ Model Context Protocol (MCP) is a standardized way for AI assistants to interact
 - **Memory**: Minimum 256MB RAM (512MB recommended for production)
 - **Storage**: 100MB available disk space
 - **Network**: Internet connection for API access
-- **Platform**: Linux, macOS, or Windows (Docker recommended for Windows)
- **Platform**: Linux, macOS, or Windows
+- **Platform**: Linux, macOS, or Windows
 
 ## Installation
 
@@ -906,7 +904,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ### Project Statistics
 - **37 Tools**: Complete Recharge Storefront API coverage
 - **10 Categories**: Comprehensive subscription management
-- **Production Ready**: Error handling, logging, monitoring
+- **Production Ready**: Error handling, logging, and monitoring
 - **Secure**: Built-in customer data protection with session token isolation
 - **Well Documented**: Comprehensive guides and examples
 
