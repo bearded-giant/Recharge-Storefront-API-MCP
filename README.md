@@ -281,9 +281,16 @@ Please specify 'customer_id', 'customer_email', or 'session_token' to ensure cor
 
 ### MCP Client Configuration
 
-To use this server with an MCP client, you'll need to configure your client to connect to this server. Here's an example configuration:
+To use this server with an MCP client, you'll need to configure your client to connect to this server. Here are configuration examples for popular clients:
 
-**For Claude Desktop (config.json):**
+#### Claude Desktop
+
+Edit your Claude Desktop configuration file:
+
+**Location**: 
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
 ```json
 {
   "mcpServers": {
@@ -299,10 +306,111 @@ To use this server with an MCP client, you'll need to configure your client to c
 }
 ```
 
-**For other MCP clients:**
-- **Command**: `node src/server.js` (from project directory)
+#### Cursor IDE
+
+1. **Install the MCP extension** (if available) or configure manually
+2. **Add to Cursor settings** (`Ctrl/Cmd + ,`):
+
+```json
+{
+  "mcp.servers": {
+    "recharge-storefront-api": {
+      "command": "node",
+      "args": ["path/to/recharge-storefront-api-mcp/src/server.js"],
+      "cwd": "path/to/recharge-storefront-api-mcp",
+      "env": {
+        "RECHARGE_STOREFRONT_DOMAIN": "your-shop.myshopify.com",
+        "RECHARGE_ADMIN_TOKEN": "your_admin_token_here"
+      }
+    }
+  }
+}
+```
+
+3. **Alternative: Use .env file** and simpler config:
+
+```json
+{
+  "mcp.servers": {
+    "recharge-storefront-api": {
+      "command": "node",
+      "args": ["src/server.js"],
+      "cwd": "path/to/recharge-storefront-api-mcp"
+    }
+  }
+}
+```
+
+#### VSCode with GitHub Copilot
+
+1. **Install MCP extension** for VSCode (if available)
+2. **Add to VSCode settings.json** (`Ctrl/Cmd + Shift + P` → "Preferences: Open Settings (JSON)"):
+
+```json
+{
+  "mcp.servers": [
+    {
+      "name": "recharge-storefront-api",
+      "command": "node",
+      "args": ["src/server.js"],
+      "cwd": "path/to/recharge-storefront-api-mcp",
+      "env": {
+        "RECHARGE_STOREFRONT_DOMAIN": "your-shop.myshopify.com",
+        "RECHARGE_ADMIN_TOKEN": "your_admin_token_here"
+      }
+    }
+  ]
+}
+```
+
+3. **Alternative: Workspace configuration** (`.vscode/settings.json` in your project):
+
+```json
+{
+  "mcp.servers": [
+    {
+      "name": "recharge-storefront-api",
+      "command": "node",
+      "args": ["../recharge-storefront-api-mcp/src/server.js"],
+      "cwd": "../recharge-storefront-api-mcp"
+    }
+  ]
+}
+```
+
+#### Claude Code (Anthropic's IDE)
+
+1. **Open Claude Code settings**
+2. **Navigate to MCP Servers section**
+3. **Add new server configuration**:
+
+```json
+{
+  "name": "Recharge Storefront API",
+  "command": "node",
+  "args": ["src/server.js"],
+  "cwd": "path/to/recharge-storefront-api-mcp",
+  "env": {
+    "RECHARGE_STOREFRONT_DOMAIN": "your-shop.myshopify.com",
+    "RECHARGE_ADMIN_TOKEN": "your_admin_token_here"
+  }
+}
+```
+
+#### Generic MCP Client Configuration
+
+For any MCP-compatible client:
+- **Command**: `node src/server.js`
 - **Working Directory**: Path to this project
 - **Environment Variables**: Set in client config or .env file
+- **Protocol**: stdio (standard input/output)
+
+#### Configuration Tips
+
+1. **Use absolute paths** for reliability across different environments
+2. **Environment variables** can be set in client config or .env file
+3. **Test connection** after setup using client's MCP testing features
+4. **Enable debug mode** by adding `"DEBUG": "true"` to env variables for troubleshooting
 
 ### Environment Variables
 
