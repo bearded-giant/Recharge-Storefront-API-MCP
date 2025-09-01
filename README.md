@@ -274,7 +274,7 @@ The server includes built-in security protections:
 
 **Security Error Message:**
 ```
-Security Error: Cannot use default session token when customer-specific session tokens exist. 
+Security Error: Cannot use default session token when customer-specific sessions exist. 
 Please specify 'customer_id', 'customer_email', or 'session_token' to ensure correct customer data access.
 ```
 

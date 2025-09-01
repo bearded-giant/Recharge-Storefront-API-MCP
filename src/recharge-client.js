@@ -148,17 +148,30 @@ export class RechargeClient {
    * @returns {Promise<string>} Session token
    */
   async getOrCreateSessionToken(customerId = null, customerEmail = null) {
-    // Security check: prevent using default session when customer sessions exist
-    if (!customerId && !customerEmail && this.sessionCache.hasCustomerSessions()) {
+    // CRITICAL SECURITY CHECK: Prevent session token mixups
+    // If we have cached customer sessions and no customer is specified,
+    // we must not use the default session as it could expose wrong customer data
+    if (!customerId && !customerEmail) {
+      // If we have customer-specific sessions cached, require explicit customer identification
+      if (this.sessionCache.hasCustomerSessions()) {
+        throw new Error(
+          'Security Error: Cannot use default session token when customer-specific sessions exist. ' +
+          'Please specify customer_id, customer_email, or session_token to ensure correct customer data access.'
+        );
+      }
+      
+      // If no customer sessions exist and we have a default session token, use it
+      if (this.sessionToken) {
+        if (process.env.DEBUG === 'true') {
+          console.error('[DEBUG] Using default session token (no customer sessions cached)');
+        }
+        return this.sessionToken;
+      }
+      
       throw new Error(
-        'Security Error: Cannot use default session token when customer-specific session tokens exist. ' +
-        'Please specify \'customer_id\', \'customer_email\', or \'session_token\' to ensure correct customer data access.'
+        'Authentication Error: No session token available. ' +
+        'Please provide customer_id, customer_email, or configure a default session_token.'
       );
-    }
-    
-    // If we have a default session token and no specific customer requested, use it
-    if (!customerId && !customerEmail && this.sessionToken) {
-      return this.sessionToken;
     }
 
     // Resolve customer ID from email if needed
@@ -182,8 +195,17 @@ export class RechargeClient {
       throw new Error('Customer ID or email required for session creation');
     }
 
+    // SECURITY: Validate customer ID format to prevent injection
+    if (typeof customerId !== 'string' || customerId.trim() === '') {
+      throw new Error('Invalid customer ID format');
+    }
+
     // Check for cached session token
     let sessionToken = this.sessionCache.getSessionToken(customerId);
+    
+    if (process.env.DEBUG === 'true') {
+      console.error(`[DEBUG] Session lookup for customer ${customerId}: ${sessionToken ? 'Found in cache' : 'Not cached, will create'}`);
+    }
     
     if (!sessionToken) {
       // Create new session
@@ -191,8 +213,16 @@ export class RechargeClient {
       if (sessionData.customer_session && sessionData.customer_session.apiToken) {
         sessionToken = sessionData.customer_session.apiToken;
         this.sessionCache.setSessionToken(customerId, sessionToken, customerEmail);
+        
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Created and cached new session for customer ${customerId}`);
+        }
       } else {
         throw new Error('Failed to create customer session');
+      }
+    } else {
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Using cached session for customer ${customerId}`);
       }
     }
 
@@ -210,8 +240,17 @@ export class RechargeClient {
    * @returns {Promise<Object>} API response data
    */
   async makeCustomerRequest(method, endpoint, data = null, params = null, customerId = null, customerEmail = null) {
-    // Get appropriate session token
+    // SECURITY: Always get customer-specific session token
+    // This ensures we never accidentally use the wrong customer's session
     const sessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
+    
+    // SECURITY: Validate that we have proper customer identification
+    if (!customerId && !customerEmail && !this.sessionToken) {
+      throw new Error(
+        'Security Error: Customer identification required for API calls. ' +
+        'Please provide customer_id, customer_email, or ensure a default session_token is configured.'
+      );
+    }
     
     // Create request config with session token
     const config = {
