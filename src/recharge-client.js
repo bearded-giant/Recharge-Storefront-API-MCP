@@ -40,7 +40,7 @@ export class RechargeClient {
     
     // Create axios instance for Storefront API
     this.storefrontApi = axios.create({
-      baseURL: `https://${this.storeUrl}/tools/recurring/portal`,
+      baseURL: 'https://api.rechargeapps.com',
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ export class RechargeClient {
     
     // Create axios instance for Admin API
     this.adminApi = axios.create({
-      baseURL: `https://${this.storeUrl}/admin/api/2021-01/recharge`,
+      baseURL: 'https://api.rechargeapps.com',
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -235,7 +235,7 @@ export class RechargeClient {
         ...options
       };
       
-      const response = await this.adminApi.post('/customer_portal/customer_sessions', sessionData, {
+      const response = await this.adminApi.post(`/customers/${customerId}/sessions`, sessionData, {
         headers: {
           'X-Recharge-Access-Token': this.adminToken,
         },
