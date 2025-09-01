@@ -2,14 +2,14 @@ import { z } from 'zod';
 
 const baseSchema = z.object({
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
 });
 
 const createSessionByIdSchema = z.object({
-  merchant_token: z.string().optional().describe('Recharge merchant token (required for session creation unless set in environment)'),
+  admin_token: z.string().optional().describe('Recharge admin token (required for session creation unless set in environment)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   customer_id: z.string().describe('Customer ID'),
   return_url: z.string().optional().describe('URL to redirect to after session creation'),
@@ -17,7 +17,7 @@ const createSessionByIdSchema = z.object({
 
 const customerSchema = z.object({
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
@@ -25,7 +25,7 @@ const customerSchema = z.object({
 
 const updateCustomerSchema = z.object({
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   email: z.string().email().optional().describe('Customer email'),
@@ -35,7 +35,7 @@ const updateCustomerSchema = z.object({
 });
 
 const customerByEmailSchema = z.object({
-  merchant_token: z.string().optional().describe('Recharge merchant token (required for customer lookup unless set in environment)'),
+  admin_token: z.string().optional().describe('Recharge admin token (required for customer lookup unless set in environment)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   email: z.string().email().describe('Customer email address'),
 });
@@ -64,7 +64,7 @@ export const customerTools = [
     execute: async (client, args) => {
       const updateData = { ...args };
       delete updateData.session_token;
-      delete updateData.merchant_token;
+      delete updateData.admin_token;
       delete updateData.store_url;
       delete updateData.customer_id;
       delete updateData.customer_email;

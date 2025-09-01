@@ -56,7 +56,7 @@ export class RechargeClient {
         'Invalid token type: Admin API tokens cannot be used as session tokens.\n' +
         'Please provide one of:\n' +
         '1. sessionToken - Customer session token (st_...)\n' +
-        '2. Use customer_id or customer_email for automatic session creation with Admin token'
+        '2. Use customer_id or customer_email for automatic session creation with admin token'
       );
     }
     
@@ -100,7 +100,7 @@ export class RechargeClient {
       }
     }
     
-    // Merchant token is used for specific merchant operations, not as default header
+    // Admin token is used for specific admin operations, not as default header
     if (this.adminToken) {
       if (process.env.DEBUG === 'true') {
         console.error('[DEBUG] Admin token available for admin operations:', this.adminToken.substring(0, 10) + '...');
@@ -119,16 +119,16 @@ export class RechargeClient {
   }
 
   /**
-   * Create a customer session using customer ID (merchant token required)
+   * Create a customer session using customer ID (admin token required)
    * @param {string} customerId - Customer ID
    * @param {Object} [options={}] - Session options
    * @param {string} [options.return_url] - URL to redirect to after session
    * @returns {Promise<Object>} Session data including token
-   * @throws {Error} If Admin API token is not available
+   * @throws {Error} If admin token is not available
    */
   async createCustomerSessionById(customerId, options = {}) {
     if (!this.adminToken) {
-      throw new Error('Admin API token required for session creation');
+      throw new Error('Admin token required for session creation');
     }
     
     validateRequiredParams({ customerId }, ['customerId']);
@@ -460,15 +460,15 @@ export class RechargeClient {
    * Get customer by email address (requires Admin API token)
    * @param {string} email Customer email address
    * @returns {Promise<Object>} Customer data including customer ID
-   * @throws {Error} If Admin API token is not available
+   * @throws {Error} If admin token is not available
    * @throws {Error} If customer is not found
    */
   async getCustomerByEmail(email) {
     if (!this.adminToken) {
       throw new Error(
-        'Admin API token required for customer lookup by email. Please provide an Admin API token when creating the RechargeClient:\n' +
-        'new RechargeClient({ storeUrl, adminToken: "your_admin_api_token" })\n' +
-        'Note: Admin API tokens are different from customer session tokens (st_...)'
+        'Admin token required for customer lookup by email. Please provide an admin token when creating the RechargeClient:\n' +
+        'new RechargeClient({ storeUrl, adminToken: "your_admin_token" })\n' +
+        'Note: Admin tokens are different from customer session tokens (st_...)'
       );
     }
     
