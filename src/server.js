@@ -10,6 +10,7 @@ const baseSchema = z.object({
 
 const subscriptionListSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -20,6 +21,7 @@ const subscriptionListSchema = z.object({
 
 const subscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -28,6 +30,7 @@ const subscriptionSchema = z.object({
 
 const updateSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -45,6 +48,7 @@ const updateSubscriptionSchema = z.object({
 
 const skipSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -54,6 +58,7 @@ const skipSubscriptionSchema = z.object({
 
 const unskipSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -63,6 +68,7 @@ const unskipSubscriptionSchema = z.object({
 
 const swapSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -73,6 +79,7 @@ const swapSubscriptionSchema = z.object({
 
 const cancelSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -83,6 +90,7 @@ const cancelSubscriptionSchema = z.object({
 
 const setNextChargeDateSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -92,6 +100,7 @@ const setNextChargeDateSchema = z.object({
 
 const activateSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -100,6 +109,7 @@ const activateSubscriptionSchema = z.object({
 
 const createSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -142,6 +152,7 @@ export const subscriptionTools = [
       delete subscriptionData.session_token;
       delete subscriptionData.merchant_token;
       delete subscriptionData.store_url;
+      delete subscriptionData.customer_email;
       const subscription = await client.createSubscription(subscriptionData);
       return {
         content: [
@@ -182,6 +193,7 @@ export const subscriptionTools = [
       delete updateData.session_token;
       delete updateData.merchant_token;
       delete updateData.store_url;
+      delete updateData.customer_email;
       const updatedSubscription = await client.updateSubscription(subscription_id, updateData);
       return {
         content: [

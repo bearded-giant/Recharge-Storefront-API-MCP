@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { handleAPIError, validateRequiredParams } from './utils/error-handler.js';
+import { SessionCache } from './utils/session-cache.js';
 
 /**
  * Recharge Storefront API Client
@@ -21,6 +22,9 @@ export class RechargeClient {
    */
   constructor({ storeUrl, sessionToken, adminToken }) {
     validateRequiredParams({ storeUrl }, ['storeUrl']);
+    
+    // Initialize session cache
+    this.sessionCache = new SessionCache();
     
     // We need at least one token for authentication
     if (!sessionToken && !adminToken) {
@@ -119,6 +123,73 @@ export class RechargeClient {
   }
 
   /**
+   * Get or create session token for customer
+   * @param {string} [customerId] - Customer ID
+   * @param {string} [customerEmail] - Customer email
+   * @returns {Promise<string>} Session token
+   */
+  async getOrCreateSessionToken(customerId = null, customerEmail = null) {
+    // If we have a default session token and no specific customer requested, use it
+    if (!customerId && !customerEmail && this.sessionToken) {
+      return this.sessionToken;
+    }
+
+    // Resolve customer ID from email if needed
+    if (!customerId && customerEmail) {
+      // Check cache first
+      customerId = this.sessionCache.getCustomerIdByEmail(customerEmail);
+      
+      if (!customerId) {
+        // Look up customer by email
+        const customerData = await this.getCustomerByEmail(customerEmail);
+        if (customerData.customer) {
+          customerId = customerData.customer.id.toString();
+          this.sessionCache.setCustomerIdByEmail(customerEmail, customerId);
+        } else {
+          throw new Error(`Customer not found with email: ${customerEmail}`);
+        }
+      }
+    }
+
+    if (!customerId) {
+      throw new Error('Customer ID or email required for session creation');
+    }
+
+    // Check for cached session token
+    let sessionToken = this.sessionCache.getSessionToken(customerId);
+    
+    if (!sessionToken) {
+      // Create new session
+      const sessionData = await this.createCustomerSessionById(customerId);
+      if (sessionData.customer_session && sessionData.customer_session.apiToken) {
+        sessionToken = sessionData.customer_session.apiToken;
+        this.sessionCache.setSessionToken(customerId, sessionToken, customerEmail);
+      } else {
+        throw new Error('Failed to create customer session');
+      }
+    }
+
+    return sessionToken;
+  }
+
+  /**
+   * Create a client instance for a specific customer
+   * @param {string} [customerId] - Customer ID
+   * @param {string} [customerEmail] - Customer email
+   * @returns {Promise<RechargeClient>} Client instance with customer session
+   */
+  async createCustomerClient(customerId = null, customerEmail = null) {
+    const sessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
+    
+    // Create new client instance with the session token
+    return new RechargeClient({
+      storeUrl: this.storeUrl,
+      sessionToken,
+      adminToken: this.adminToken
+    });
+  }
+
+  /**
    * Create a customer session using customer ID (admin token required)
    * @param {string} customerId - Customer ID
    * @param {Object} [options={}] - Session options
@@ -193,14 +264,8 @@ export class RechargeClient {
     }
     
     if (response.customer_session && response.customer_session.apiToken) {
-      // Update client to use the new session token
-      this.sessionToken = response.customer_session.apiToken;
-      this.client.defaults.headers['Authorization'] = `Bearer ${this.sessionToken}`;
-      // Remove admin token header since we now have a session token
-      delete this.client.defaults.headers['X-Recharge-Access-Token'];
-      
       if (process.env.DEBUG === 'true') {
-        console.error('[DEBUG] Client updated to use session token:', this.sessionToken.substring(0, 10) + '...');
+        console.error('[DEBUG] Session created successfully:', response.customer_session.apiToken.substring(0, 10) + '...');
       }
     }
     
@@ -365,6 +430,78 @@ export class RechargeClient {
     
     const response = await this.client.request(config);
     return response.data;
+  }
+
+  /**
+   * Make an API request with automatic session management
+   * @param {string} method - HTTP method
+   * @param {string} endpoint - API endpoint
+   * @param {Object} data - Request data
+   * @param {Object} params - Query parameters
+   * @param {string} [customerId] - Customer ID for session
+   * @param {string} [customerEmail] - Customer email for session
+   * @returns {Promise<Object>} API response data
+   */
+  async makeCustomerRequest(method, endpoint, data = null, params = null, customerId = null, customerEmail = null) {
+    // Get appropriate session token
+    const sessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
+    
+    // Create request config with session token
+    const config = {
+      method: method.toLowerCase(),
+      url: endpoint,
+      headers: {
+        'Authorization': `Bearer ${sessionToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': `Recharge-Storefront-API-MCP/${process.env.MCP_SERVER_VERSION || '1.0.0'}`,
+      }
+    };
+    
+    if (data) {
+      config.data = data;
+    }
+    
+    if (params) {
+      config.params = params;
+    }
+    
+    try {
+      const response = await axios.request({
+        ...config,
+        baseURL: this.baseURL,
+        timeout: 30000,
+        maxRedirects: 0,
+        validateStatus: (status) => status < 500,
+      });
+      
+      return response.data;
+    } catch (error) {
+      // If session expired, clear cache and retry once
+      if (error.response?.status === 401 && customerId) {
+        this.sessionCache.clearSession(customerId);
+        
+        if (process.env.DEBUG === 'true') {
+          console.error('[DEBUG] Session expired, retrying with new session...');
+        }
+        
+        // Retry with fresh session
+        const newSessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
+        config.headers['Authorization'] = `Bearer ${newSessionToken}`;
+        
+        const retryResponse = await axios.request({
+          ...config,
+          baseURL: this.baseURL,
+          timeout: 30000,
+          maxRedirects: 0,
+          validateStatus: (status) => status < 500,
+        });
+        
+        return retryResponse.data;
+      }
+      
+      handleAPIError(error);
+    }
   }
 
   /**

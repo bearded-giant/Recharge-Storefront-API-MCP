@@ -45,8 +45,13 @@ export const customerTools = [
     name: 'get_customer',
     description: 'Retrieve current customer information',
     inputSchema: customerSchema,
-    execute: async (client, args) => {
-      const customer = await client.getCustomer();
+    execute: async (client, args, context) => {
+      let customer;
+      if (context?.customerId || context?.customerEmail) {
+        customer = await client.makeCustomerRequest('GET', '/customer', null, null, context.customerId, context.customerEmail);
+      } else {
+        customer = await client.getCustomer();
+      }
       return {
         content: [
           {
@@ -61,14 +66,21 @@ export const customerTools = [
     name: 'update_customer',
     description: 'Update customer information',
     inputSchema: updateCustomerSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const updateData = { ...args };
       delete updateData.session_token;
       delete updateData.admin_token;
       delete updateData.store_url;
       delete updateData.customer_id;
       delete updateData.customer_email;
-      const updatedCustomer = await client.updateCustomer(updateData);
+      
+      let updatedCustomer;
+      if (context?.customerId || context?.customerEmail) {
+        updatedCustomer = await client.makeCustomerRequest('PUT', '/customer', updateData, null, context.customerId, context.customerEmail);
+      } else {
+        updatedCustomer = await client.updateCustomer(updateData);
+      }
+      
       return {
         content: [
           {
@@ -83,7 +95,7 @@ export const customerTools = [
     name: 'get_customer_by_email',
     description: 'Find customer by email address to get customer ID (requires merchant token)',
     inputSchema: customerByEmailSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const { email } = args;
       const customer = await client.getCustomerByEmail(email);
       return {
@@ -100,7 +112,7 @@ export const customerTools = [
     name: 'create_customer_session_by_id',
     description: 'Create a customer session using customer ID (requires merchant token)',
     inputSchema: createSessionByIdSchema,
-    execute: async (client, args) => {
+    execute: async (client, args, context) => {
       const { customer_id, return_url } = args;
       const session = await client.createCustomerSessionById(customer_id, { return_url });
       return {
