@@ -841,30 +841,13 @@ For security issues, please follow responsible disclosure practices and contact 
 
 ## Contributing
 
-### Getting Started
+Contributions are welcome! When contributing:
 
-1. **Fork repository**: Create your own fork
-2. **Create branch**: `git checkout -b feature/your-feature`
-3. **Make changes**: Follow existing code patterns
-4. **Test thoroughly**: Run `npm run validate`
-5. **Submit PR**: Include description and tests
-
-### Development Guidelines
-
-#### Code Standards
-- **ESM modules**: Use modern JavaScript modules
-- **Error handling**: Comprehensive error handling required
-- **Input validation**: Use Zod schemas for all inputs
-- **Documentation**: JSDoc comments for all functions
-- **Validation**: Include validation for new functionality
-
-#### Pull Request Process
-- **Descriptive title**: Clear description of changes
-- **Validation**: All validation must pass
-- **Documentation**: Update README if needed
-- **No breaking changes**: Or clearly document them
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
+- **Follow existing patterns**: Use the established code structure and naming conventions
+- **Add proper validation**: Use Zod schemas for all new tool parameters
+- **Test thoroughly**: Run `npm run validate` before submitting changes
+- **Update documentation**: Keep the README current with any changes
+- **Handle errors properly**: Use the existing error handling patterns
 
 ## License
 
@@ -875,10 +858,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Support
 
 ### Resources
-- **Documentation**: This README and inline code documentation
-- **Security**: [SECURITY.md](SECURITY.md) for security guidelines  
-- **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines
-- **Changelog**: [CHANGELOG.md](CHANGELOG.md) for version history
+- **Documentation**: This README and comprehensive inline code documentation
+- **Examples**: Complete usage examples throughout this README
+- **Debug Mode**: Detailed logging for troubleshooting
 
 ### Getting Help
 - **Debug Mode**: Enable with `DEBUG=true` for troubleshooting
