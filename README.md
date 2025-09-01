@@ -82,6 +82,7 @@ Model Context Protocol (MCP) is a standardized way for AI assistants to interact
 - **Storage**: 100MB available disk space
 - **Network**: Internet connection for API access
 - **Platform**: Linux, macOS, or Windows (Docker recommended for Windows)
+ **Platform**: Linux, macOS, or Windows
 
 ## Installation
 
@@ -115,7 +116,6 @@ The setup script will:
 - Install dependencies
 - Create environment file
 - Validate configuration
-- Check for Docker (optional)
 - Display project statistics
 
 ### Verification
@@ -718,55 +718,6 @@ Debug output includes:
 - Error stack traces
 - Performance metrics
 
-## Docker Deployment
-
-### Quick Docker Setup
-
-```bash
-# Development
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-
-# Production  
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
-
-### Docker Commands
-
-```bash
-# Build image
-npm run docker:build
-
-# Run containers
-npm run docker:run
-
-# View logs
-npm run docker:logs
-
-# Stop containers
-npm run docker:stop
-
-# Clean up
-npm run docker:clean
-```
-
-### Automated Deployment
-
-```bash
-# Deploy to development
-./scripts/deploy.sh development
-
-# Deploy to production
-./scripts/deploy.sh production
-```
-
-### Docker Configuration
-
-- **Base**: `docker-compose.yml` - Core configuration
-- **Development**: `docker-compose.dev.yml` - Debug mode, volume mounts
-- **Production**: `docker-compose.prod.yml` - Resource limits, logging
-
-See [DOCKER.md](DOCKER.md) for detailed deployment guide.
-
 ## Troubleshooting
 
 ### Common Issues
@@ -898,20 +849,18 @@ Debug information includes:
 - **Input validation**: Zod schema validation for all inputs
 - **Error sanitization**: Sensitive data removed from logs
 
-#### Production Security
-- **Non-root container user**: Docker runs as non-privileged user
-- **Resource limits**: Memory and CPU limits in production
-- **Secure logging**: Sensitive data excluded from logs
-- **Health checks**: Monitor service availability
-
 ### Reporting Security Issues
 
-See [SECURITY.md](SECURITY.md) for security reporting guidelines.
+For security issues, please follow responsible disclosure practices and contact the project maintainers directly.
 
 ## Contributing
 
 ### Getting Started
 
+1. **Use environment variables** for sensitive data
+2. **Rotate tokens regularly** (recommended: every 90 days)
+3. **Use minimum required permissions**
+4. **Monitor API usage** for anomalies
 1. **Fork repository**: Create your own fork
 2. **Create branch**: `git checkout -b feature/your-feature`
 3. **Make changes**: Follow existing code patterns
@@ -944,7 +893,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Support
 
 ### Resources
-- **Documentation**: This README and [DOCKER.md](DOCKER.md)
+- **Documentation**: This README
 - **Security**: [SECURITY.md](SECURITY.md) for security guidelines
 - **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md) for development
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md) for version history
@@ -957,7 +906,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ### Project Statistics
 - **37 Tools**: Complete Recharge Storefront API coverage
 - **10 Categories**: Comprehensive subscription management
-- **Production Ready**: Docker, monitoring, error handling
+- **Production Ready**: Error handling, logging, monitoring
 - **Secure**: Built-in customer data protection with session token isolation
 - **Well Documented**: Comprehensive guides and examples
 

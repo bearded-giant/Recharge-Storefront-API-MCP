@@ -136,24 +136,6 @@ else
     exit 1
 fi
 
-# Check Docker availability (optional)
-if command -v docker >/dev/null 2>&1; then
-    docker_version=$(docker --version | cut -d' ' -f3 | cut -d',' -f1)
-    print_status "Docker available: $docker_version"
-    
-    if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-        compose_version=$(docker compose version --short 2>/dev/null || echo "unknown")
-        print_status "Docker Compose available: $compose_version"
-    elif command -v docker-compose >/dev/null 2>&1; then
-        compose_version=$(docker-compose --version | cut -d' ' -f3 | cut -d',' -f1)
-        print_status "Docker Compose (legacy) available: $compose_version"
-    else
-        print_warning "Docker Compose not found (optional for containerized deployment)"
-    fi
-else
-    print_warning "Docker not found (optional for containerized deployment)"
-fi
-
 # Display project statistics
 print_info "Project Statistics:"
 tool_count=$(find src/tools -name "*-tools.js" | wc -l)
@@ -173,6 +155,5 @@ print_info "Available commands:"
 echo "  npm run validate    - Validate configuration and syntax"
 echo "  npm run coverage    - Show API coverage report"
 echo "  npm run test        - Run tests"
-echo "  npm run docker:build - Build Docker image"
 echo ""
 print_info "For more information, see README.md"
