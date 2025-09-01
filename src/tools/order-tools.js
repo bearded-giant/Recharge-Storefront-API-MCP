@@ -45,7 +45,7 @@ export const orderTools = [
       if (context?.customerId || context?.customerEmail) {
         orders = await client.makeCustomerRequest('GET', '/orders', null, params, context.customerId, context.customerEmail);
       } else {
-        orders = await client.getOrders(params);
+        orders = await client.getOrders(params, null, null);
       }
       
       return {
@@ -69,7 +69,7 @@ export const orderTools = [
       if (context?.customerId || context?.customerEmail) {
         order = await client.makeCustomerRequest('GET', `/orders/${order_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        order = await client.getOrder(order_id);
+        order = await client.getOrder(order_id, null, null);
       }
       
       return {

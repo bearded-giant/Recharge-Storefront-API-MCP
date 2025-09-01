@@ -59,7 +59,7 @@ export const onetimeTools = [
       if (context?.customerId || context?.customerEmail) {
         onetimes = await client.makeCustomerRequest('GET', '/onetimes', null, null, context.customerId, context.customerEmail);
       } else {
-        onetimes = await client.getOnetimes();
+        onetimes = await client.getOnetimes({});
       }
       return {
         content: [
@@ -82,7 +82,7 @@ export const onetimeTools = [
       if (context?.customerId || context?.customerEmail) {
         onetime = await client.makeCustomerRequest('GET', `/onetimes/${onetime_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        onetime = await client.getOnetime(onetime_id);
+        onetime = await client.getOnetime(onetime_id, null, null);
       }
       
       return {
@@ -111,7 +111,7 @@ export const onetimeTools = [
       if (context?.customerId || context?.customerEmail) {
         onetime = await client.makeCustomerRequest('POST', '/onetimes', onetimeData, null, context.customerId, context.customerEmail);
       } else {
-        onetime = await client.createOnetime(onetimeData);
+        onetime = await client.createOnetime(onetimeData, null, null);
       }
       
       return {
@@ -142,7 +142,7 @@ export const onetimeTools = [
       if (context?.customerId || context?.customerEmail) {
         updatedOnetime = await client.makeCustomerRequest('PUT', `/onetimes/${onetime_id}`, onetimeData, null, context.customerId, context.customerEmail);
       } else {
-        updatedOnetime = await client.updateOnetime(onetime_id, onetimeData);
+        updatedOnetime = await client.updateOnetime(onetime_id, onetimeData, null, null);
       }
       
       return {
@@ -166,7 +166,7 @@ export const onetimeTools = [
       if (context?.customerId || context?.customerEmail) {
         result = await client.makeCustomerRequest('DELETE', `/onetimes/${onetime_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        result = await client.deleteOnetime(onetime_id);
+        result = await client.deleteOnetime(onetime_id, null, null);
       }
       
       return {

@@ -10,6 +10,7 @@ const baseSchema = z.object({
 
 const subscriptionListSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -20,6 +21,7 @@ const subscriptionListSchema = z.object({
 
 const subscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -28,6 +30,7 @@ const subscriptionSchema = z.object({
 
 const updateSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -45,6 +48,7 @@ const updateSubscriptionSchema = z.object({
 
 const skipSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -54,6 +58,7 @@ const skipSubscriptionSchema = z.object({
 
 const unskipSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -63,6 +68,7 @@ const unskipSubscriptionSchema = z.object({
 
 const swapSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -73,6 +79,7 @@ const swapSubscriptionSchema = z.object({
 
 const cancelSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -83,6 +90,7 @@ const cancelSubscriptionSchema = z.object({
 
 const setNextChargeDateSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -92,6 +100,7 @@ const setNextChargeDateSchema = z.object({
 
 const activateSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -100,6 +109,7 @@ const activateSubscriptionSchema = z.object({
 
 const createSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
@@ -123,6 +133,7 @@ export const subscriptionTools = [
     execute: async (client, args) => {
       const params = { ...args };
       delete params.customer_id;
+      delete params.customer_email;
       delete params.customer_email;
       delete params.session_token;
       delete params.admin_token;
@@ -156,7 +167,7 @@ export const subscriptionTools = [
       if (context?.customerId || context?.customerEmail) {
         subscription = await client.makeCustomerRequest('POST', '/subscriptions', subscriptionData, null, context.customerId, context.customerEmail);
       } else {
-        subscription = await client.createSubscription(subscriptionData);
+        subscription = await client.createSubscription(subscriptionData, null, null);
       }
       
       return {
@@ -180,7 +191,7 @@ export const subscriptionTools = [
       if (context?.customerId || context?.customerEmail) {
         subscription = await client.makeCustomerRequest('GET', `/subscriptions/${subscription_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        subscription = await client.getSubscription(subscription_id);
+        subscription = await client.getSubscription(subscription_id, null, null);
       }
       
       return {
@@ -211,7 +222,7 @@ export const subscriptionTools = [
       if (context?.customerId || context?.customerEmail) {
         updatedSubscription = await client.makeCustomerRequest('PUT', `/subscriptions/${subscription_id}`, updateData, null, context.customerId, context.customerEmail);
       } else {
-        updatedSubscription = await client.updateSubscription(subscription_id, updateData);
+        updatedSubscription = await client.updateSubscription(subscription_id, updateData, null, null);
       }
       
       return {
@@ -235,7 +246,7 @@ export const subscriptionTools = [
       if (context?.customerId || context?.customerEmail) {
         result = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/skip`, { date }, null, context.customerId, context.customerEmail);
       } else {
-        result = await client.skipSubscription(subscription_id, date);
+        result = await client.skipSubscription(subscription_id, date, null, null);
       }
       
       return {
@@ -259,7 +270,7 @@ export const subscriptionTools = [
       if (context?.customerId || context?.customerEmail) {
         result = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/unskip`, { date }, null, context.customerId, context.customerEmail);
       } else {
-        result = await client.unskipSubscription(subscription_id, date);
+        result = await client.unskipSubscription(subscription_id, date, null, null);
       }
       
       return {
@@ -290,7 +301,7 @@ export const subscriptionTools = [
       if (context?.customerId || context?.customerEmail) {
         swappedSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/swap`, swapData, null, context.customerId, context.customerEmail);
       } else {
-        swappedSubscription = await client.swapSubscription(subscription_id, swapData);
+        swappedSubscription = await client.swapSubscription(subscription_id, swapData, null, null);
       }
       
       return {
@@ -321,7 +332,7 @@ export const subscriptionTools = [
       if (context?.customerId || context?.customerEmail) {
         cancelledSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/cancel`, cancelData, null, context.customerId, context.customerEmail);
       } else {
-        cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData);
+        cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData, null, null);
       }
       
       return {
@@ -345,7 +356,7 @@ export const subscriptionTools = [
       if (context?.customerId || context?.customerEmail) {
         activatedSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/activate`, {}, null, context.customerId, context.customerEmail);
       } else {
-        activatedSubscription = await client.activateSubscription(subscription_id);
+        activatedSubscription = await client.activateSubscription(subscription_id, null, null);
       }
       
       return {
@@ -369,7 +380,7 @@ export const subscriptionTools = [
       if (context?.customerId || context?.customerEmail) {
         updatedSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/set_next_charge_date`, { date }, null, context.customerId, context.customerEmail);
       } else {
-        updatedSubscription = await client.setNextChargeDate(subscription_id, date);
+        updatedSubscription = await client.setNextChargeDate(subscription_id, date, null, null);
       }
       
       return {

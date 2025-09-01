@@ -45,7 +45,7 @@ export const productTools = [
       if (context?.customerId || context?.customerEmail) {
         products = await client.makeCustomerRequest('GET', '/products', null, params, context.customerId, context.customerEmail);
       } else {
-        products = await client.getProducts(params);
+        products = await client.getProducts(params, null, null);
       }
       
       return {
@@ -69,7 +69,7 @@ export const productTools = [
       if (context?.customerId || context?.customerEmail) {
         product = await client.makeCustomerRequest('GET', `/products/${product_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        product = await client.getProduct(product_id);
+        product = await client.getProduct(product_id, null, null);
       }
       
       return {

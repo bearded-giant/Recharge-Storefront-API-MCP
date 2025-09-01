@@ -53,7 +53,7 @@ export const discountTools = [
       if (context?.customerId || context?.customerEmail) {
         discounts = await client.makeCustomerRequest('GET', '/discounts', null, params, context.customerId, context.customerEmail);
       } else {
-        discounts = await client.getDiscounts(params);
+        discounts = await client.getDiscounts(params, null, null);
       }
       
       return {
@@ -77,7 +77,7 @@ export const discountTools = [
       if (context?.customerId || context?.customerEmail) {
         discount = await client.makeCustomerRequest('GET', `/discounts/${discount_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        discount = await client.getDiscount(discount_id);
+        discount = await client.getDiscount(discount_id, null, null);
       }
       
       return {
@@ -101,7 +101,7 @@ export const discountTools = [
       if (context?.customerId || context?.customerEmail) {
         discount = await client.makeCustomerRequest('POST', '/discounts', { discount_code }, null, context.customerId, context.customerEmail);
       } else {
-        discount = await client.applyDiscount(discount_code);
+        discount = await client.applyDiscount(discount_code, null, null);
       }
       
       return {
@@ -125,7 +125,7 @@ export const discountTools = [
       if (context?.customerId || context?.customerEmail) {
         result = await client.makeCustomerRequest('DELETE', `/discounts/${discount_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        result = await client.removeDiscount(discount_id);
+        result = await client.removeDiscount(discount_id, null, null);
       }
       
       return {

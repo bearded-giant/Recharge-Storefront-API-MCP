@@ -88,7 +88,7 @@ export const bundleTools = [
       if (context?.customerId || context?.customerEmail) {
         bundles = await client.makeCustomerRequest('GET', '/bundles', null, params, context.customerId, context.customerEmail);
       } else {
-        bundles = await client.getBundles(params);
+        bundles = await client.getBundles(params, null, null);
       }
       
       return {
@@ -112,7 +112,7 @@ export const bundleTools = [
       if (context?.customerId || context?.customerEmail) {
         bundle = await client.makeCustomerRequest('GET', `/bundles/${bundle_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        bundle = await client.getBundle(bundle_id);
+        bundle = await client.getBundle(bundle_id, null, null);
       }
       
       return {
@@ -143,7 +143,7 @@ export const bundleTools = [
       if (context?.customerId || context?.customerEmail) {
         selections = await client.makeCustomerRequest('GET', `/bundles/${bundle_id}/bundle_selections`, null, params, context.customerId, context.customerEmail);
       } else {
-        selections = await client.getBundleSelections(bundle_id, params);
+        selections = await client.getBundleSelections(bundle_id, params, null, null);
       }
       
       return {
@@ -167,7 +167,7 @@ export const bundleTools = [
       if (context?.customerId || context?.customerEmail) {
         selection = await client.makeCustomerRequest('GET', `/bundle_selections/${bundle_selection_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        selection = await client.getBundleSelection(bundle_selection_id);
+        selection = await client.getBundleSelection(bundle_selection_id, null, null);
       }
       
       return {
@@ -196,7 +196,7 @@ export const bundleTools = [
       if (context?.customerId || context?.customerEmail) {
         selection = await client.makeCustomerRequest('POST', '/bundle_selections', selectionData, null, context.customerId, context.customerEmail);
       } else {
-        selection = await client.createBundleSelection(selectionData);
+        selection = await client.createBundleSelection(selectionData, null, null);
       }
       
       return {
@@ -227,7 +227,7 @@ export const bundleTools = [
       if (context?.customerId || context?.customerEmail) {
         updatedSelection = await client.makeCustomerRequest('PUT', `/bundle_selections/${bundle_selection_id}`, selectionData, null, context.customerId, context.customerEmail);
       } else {
-        updatedSelection = await client.updateBundleSelection(bundle_selection_id, selectionData);
+        updatedSelection = await client.updateBundleSelection(bundle_selection_id, selectionData, null, null);
       }
       
       return {
@@ -251,7 +251,7 @@ export const bundleTools = [
       if (context?.customerId || context?.customerEmail) {
         result = await client.makeCustomerRequest('DELETE', `/bundle_selections/${bundle_selection_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        result = await client.deleteBundleSelection(bundle_selection_id);
+        result = await client.deleteBundleSelection(bundle_selection_id, null, null);
       }
       
       return {

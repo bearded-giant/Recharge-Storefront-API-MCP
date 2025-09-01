@@ -663,28 +663,31 @@ export class RechargeClient {
    * @throws {Error} If API request fails
    */
   async getSubscriptions(params = {}, customerId = null, customerEmail = null) {
-    const response = await this.makeCustomerRequest('GET', '/subscriptions', null, params, customerId, customerEmail);
-    return response;
+    return this.makeCustomerRequest('GET', '/subscriptions', null, params, customerId, customerEmail);
   }
 
   /**
    * Get detailed information about a specific subscription
    * @param {string} subscriptionId - The subscription ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Subscription data
    * @throws {Error} If subscription ID is invalid or not found
    */
-  async getSubscription(subscriptionId) {
+  async getSubscription(subscriptionId, customerId = null, customerEmail = null) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('GET', `/subscriptions/${subscriptionId}`);
+    return this.makeCustomerRequest('GET', `/subscriptions/${subscriptionId}`, null, null, customerId, customerEmail);
   }
 
   /**
    * Create a new subscription
    * @param {Object} subscriptionData - Subscription data
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Created subscription data
    * @throws {Error} If required fields are missing or invalid
    */
-  async createSubscription(subscriptionData) {
+  async createSubscription(subscriptionData, customerId = null, customerEmail = null) {
     const required = ['address_id', 'next_charge_scheduled_at', 'order_interval_frequency', 'order_interval_unit', 'quantity', 'variant_id'];
     validateRequiredParams(subscriptionData, required);
     
@@ -700,17 +703,19 @@ export class RechargeClient {
       processedData.order_interval_frequency = parseInt(processedData.order_interval_frequency, 10);
     }
     
-    return this.makeRequest('POST', '/subscriptions', processedData);
+    return this.makeCustomerRequest('POST', '/subscriptions', processedData, null, customerId, customerEmail);
   }
 
   /**
    * Update subscription details
    * @param {string} subscriptionId - The subscription ID
    * @param {Object} data - Update data
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Updated subscription data
    * @throws {Error} If subscription ID is invalid or update data is empty
    */
-  async updateSubscription(subscriptionId, data) {
+  async updateSubscription(subscriptionId, data, customerId = null, customerEmail = null) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Subscription update data is required');
@@ -728,64 +733,74 @@ export class RechargeClient {
       processedData.order_interval_frequency = parseInt(processedData.order_interval_frequency, 10);
     }
     
-    return this.makeRequest('PUT', `/subscriptions/${subscriptionId}`, processedData);
+    return this.makeCustomerRequest('PUT', `/subscriptions/${subscriptionId}`, processedData, null, customerId, customerEmail);
   }
 
   /**
    * Cancel a subscription
    * @param {string} subscriptionId - The subscription ID
    * @param {Object} [data={}] - Cancellation data
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Cancellation result
    * @throws {Error} If subscription ID is invalid
    */
-  async cancelSubscription(subscriptionId, data = {}) {
+  async cancelSubscription(subscriptionId, data = {}, customerId = null, customerEmail = null) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/cancel`, data);
+    return this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/cancel`, data, null, customerId, customerEmail);
   }
 
   /**
    * Activate a cancelled subscription
    * @param {string} subscriptionId - The subscription ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Activation result
    * @throws {Error} If subscription ID is invalid or subscription cannot be activated
    */
-  async activateSubscription(subscriptionId) {
+  async activateSubscription(subscriptionId, customerId = null, customerEmail = null) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/activate`);
+    return this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/activate`, {}, null, customerId, customerEmail);
   }
 
   /**
    * Skip a subscription delivery for a specific date
    * @param {string} subscriptionId - The subscription ID
    * @param {string} date - Date to skip (YYYY-MM-DD)
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Skip result
    * @throws {Error} If subscription ID or date is invalid
    */
-  async skipSubscription(subscriptionId, date) {
+  async skipSubscription(subscriptionId, date, customerId = null, customerEmail = null) {
     validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/skip`, { date });
+    return this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/skip`, { date }, null, customerId, customerEmail);
   }
 
   /**
    * Unskip a previously skipped subscription delivery
    * @param {string} subscriptionId - The subscription ID
    * @param {string} date - Date to unskip (YYYY-MM-DD)
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Unskip result
    * @throws {Error} If subscription ID or date is invalid
    */
-  async unskipSubscription(subscriptionId, date) {
+  async unskipSubscription(subscriptionId, date, customerId = null, customerEmail = null) {
     validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/unskip`, { date });
+    return this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/unskip`, { date }, null, customerId, customerEmail);
   }
 
   /**
    * Swap subscription product variant
    * @param {string} subscriptionId - The subscription ID
    * @param {Object} data - Swap data including variant_id
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Swap result
    * @throws {Error} If subscription ID is invalid or variant_id is missing
    */
-  async swapSubscription(subscriptionId, data) {
+  async swapSubscription(subscriptionId, data, customerId = null, customerEmail = null) {
     validateRequiredParams({ subscriptionId }, ['subscriptionId']);
     if (!data?.variant_id) {
       throw new Error('variant_id is required for subscription swap');
@@ -798,19 +813,21 @@ export class RechargeClient {
       processedData.quantity = parseInt(processedData.quantity, 10);
     }
     
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/swap`, processedData);
+    return this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/swap`, processedData, null, customerId, customerEmail);
   }
 
   /**
    * Set next charge date for subscription
    * @param {string} subscriptionId - The subscription ID
    * @param {string} date - Next charge date (YYYY-MM-DD)
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Update result
    * @throws {Error} If subscription ID or date is invalid
    */
-  async setNextChargeDate(subscriptionId, date) {
+  async setNextChargeDate(subscriptionId, date, customerId = null, customerEmail = null) {
     validateRequiredParams({ subscriptionId, date }, ['subscriptionId', 'date']);
-    return this.makeRequest('POST', `/subscriptions/${subscriptionId}/set_next_charge_date`, { date });
+    return this.makeCustomerRequest('POST', `/subscriptions/${subscriptionId}/set_next_charge_date`, { date }, null, customerId, customerEmail);
   }
 
   // Address methods
@@ -819,61 +836,70 @@ export class RechargeClient {
    * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Addresses data
    * @throws {Error} If API request fails
    */
-  async getAddresses(params = {}) {
-    const response = await this.makeRequest('GET', '/addresses', null, params);
-    return response;
+  async getAddresses(params = {}, customerId = null, customerEmail = null) {
+    return this.makeCustomerRequest('GET', '/addresses', null, params, customerId, customerEmail);
   }
 
   /**
    * Get detailed information about a specific address
    * @param {string} addressId - The address ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Address data
    * @throws {Error} If address ID is invalid or not found
    */
-  async getAddress(addressId) {
+  async getAddress(addressId, customerId = null, customerEmail = null) {
     validateRequiredParams({ addressId }, ['addressId']);
-    return this.makeRequest('GET', `/addresses/${addressId}`);
+    return this.makeCustomerRequest('GET', `/addresses/${addressId}`, null, null, customerId, customerEmail);
   }
 
   /**
    * Create a new address
    * @param {Object} addressData - Address data
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Created address data
    * @throws {Error} If required address fields are missing
    */
-  async createAddress(addressData) {
+  async createAddress(addressData, customerId = null, customerEmail = null) {
     const required = ['address1', 'city', 'province', 'zip', 'country', 'first_name', 'last_name'];
     validateRequiredParams(addressData, required);
-    return this.makeRequest('POST', '/addresses', addressData);
+    return this.makeCustomerRequest('POST', '/addresses', addressData, null, customerId, customerEmail);
   }
 
   /**
    * Update an existing address
    * @param {string} addressId - The address ID
    * @param {Object} addressData - Updated address data
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Updated address data
    * @throws {Error} If address ID is invalid or update data is empty
    */
-  async updateAddress(addressId, addressData) {
+  async updateAddress(addressId, addressData, customerId = null, customerEmail = null) {
     validateRequiredParams({ addressId }, ['addressId']);
     if (!addressData || Object.keys(addressData).length === 0) {
       throw new Error('Address update data is required');
     }
-    return this.makeRequest('PUT', `/addresses/${addressId}`, addressData);
+    return this.makeCustomerRequest('PUT', `/addresses/${addressId}`, addressData, null, customerId, customerEmail);
   }
 
   /**
    * Delete an address
    * @param {string} addressId - The address ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Deletion result
    * @throws {Error} If address ID is invalid or address cannot be deleted
    */
-  async deleteAddress(addressId) {
+  async deleteAddress(addressId, customerId = null, customerEmail = null) {
     validateRequiredParams({ addressId }, ['addressId']);
-    return this.makeRequest('DELETE', `/addresses/${addressId}`);
+    return this.makeCustomerRequest('DELETE', `/addresses/${addressId}`, null, null, customerId, customerEmail);
   }
 
   // Payment method methods
@@ -882,37 +908,43 @@ export class RechargeClient {
    * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Payment methods data
    * @throws {Error} If API request fails
    */
-  async getPaymentMethods(params = {}) {
-    return this.makeRequest('GET', '/payment_methods', null, params);
+  async getPaymentMethods(params = {}, customerId = null, customerEmail = null) {
+    return this.makeCustomerRequest('GET', '/payment_methods', null, params, customerId, customerEmail);
   }
 
   /**
    * Get detailed information about a specific payment method
    * @param {string} paymentMethodId - The payment method ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Payment method data
    * @throws {Error} If payment method ID is invalid or not found
    */
-  async getPaymentMethod(paymentMethodId) {
+  async getPaymentMethod(paymentMethodId, customerId = null, customerEmail = null) {
     validateRequiredParams({ paymentMethodId }, ['paymentMethodId']);
-    return this.makeRequest('GET', `/payment_methods/${paymentMethodId}`);
+    return this.makeCustomerRequest('GET', `/payment_methods/${paymentMethodId}`, null, null, customerId, customerEmail);
   }
 
   /**
    * Update payment method billing information
    * @param {string} paymentMethodId - The payment method ID
    * @param {Object} paymentData - Updated payment data
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Updated payment method data
    * @throws {Error} If payment method ID is invalid or update data is empty
    */
-  async updatePaymentMethod(paymentMethodId, paymentData) {
+  async updatePaymentMethod(paymentMethodId, paymentData, customerId = null, customerEmail = null) {
     validateRequiredParams({ paymentMethodId }, ['paymentMethodId']);
     if (!paymentData || Object.keys(paymentData).length === 0) {
       throw new Error('Payment method update data is required');
     }
-    return this.makeRequest('PUT', `/payment_methods/${paymentMethodId}`, paymentData);
+    return this.makeCustomerRequest('PUT', `/payment_methods/${paymentMethodId}`, paymentData, null, customerId, customerEmail);
   }
 
   // Product methods
@@ -922,22 +954,26 @@ export class RechargeClient {
    * @param {number} [params.limit] - Number of results to return
    * @param {string} [params.handle] - Filter by product handle
    * @param {boolean} [params.subscription_defaults] - Include subscription defaults
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Products data
    * @throws {Error} If API request fails
    */
-  async getProducts(params = {}) {
-    return this.makeRequest('GET', '/products', null, params);
+  async getProducts(params = {}, customerId = null, customerEmail = null) {
+    return this.makeCustomerRequest('GET', '/products', null, params, customerId, customerEmail);
   }
 
   /**
    * Get detailed product information
    * @param {string} productId - The product ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Product data
    * @throws {Error} If product ID is invalid or not found
    */
-  async getProduct(productId) {
+  async getProduct(productId, customerId = null, customerEmail = null) {
     validateRequiredParams({ productId }, ['productId']);
-    return this.makeRequest('GET', `/products/${productId}`);
+    return this.makeCustomerRequest('GET', `/products/${productId}`, null, null, customerId, customerEmail);
   }
 
   // Order methods
@@ -947,22 +983,26 @@ export class RechargeClient {
    * @param {string} [params.status] - Filter by order status
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Orders data
    * @throws {Error} If API request fails
    */
-  async getOrders(params = {}) {
-    return this.makeRequest('GET', '/orders', null, params);
+  async getOrders(params = {}, customerId = null, customerEmail = null) {
+    return this.makeCustomerRequest('GET', '/orders', null, params, customerId, customerEmail);
   }
 
   /**
    * Get detailed order information
    * @param {string} orderId - The order ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Order data
    * @throws {Error} If order ID is invalid or not found
    */
-  async getOrder(orderId) {
+  async getOrder(orderId, customerId = null, customerEmail = null) {
     validateRequiredParams({ orderId }, ['orderId']);
-    return this.makeRequest('GET', `/orders/${orderId}`);
+    return this.makeCustomerRequest('GET', `/orders/${orderId}`, null, null, customerId, customerEmail);
   }
 
   // Charge methods
@@ -972,22 +1012,26 @@ export class RechargeClient {
    * @param {string} [params.status] - Filter by charge status
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Charges data
    * @throws {Error} If API request fails
    */
-  async getCharges(params = {}) {
-    return this.makeRequest('GET', '/charges', null, params);
+  async getCharges(params = {}, customerId = null, customerEmail = null) {
+    return this.makeCustomerRequest('GET', '/charges', null, params, customerId, customerEmail);
   }
 
   /**
    * Get detailed charge information
    * @param {string} chargeId - The charge ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Charge data
    * @throws {Error} If charge ID is invalid or not found
    */
-  async getCharge(chargeId) {
+  async getCharge(chargeId, customerId = null, customerEmail = null) {
     validateRequiredParams({ chargeId }, ['chargeId']);
-    return this.makeRequest('GET', `/charges/${chargeId}`);
+    return this.makeCustomerRequest('GET', `/charges/${chargeId}`, null, null, customerId, customerEmail);
   }
 
   // One-time product methods
@@ -996,31 +1040,37 @@ export class RechargeClient {
    * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} One-time products data
    * @throws {Error} If API request fails
    */
-  async getOnetimes(params = {}) {
-    return this.makeRequest('GET', '/onetimes', null, params);
+  async getOnetimes(params = {}, customerId = null, customerEmail = null) {
+    return this.makeCustomerRequest('GET', '/onetimes', null, params, customerId, customerEmail);
   }
 
   /**
    * Get detailed information about a specific one-time product
    * @param {string} onetimeId - The one-time product ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} One-time product data
    * @throws {Error} If one-time product ID is invalid or not found
    */
-  async getOnetime(onetimeId) {
+  async getOnetime(onetimeId, customerId = null, customerEmail = null) {
     validateRequiredParams({ onetimeId }, ['onetimeId']);
-    return this.makeRequest('GET', `/onetimes/${onetimeId}`);
+    return this.makeCustomerRequest('GET', `/onetimes/${onetimeId}`, null, null, customerId, customerEmail);
   }
 
   /**
    * Create a one-time product
    * @param {Object} onetimeData - One-time product data
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Created one-time product data
    * @throws {Error} If required fields are missing
    */
-  async createOnetime(onetimeData) {
+  async createOnetime(onetimeData, customerId = null, customerEmail = null) {
     const required = ['variant_id', 'quantity', 'next_charge_scheduled_at'];
     validateRequiredParams(onetimeData, required);
     
@@ -1032,17 +1082,19 @@ export class RechargeClient {
       processedData.price = parseFloat(processedData.price);
     }
     
-    return this.makeRequest('POST', '/onetimes', processedData);
+    return this.makeCustomerRequest('POST', '/onetimes', processedData, null, customerId, customerEmail);
   }
 
   /**
    * Update a one-time product
    * @param {string} onetimeId - The one-time product ID
    * @param {Object} onetimeData - Updated one-time product data
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Updated one-time product data
    * @throws {Error} If one-time product ID is invalid or update data is empty
    */
-  async updateOnetime(onetimeId, onetimeData) {
+  async updateOnetime(onetimeId, onetimeData, customerId = null, customerEmail = null) {
     validateRequiredParams({ onetimeId }, ['onetimeId']);
     if (!onetimeData || Object.keys(onetimeData).length === 0) {
       throw new Error('One-time product update data is required');
@@ -1057,18 +1109,20 @@ export class RechargeClient {
       processedData.price = parseFloat(processedData.price);
     }
     
-    return this.makeRequest('PUT', `/onetimes/${onetimeId}`, processedData);
+    return this.makeCustomerRequest('PUT', `/onetimes/${onetimeId}`, processedData, null, customerId, customerEmail);
   }
 
   /**
    * Delete a one-time product
    * @param {string} onetimeId - The one-time product ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Deletion result
    * @throws {Error} If one-time product ID is invalid or product cannot be deleted
    */
-  async deleteOnetime(onetimeId) {
+  async deleteOnetime(onetimeId, customerId = null, customerEmail = null) {
     validateRequiredParams({ onetimeId }, ['onetimeId']);
-    return this.makeRequest('DELETE', `/onetimes/${onetimeId}`);
+    return this.makeCustomerRequest('DELETE', `/onetimes/${onetimeId}`, null, null, customerId, customerEmail);
   }
 
   // Bundle methods
@@ -1078,22 +1132,26 @@ export class RechargeClient {
    * @param {string} [params.subscription_id] - Filter by subscription ID
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Bundles data
    * @throws {Error} If API request fails
    */
-  async getBundles(params = {}) {
-    return this.makeRequest('GET', '/bundles', null, params);
+  async getBundles(params = {}, customerId = null, customerEmail = null) {
+    return this.makeCustomerRequest('GET', '/bundles', null, params, customerId, customerEmail);
   }
 
   /**
    * Get detailed information about a specific bundle
    * @param {string} bundleId - The bundle ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Bundle data
    * @throws {Error} If bundle ID is invalid or not found
    */
-  async getBundle(bundleId) {
+  async getBundle(bundleId, customerId = null, customerEmail = null) {
     validateRequiredParams({ bundleId }, ['bundleId']);
-    return this.makeRequest('GET', `/bundles/${bundleId}`);
+    return this.makeCustomerRequest('GET', `/bundles/${bundleId}`, null, null, customerId, customerEmail);
   }
 
   /**
@@ -1101,23 +1159,27 @@ export class RechargeClient {
    * @param {string} bundleId - The bundle ID
    * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Bundle selections data
    * @throws {Error} If bundle ID is invalid
    */
-  async getBundleSelections(bundleId, params = {}) {
+  async getBundleSelections(bundleId, params = {}, customerId = null, customerEmail = null) {
     validateRequiredParams({ bundleId }, ['bundleId']);
-    return this.makeRequest('GET', `/bundles/${bundleId}/bundle_selections`, null, params);
+    return this.makeCustomerRequest('GET', `/bundles/${bundleId}/bundle_selections`, null, params, customerId, customerEmail);
   }
 
   /**
    * Get detailed information about a specific bundle selection
    * @param {string} bundleSelectionId - The bundle selection ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Bundle selection data
    * @throws {Error} If bundle selection ID is invalid or not found
    */
-  async getBundleSelection(bundleSelectionId) {
+  async getBundleSelection(bundleSelectionId, customerId = null, customerEmail = null) {
     validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
-    return this.makeRequest('GET', `/bundle_selections/${bundleSelectionId}`);
+    return this.makeCustomerRequest('GET', `/bundle_selections/${bundleSelectionId}`, null, null, customerId, customerEmail);
   }
 
   /**
@@ -1126,10 +1188,12 @@ export class RechargeClient {
    * @param {string} selectionData.bundle_id - Bundle ID
    * @param {number} selectionData.variant_id - Selected variant ID
    * @param {number} selectionData.quantity - Quantity selected
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Created bundle selection data
    * @throws {Error} If required fields are missing
    */
-  async createBundleSelection(selectionData) {
+  async createBundleSelection(selectionData, customerId = null, customerEmail = null) {
     const required = ['bundle_id', 'variant_id', 'quantity'];
     validateRequiredParams(selectionData, required);
     
@@ -1142,17 +1206,19 @@ export class RechargeClient {
       processedData.external_variant_id = parseInt(processedData.external_variant_id, 10);
     }
     
-    return this.makeRequest('POST', '/bundle_selections', processedData);
+    return this.makeCustomerRequest('POST', '/bundle_selections', processedData, null, customerId, customerEmail);
   }
 
   /**
    * Update a bundle selection
    * @param {string} bundleSelectionId - The bundle selection ID
    * @param {Object} selectionData - Updated bundle selection data
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Updated bundle selection data
    * @throws {Error} If bundle selection ID is invalid or update data is empty
    */
-  async updateBundleSelection(bundleSelectionId, selectionData) {
+  async updateBundleSelection(bundleSelectionId, selectionData, customerId = null, customerEmail = null) {
     validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
     if (!selectionData || Object.keys(selectionData).length === 0) {
       throw new Error('Bundle selection update data is required');
@@ -1170,18 +1236,20 @@ export class RechargeClient {
       processedData.external_variant_id = parseInt(processedData.external_variant_id, 10);
     }
     
-    return this.makeRequest('PUT', `/bundle_selections/${bundleSelectionId}`, processedData);
+    return this.makeCustomerRequest('PUT', `/bundle_selections/${bundleSelectionId}`, processedData, null, customerId, customerEmail);
   }
 
   /**
    * Delete a bundle selection
    * @param {string} bundleSelectionId - The bundle selection ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Deletion result
    * @throws {Error} If bundle selection ID is invalid or selection cannot be deleted
    */
-  async deleteBundleSelection(bundleSelectionId) {
+  async deleteBundleSelection(bundleSelectionId, customerId = null, customerEmail = null) {
     validateRequiredParams({ bundleSelectionId }, ['bundleSelectionId']);
-    return this.makeRequest('DELETE', `/bundle_selections/${bundleSelectionId}`);
+    return this.makeCustomerRequest('DELETE', `/bundle_selections/${bundleSelectionId}`, null, null, customerId, customerEmail);
   }
 
   // Discount methods
@@ -1190,44 +1258,52 @@ export class RechargeClient {
    * @param {Object} [params={}] - Query parameters
    * @param {number} [params.limit] - Number of results to return
    * @param {number} [params.page] - Page number for pagination
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Discounts data
    * @throws {Error} If API request fails
    */
-  async getDiscounts(params = {}) {
-    return this.makeRequest('GET', '/discounts', null, params);
+  async getDiscounts(params = {}, customerId = null, customerEmail = null) {
+    return this.makeCustomerRequest('GET', '/discounts', null, params, customerId, customerEmail);
   }
 
   /**
    * Get detailed information about a specific discount
    * @param {string} discountId - The discount ID
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Discount data
    * @throws {Error} If discount ID is invalid or not found
    */
-  async getDiscount(discountId) {
+  async getDiscount(discountId, customerId = null, customerEmail = null) {
     validateRequiredParams({ discountId }, ['discountId']);
-    return this.makeRequest('GET', `/discounts/${discountId}`);
+    return this.makeCustomerRequest('GET', `/discounts/${discountId}`, null, null, customerId, customerEmail);
   }
 
   /**
    * Apply a discount code
    * @param {string} discountCode - The discount code to apply
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Applied discount data
    * @throws {Error} If discount code is invalid or cannot be applied
    */
-  async applyDiscount(discountCode) {
+  async applyDiscount(discountCode, customerId = null, customerEmail = null) {
     validateRequiredParams({ discountCode }, ['discountCode']);
-    return this.makeRequest('POST', '/discounts', { discount_code: discountCode });
+    return this.makeCustomerRequest('POST', '/discounts', { discount_code: discountCode }, null, customerId, customerEmail);
   }
 
   /**
    * Remove a discount
    * @param {string} discountId - The discount ID to remove
+   * @param {string} [customerId] - Customer ID for session creation
+   * @param {string} [customerEmail] - Customer email for session creation
    * @returns {Promise<Object>} Removal result
    * @throws {Error} If discount ID is invalid or discount cannot be removed
    */
-  async removeDiscount(discountId) {
+  async removeDiscount(discountId, customerId = null, customerEmail = null) {
     validateRequiredParams({ discountId }, ['discountId']);
-    return this.makeRequest('DELETE', `/discounts/${discountId}`);
+    return this.makeCustomerRequest('DELETE', `/discounts/${discountId}`, null, null, customerId, customerEmail);
   }
 
   /**

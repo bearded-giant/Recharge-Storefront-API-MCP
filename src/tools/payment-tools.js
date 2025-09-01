@@ -48,7 +48,7 @@ export const paymentTools = [
       if (context?.customerId || context?.customerEmail) {
         paymentMethods = await client.makeCustomerRequest('GET', '/payment_methods', null, null, context.customerId, context.customerEmail);
       } else {
-        paymentMethods = await client.getPaymentMethods();
+        paymentMethods = await client.getPaymentMethods({});
       }
       return {
         content: [
@@ -71,7 +71,7 @@ export const paymentTools = [
       if (context?.customerId || context?.customerEmail) {
         paymentMethod = await client.makeCustomerRequest('GET', `/payment_methods/${payment_method_id}`, null, null, context.customerId, context.customerEmail);
       } else {
-        paymentMethod = await client.getPaymentMethod(payment_method_id);
+        paymentMethod = await client.getPaymentMethod(payment_method_id, null, null);
       }
       
       return {
@@ -102,7 +102,7 @@ export const paymentTools = [
       if (context?.customerId || context?.customerEmail) {
         updatedPaymentMethod = await client.makeCustomerRequest('PUT', `/payment_methods/${payment_method_id}`, paymentData, null, context.customerId, context.customerEmail);
       } else {
-        updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData);
+        updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData, null, null);
       }
       
       return {
