@@ -238,6 +238,7 @@ export class RechargeClient {
       const response = await this.adminApi.post(`/customers/${customerId}/sessions`, sessionData, {
         headers: {
           'X-Recharge-Access-Token': this.adminToken,
+          'X-Recharge-Version': '2021-11',
         },
       });
       
