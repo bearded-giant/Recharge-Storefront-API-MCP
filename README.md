@@ -326,7 +326,7 @@ Override environment variables in individual tool calls:
   "name": "get_subscriptions",
   "arguments": {
     "store_url": "different-shop.myshopify.com",
-    "admin_token": "different_admin_token",
+    "admin_token": "different_admin_token", 
     "customer_email": "customer@example.com"
   }
 }
