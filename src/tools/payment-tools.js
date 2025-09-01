@@ -46,9 +46,9 @@ export const paymentTools = [
     execute: async (client, args, context) => {
       let paymentMethods;
       if (context?.customerId || context?.customerEmail) {
-        paymentMethods = await client.makeCustomerRequest('GET', '/payment_methods', null, null, context.customerId, context.customerEmail);
+        paymentMethods = await client.getPaymentMethods({}, context.customerId, context.customerEmail);
       } else {
-        paymentMethods = await client.getPaymentMethods({});
+        paymentMethods = await client.getPaymentMethods({}, args.customer_id, args.customer_email);
       }
       return {
         content: [
@@ -69,9 +69,9 @@ export const paymentTools = [
       
       let paymentMethod;
       if (context?.customerId || context?.customerEmail) {
-        paymentMethod = await client.makeCustomerRequest('GET', `/payment_methods/${payment_method_id}`, null, null, context.customerId, context.customerEmail);
+        paymentMethod = await client.getPaymentMethod(payment_method_id, context.customerId, context.customerEmail);
       } else {
-        paymentMethod = await client.getPaymentMethod(payment_method_id, null, null);
+        paymentMethod = await client.getPaymentMethod(payment_method_id, args.customer_id, args.customer_email);
       }
       
       return {
@@ -100,9 +100,9 @@ export const paymentTools = [
       
       let updatedPaymentMethod;
       if (context?.customerId || context?.customerEmail) {
-        updatedPaymentMethod = await client.makeCustomerRequest('PUT', `/payment_methods/${payment_method_id}`, paymentData, null, context.customerId, context.customerEmail);
+        updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData, context.customerId, context.customerEmail);
       } else {
-        updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData, null, null);
+        updatedPaymentMethod = await client.updatePaymentMethod(payment_method_id, paymentData, args.customer_id, args.customer_email);
       }
       
       return {

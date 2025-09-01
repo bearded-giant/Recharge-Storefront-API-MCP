@@ -62,9 +62,9 @@ export const addressTools = [
     execute: async (client, args, context) => {
       let addresses;
       if (context?.customerId || context?.customerEmail) {
-        addresses = await client.makeCustomerRequest('GET', '/addresses', null, null, context.customerId, context.customerEmail);
+        addresses = await client.getAddresses({}, context.customerId, context.customerEmail);
       } else {
-        addresses = await client.getAddresses({});
+        addresses = await client.getAddresses({}, args.customer_id, args.customer_email);
       }
       return {
         content: [
@@ -85,9 +85,9 @@ export const addressTools = [
       
       let address;
       if (context?.customerId || context?.customerEmail) {
-        address = await client.makeCustomerRequest('GET', `/addresses/${address_id}`, null, null, context.customerId, context.customerEmail);
+        address = await client.getAddress(address_id, context.customerId, context.customerEmail);
       } else {
-        address = await client.getAddress(address_id, null, null);
+        address = await client.getAddress(address_id, args.customer_id, args.customer_email);
       }
       
       return {
@@ -114,9 +114,9 @@ export const addressTools = [
       
       let address;
       if (context?.customerId || context?.customerEmail) {
-        address = await client.makeCustomerRequest('POST', '/addresses', addressData, null, context.customerId, context.customerEmail);
+        address = await client.createAddress(addressData, context.customerId, context.customerEmail);
       } else {
-        address = await client.createAddress(addressData, null, null);
+        address = await client.createAddress(addressData, args.customer_id, args.customer_email);
       }
       
       return {
@@ -145,9 +145,9 @@ export const addressTools = [
       
       let updatedAddress;
       if (context?.customerId || context?.customerEmail) {
-        updatedAddress = await client.makeCustomerRequest('PUT', `/addresses/${address_id}`, addressData, null, context.customerId, context.customerEmail);
+        updatedAddress = await client.updateAddress(address_id, addressData, context.customerId, context.customerEmail);
       } else {
-        updatedAddress = await client.updateAddress(address_id, addressData, null, null);
+        updatedAddress = await client.updateAddress(address_id, addressData, args.customer_id, args.customer_email);
       }
       
       return {
@@ -169,9 +169,9 @@ export const addressTools = [
       
       let result;
       if (context?.customerId || context?.customerEmail) {
-        result = await client.makeCustomerRequest('DELETE', `/addresses/${address_id}`, null, null, context.customerId, context.customerEmail);
+        result = await client.deleteAddress(address_id, context.customerId, context.customerEmail);
       } else {
-        result = await client.deleteAddress(address_id, null, null);
+        result = await client.deleteAddress(address_id, args.customer_id, args.customer_email);
       }
       
       return {

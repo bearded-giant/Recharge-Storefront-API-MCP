@@ -86,9 +86,9 @@ export const bundleTools = [
       
       let bundles;
       if (context?.customerId || context?.customerEmail) {
-        bundles = await client.makeCustomerRequest('GET', '/bundles', null, params, context.customerId, context.customerEmail);
+        bundles = await client.getBundles(params, context.customerId, context.customerEmail);
       } else {
-        bundles = await client.getBundles(params, null, null);
+        bundles = await client.getBundles(params, args.customer_id, args.customer_email);
       }
       
       return {
@@ -110,9 +110,9 @@ export const bundleTools = [
       
       let bundle;
       if (context?.customerId || context?.customerEmail) {
-        bundle = await client.makeCustomerRequest('GET', `/bundles/${bundle_id}`, null, null, context.customerId, context.customerEmail);
+        bundle = await client.getBundle(bundle_id, context.customerId, context.customerEmail);
       } else {
-        bundle = await client.getBundle(bundle_id, null, null);
+        bundle = await client.getBundle(bundle_id, args.customer_id, args.customer_email);
       }
       
       return {
@@ -141,9 +141,9 @@ export const bundleTools = [
       
       let selections;
       if (context?.customerId || context?.customerEmail) {
-        selections = await client.makeCustomerRequest('GET', `/bundles/${bundle_id}/bundle_selections`, null, params, context.customerId, context.customerEmail);
+        selections = await client.getBundleSelections(bundle_id, params, context.customerId, context.customerEmail);
       } else {
-        selections = await client.getBundleSelections(bundle_id, params, null, null);
+        selections = await client.getBundleSelections(bundle_id, params, args.customer_id, args.customer_email);
       }
       
       return {
@@ -165,9 +165,9 @@ export const bundleTools = [
       
       let selection;
       if (context?.customerId || context?.customerEmail) {
-        selection = await client.makeCustomerRequest('GET', `/bundle_selections/${bundle_selection_id}`, null, null, context.customerId, context.customerEmail);
+        selection = await client.getBundleSelection(bundle_selection_id, context.customerId, context.customerEmail);
       } else {
-        selection = await client.getBundleSelection(bundle_selection_id, null, null);
+        selection = await client.getBundleSelection(bundle_selection_id, args.customer_id, args.customer_email);
       }
       
       return {
@@ -194,9 +194,9 @@ export const bundleTools = [
       
       let selection;
       if (context?.customerId || context?.customerEmail) {
-        selection = await client.makeCustomerRequest('POST', '/bundle_selections', selectionData, null, context.customerId, context.customerEmail);
+        selection = await client.createBundleSelection(selectionData, context.customerId, context.customerEmail);
       } else {
-        selection = await client.createBundleSelection(selectionData, null, null);
+        selection = await client.createBundleSelection(selectionData, args.customer_id, args.customer_email);
       }
       
       return {
@@ -225,9 +225,9 @@ export const bundleTools = [
       
       let updatedSelection;
       if (context?.customerId || context?.customerEmail) {
-        updatedSelection = await client.makeCustomerRequest('PUT', `/bundle_selections/${bundle_selection_id}`, selectionData, null, context.customerId, context.customerEmail);
+        updatedSelection = await client.updateBundleSelection(bundle_selection_id, selectionData, context.customerId, context.customerEmail);
       } else {
-        updatedSelection = await client.updateBundleSelection(bundle_selection_id, selectionData, null, null);
+        updatedSelection = await client.updateBundleSelection(bundle_selection_id, selectionData, args.customer_id, args.customer_email);
       }
       
       return {
@@ -249,9 +249,9 @@ export const bundleTools = [
       
       let result;
       if (context?.customerId || context?.customerEmail) {
-        result = await client.makeCustomerRequest('DELETE', `/bundle_selections/${bundle_selection_id}`, null, null, context.customerId, context.customerEmail);
+        result = await client.deleteBundleSelection(bundle_selection_id, context.customerId, context.customerEmail);
       } else {
-        result = await client.deleteBundleSelection(bundle_selection_id, null, null);
+        result = await client.deleteBundleSelection(bundle_selection_id, args.customer_id, args.customer_email);
       }
       
       return {

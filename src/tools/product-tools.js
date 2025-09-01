@@ -43,9 +43,9 @@ export const productTools = [
       
       let products;
       if (context?.customerId || context?.customerEmail) {
-        products = await client.makeCustomerRequest('GET', '/products', null, params, context.customerId, context.customerEmail);
+        products = await client.getProducts(params, context.customerId, context.customerEmail);
       } else {
-        products = await client.getProducts(params, null, null);
+        products = await client.getProducts(params, args.customer_id, args.customer_email);
       }
       
       return {
@@ -67,9 +67,9 @@ export const productTools = [
       
       let product;
       if (context?.customerId || context?.customerEmail) {
-        product = await client.makeCustomerRequest('GET', `/products/${product_id}`, null, null, context.customerId, context.customerEmail);
+        product = await client.getProduct(product_id, context.customerId, context.customerEmail);
       } else {
-        product = await client.getProduct(product_id, null, null);
+        product = await client.getProduct(product_id, args.customer_id, args.customer_email);
       }
       
       return {

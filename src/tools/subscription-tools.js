@@ -165,9 +165,9 @@ export const subscriptionTools = [
       
       let subscription;
       if (context?.customerId || context?.customerEmail) {
-        subscription = await client.makeCustomerRequest('POST', '/subscriptions', subscriptionData, null, context.customerId, context.customerEmail);
+        subscription = await client.createSubscription(subscriptionData, context.customerId, context.customerEmail);
       } else {
-        subscription = await client.createSubscription(subscriptionData, null, null);
+        subscription = await client.createSubscription(subscriptionData, args.customer_id, args.customer_email);
       }
       
       return {
@@ -189,9 +189,9 @@ export const subscriptionTools = [
       
       let subscription;
       if (context?.customerId || context?.customerEmail) {
-        subscription = await client.makeCustomerRequest('GET', `/subscriptions/${subscription_id}`, null, null, context.customerId, context.customerEmail);
+        subscription = await client.getSubscription(subscription_id, context.customerId, context.customerEmail);
       } else {
-        subscription = await client.getSubscription(subscription_id, null, null);
+        subscription = await client.getSubscription(subscription_id, args.customer_id, args.customer_email);
       }
       
       return {
@@ -220,9 +220,9 @@ export const subscriptionTools = [
       
       let updatedSubscription;
       if (context?.customerId || context?.customerEmail) {
-        updatedSubscription = await client.makeCustomerRequest('PUT', `/subscriptions/${subscription_id}`, updateData, null, context.customerId, context.customerEmail);
+        updatedSubscription = await client.updateSubscription(subscription_id, updateData, context.customerId, context.customerEmail);
       } else {
-        updatedSubscription = await client.updateSubscription(subscription_id, updateData, null, null);
+        updatedSubscription = await client.updateSubscription(subscription_id, updateData, args.customer_id, args.customer_email);
       }
       
       return {
@@ -244,9 +244,9 @@ export const subscriptionTools = [
       
       let result;
       if (context?.customerId || context?.customerEmail) {
-        result = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/skip`, { date }, null, context.customerId, context.customerEmail);
+        result = await client.skipSubscription(subscription_id, date, context.customerId, context.customerEmail);
       } else {
-        result = await client.skipSubscription(subscription_id, date, null, null);
+        result = await client.skipSubscription(subscription_id, date, args.customer_id, args.customer_email);
       }
       
       return {
@@ -268,9 +268,9 @@ export const subscriptionTools = [
       
       let result;
       if (context?.customerId || context?.customerEmail) {
-        result = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/unskip`, { date }, null, context.customerId, context.customerEmail);
+        result = await client.unskipSubscription(subscription_id, date, context.customerId, context.customerEmail);
       } else {
-        result = await client.unskipSubscription(subscription_id, date, null, null);
+        result = await client.unskipSubscription(subscription_id, date, args.customer_id, args.customer_email);
       }
       
       return {
@@ -299,9 +299,9 @@ export const subscriptionTools = [
       
       let swappedSubscription;
       if (context?.customerId || context?.customerEmail) {
-        swappedSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/swap`, swapData, null, context.customerId, context.customerEmail);
+        swappedSubscription = await client.swapSubscription(subscription_id, swapData, context.customerId, context.customerEmail);
       } else {
-        swappedSubscription = await client.swapSubscription(subscription_id, swapData, null, null);
+        swappedSubscription = await client.swapSubscription(subscription_id, swapData, args.customer_id, args.customer_email);
       }
       
       return {
@@ -330,9 +330,9 @@ export const subscriptionTools = [
       
       let cancelledSubscription;
       if (context?.customerId || context?.customerEmail) {
-        cancelledSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/cancel`, cancelData, null, context.customerId, context.customerEmail);
+        cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData, context.customerId, context.customerEmail);
       } else {
-        cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData, null, null);
+        cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData, args.customer_id, args.customer_email);
       }
       
       return {
@@ -354,9 +354,9 @@ export const subscriptionTools = [
       
       let activatedSubscription;
       if (context?.customerId || context?.customerEmail) {
-        activatedSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/activate`, {}, null, context.customerId, context.customerEmail);
+        activatedSubscription = await client.activateSubscription(subscription_id, context.customerId, context.customerEmail);
       } else {
-        activatedSubscription = await client.activateSubscription(subscription_id, null, null);
+        activatedSubscription = await client.activateSubscription(subscription_id, args.customer_id, args.customer_email);
       }
       
       return {
@@ -378,9 +378,9 @@ export const subscriptionTools = [
       
       let updatedSubscription;
       if (context?.customerId || context?.customerEmail) {
-        updatedSubscription = await client.makeCustomerRequest('POST', `/subscriptions/${subscription_id}/set_next_charge_date`, { date }, null, context.customerId, context.customerEmail);
+        updatedSubscription = await client.setNextChargeDate(subscription_id, date, context.customerId, context.customerEmail);
       } else {
-        updatedSubscription = await client.setNextChargeDate(subscription_id, date, null, null);
+        updatedSubscription = await client.setNextChargeDate(subscription_id, date, args.customer_id, args.customer_email);
       }
       
       return {

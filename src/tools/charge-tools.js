@@ -43,9 +43,9 @@ export const chargeTools = [
       
       let charges;
       if (context?.customerId || context?.customerEmail) {
-        charges = await client.makeCustomerRequest('GET', '/charges', null, params, context.customerId, context.customerEmail);
+        charges = await client.getCharges(params, context.customerId, context.customerEmail);
       } else {
-        charges = await client.getCharges(params, null, null);
+        charges = await client.getCharges(params, args.customer_id, args.customer_email);
       }
       
       return {
@@ -67,9 +67,9 @@ export const chargeTools = [
       
       let charge;
       if (context?.customerId || context?.customerEmail) {
-        charge = await client.makeCustomerRequest('GET', `/charges/${charge_id}`, null, null, context.customerId, context.customerEmail);
+        charge = await client.getCharge(charge_id, context.customerId, context.customerEmail);
       } else {
-        charge = await client.getCharge(charge_id, null, null);
+        charge = await client.getCharge(charge_id, args.customer_id, args.customer_email);
       }
       
       return {

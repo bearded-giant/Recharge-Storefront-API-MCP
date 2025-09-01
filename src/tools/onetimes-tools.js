@@ -57,9 +57,9 @@ export const onetimeTools = [
     execute: async (client, args, context) => {
       let onetimes;
       if (context?.customerId || context?.customerEmail) {
-        onetimes = await client.makeCustomerRequest('GET', '/onetimes', null, null, context.customerId, context.customerEmail);
+        onetimes = await client.getOnetimes({}, context.customerId, context.customerEmail);
       } else {
-        onetimes = await client.getOnetimes({});
+        onetimes = await client.getOnetimes({}, args.customer_id, args.customer_email);
       }
       return {
         content: [
@@ -80,9 +80,9 @@ export const onetimeTools = [
       
       let onetime;
       if (context?.customerId || context?.customerEmail) {
-        onetime = await client.makeCustomerRequest('GET', `/onetimes/${onetime_id}`, null, null, context.customerId, context.customerEmail);
+        onetime = await client.getOnetime(onetime_id, context.customerId, context.customerEmail);
       } else {
-        onetime = await client.getOnetime(onetime_id, null, null);
+        onetime = await client.getOnetime(onetime_id, args.customer_id, args.customer_email);
       }
       
       return {
@@ -109,9 +109,9 @@ export const onetimeTools = [
       
       let onetime;
       if (context?.customerId || context?.customerEmail) {
-        onetime = await client.makeCustomerRequest('POST', '/onetimes', onetimeData, null, context.customerId, context.customerEmail);
+        onetime = await client.createOnetime(onetimeData, context.customerId, context.customerEmail);
       } else {
-        onetime = await client.createOnetime(onetimeData, null, null);
+        onetime = await client.createOnetime(onetimeData, args.customer_id, args.customer_email);
       }
       
       return {
@@ -140,9 +140,9 @@ export const onetimeTools = [
       
       let updatedOnetime;
       if (context?.customerId || context?.customerEmail) {
-        updatedOnetime = await client.makeCustomerRequest('PUT', `/onetimes/${onetime_id}`, onetimeData, null, context.customerId, context.customerEmail);
+        updatedOnetime = await client.updateOnetime(onetime_id, onetimeData, context.customerId, context.customerEmail);
       } else {
-        updatedOnetime = await client.updateOnetime(onetime_id, onetimeData, null, null);
+        updatedOnetime = await client.updateOnetime(onetime_id, onetimeData, args.customer_id, args.customer_email);
       }
       
       return {
@@ -164,9 +164,9 @@ export const onetimeTools = [
       
       let result;
       if (context?.customerId || context?.customerEmail) {
-        result = await client.makeCustomerRequest('DELETE', `/onetimes/${onetime_id}`, null, null, context.customerId, context.customerEmail);
+        result = await client.deleteOnetime(onetime_id, context.customerId, context.customerEmail);
       } else {
-        result = await client.deleteOnetime(onetime_id, null, null);
+        result = await client.deleteOnetime(onetime_id, args.customer_id, args.customer_email);
       }
       
       return {
