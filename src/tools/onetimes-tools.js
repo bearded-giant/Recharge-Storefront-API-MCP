@@ -1,143 +1,309 @@
 import { z } from 'zod';
 
-const onetimeListSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+const baseSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
 });
 
-const onetimeSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+const subscriptionListSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  onetime_id: z.string().describe('The one-time product ID'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  status: z.enum(['active', 'cancelled', 'expired']).optional().describe('Filter by subscription status'),
+  limit: z.number().max(250).default(50).describe('Number of subscriptions to return'),
+  page: z.number().default(1).describe('Page number for pagination'),
 });
 
-const createOnetimeSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+const subscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  variant_id: z.number().describe('Variant ID'),
-  quantity: z.number().describe('Quantity'),
-  next_charge_scheduled_at: z.string().describe('When to add this to next charge (YYYY-MM-DD format)'),
-  price: z.number().optional().describe('Price per unit'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+});
+
+const updateSubscriptionSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  next_charge_scheduled_at: z.string().optional().describe('Next charge date (ISO format)'),
+  order_interval_frequency: z.number().optional().describe('Order interval frequency (e.g., 1, 2, 3)'),
+  order_interval_unit: z.enum(['day', 'week', 'month']).optional().describe('Order interval unit'),
+  quantity: z.number().optional().describe('Subscription quantity'),
+  variant_id: z.number().optional().describe('Product variant ID'),
   properties: z.array(z.object({
     name: z.string(),
     value: z.string(),
   })).optional().describe('Product properties'),
 });
 
-const updateOnetimeSchema = z.object({
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  merchant_token: z.string().optional().describe('Recharge merchant token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+const skipSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  onetime_id: z.string().describe('The one-time product ID'),
-  next_charge_scheduled_at: z.string().optional().describe('When to add this to next charge (YYYY-MM-DD format)'),
-  quantity: z.number().optional().describe('Quantity'),
-  price: z.number().optional().describe('Price per unit'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  date: z.string().describe('Date to skip (YYYY-MM-DD format)'),
+});
+
+const unskipSubscriptionSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  date: z.string().describe('Date to unskip (YYYY-MM-DD format)'),
+});
+
+const swapSubscriptionSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  variant_id: z.number().describe('New variant ID to swap to'),
+  quantity: z.number().optional().describe('New quantity'),
+});
+
+const cancelSubscriptionSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  cancellation_reason: z.string().optional().describe('Reason for cancellation'),
+  cancellation_reason_comments: z.string().optional().describe('Additional comments for cancellation'),
+});
+
+const setNextChargeDateSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+  date: z.string().describe('Next charge date (YYYY-MM-DD format)'),
+});
+
+const activateSubscriptionSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  subscription_id: z.string().describe('The subscription ID'),
+});
+
+const createSubscriptionSchema = z.object({
+  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
+  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
+  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
+  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
+  address_id: z.string().describe('The address ID for the subscription'),
+  next_charge_scheduled_at: z.string().describe('Next charge date (YYYY-MM-DD format)'),
+  order_interval_frequency: z.number().describe('Order interval frequency (e.g., 1, 2, 3)'),
+  order_interval_unit: z.enum(['day', 'week', 'month']).describe('Order interval unit'),
+  quantity: z.number().describe('Subscription quantity'),
+  variant_id: z.number().describe('Product variant ID'),
   properties: z.array(z.object({
     name: z.string(),
     value: z.string(),
   })).optional().describe('Product properties'),
 });
 
-export const onetimeTools = [
+export const subscriptionTools = [
   {
-    name: 'get_onetimes',
-    description: 'Get all one-time products for a specific customer',
-    inputSchema: onetimeListSchema,
+    name: 'get_subscriptions',
+    description: 'Get subscriptions for a specific customer',
+    inputSchema: subscriptionListSchema,
     execute: async (client, args) => {
-      const onetimes = await client.getOnetimes(args);
+      const subscriptions = await client.getSubscriptions(args);
       return {
         content: [
           {
             type: 'text',
-            text: `One-time Products:\n${JSON.stringify(onetimes, null, 2)}`,
+            text: `Subscriptions:\n${JSON.stringify(subscriptions, null, 2)}`,
           },
         ],
       };
     },
   },
   {
-    name: 'get_onetime',
-    description: 'Get detailed information about a specific one-time product',
-    inputSchema: onetimeSchema,
+    name: 'create_subscription',
+    description: 'Create a new subscription',
+    inputSchema: createSubscriptionSchema,
     execute: async (client, args) => {
-      const { onetime_id } = args;
-      const onetime = await client.getOnetime(onetime_id);
+      const subscriptionData = { ...args };
+      delete subscriptionData.customer_id;
+      delete subscriptionData.session_token;
+      delete subscriptionData.admin_token;
+      delete subscriptionData.store_url;
+      const subscription = await client.createSubscription(subscriptionData);
       return {
         content: [
           {
             type: 'text',
-            text: `One-time Product Details:\n${JSON.stringify(onetime, null, 2)}`,
+            text: `Created Subscription:\n${JSON.stringify(subscription, null, 2)}`,
           },
         ],
       };
     },
   },
   {
-    name: 'create_onetime',
-    description: 'Create a new one-time product',
-    inputSchema: createOnetimeSchema,
+    name: 'get_subscription',
+    description: 'Get detailed information about a specific subscription',
+    inputSchema: subscriptionSchema,
     execute: async (client, args) => {
-      const onetimeData = { ...args };
-      delete onetimeData.session_token;
-      delete onetimeData.merchant_token;
-      delete onetimeData.store_url;
-      delete onetimeData.customer_id;
-      delete onetimeData.customer_email;
-      const onetime = await client.createOnetime(onetimeData);
+      const { subscription_id } = args;
+      const subscription = await client.getSubscription(subscription_id);
       return {
         content: [
           {
             type: 'text',
-            text: `One-time Product Created:\n${JSON.stringify(onetime, null, 2)}`,
+            text: `Subscription Details:\n${JSON.stringify(subscription, null, 2)}`,
           },
         ],
       };
     },
   },
   {
-    name: 'update_onetime',
-    description: 'Update a one-time product',
-    inputSchema: updateOnetimeSchema,
+    name: 'update_subscription',
+    description: 'Update subscription details like frequency, quantity, or next charge date',
+    inputSchema: updateSubscriptionSchema,
     execute: async (client, args) => {
-      const { onetime_id } = args;
+      const { subscription_id } = args;
       const updateData = { ...args };
-      delete updateData.onetime_id;
-      delete updateData.session_token;
-      delete updateData.merchant_token;
-      delete updateData.store_url;
+      delete updateData.subscription_id;
       delete updateData.customer_id;
-      delete updateData.customer_email;
-      const updatedOnetime = await client.updateOnetime(onetime_id, updateData);
+      delete updateData.session_token;
+      delete updateData.admin_token;
+      delete updateData.store_url;
+      const updatedSubscription = await client.updateSubscription(subscription_id, updateData);
       return {
         content: [
           {
             type: 'text',
-            text: `Updated One-time Product:\n${JSON.stringify(updatedOnetime, null, 2)}`,
+            text: `Updated Subscription:\n${JSON.stringify(updatedSubscription, null, 2)}`,
           },
         ],
       };
     },
   },
   {
-    name: 'delete_onetime',
-    description: 'Delete a one-time product',
-    inputSchema: onetimeSchema,
+    name: 'skip_subscription',
+    description: 'Skip a subscription delivery for a specific date',
+    inputSchema: skipSubscriptionSchema,
     execute: async (client, args) => {
-      const { onetime_id } = args;
-      const result = await client.deleteOnetime(onetime_id);
+      const { subscription_id, date } = args;
+      const result = await client.skipSubscription(subscription_id, date);
       return {
         content: [
           {
             type: 'text',
-            text: `Deleted One-time Product:\n${JSON.stringify(result, null, 2)}`,
+            text: `Skipped Subscription:\n${JSON.stringify(result, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'unskip_subscription',
+    description: 'Unskip a previously skipped subscription delivery',
+    inputSchema: unskipSubscriptionSchema,
+    execute: async (client, args) => {
+      const { subscription_id, date } = args;
+      const result = await client.unskipSubscription(subscription_id, date);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Unskipped Subscription:\n${JSON.stringify(result, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'swap_subscription',
+    description: 'Swap the variant of a subscription',
+    inputSchema: swapSubscriptionSchema,
+    execute: async (client, args) => {
+      const { subscription_id } = args;
+      const swapData = { ...args };
+      delete swapData.subscription_id;
+      delete swapData.customer_id;
+      delete swapData.session_token;
+      delete swapData.admin_token;
+      delete swapData.store_url;
+      delete swapData.customer_email;
+      const swappedSubscription = await client.swapSubscription(subscription_id, swapData);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Swapped Subscription Product:\n${JSON.stringify(swappedSubscription, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'cancel_subscription',
+    description: 'Cancel a subscription',
+    inputSchema: cancelSubscriptionSchema,
+    execute: async (client, args) => {
+      const { subscription_id } = args;
+      const cancelData = { ...args };
+      delete cancelData.subscription_id;
+      delete cancelData.customer_id;
+      delete cancelData.session_token;
+      delete cancelData.admin_token;
+      delete cancelData.store_url;
+      delete cancelData.customer_email;
+      const cancelledSubscription = await client.cancelSubscription(subscription_id, cancelData);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Cancelled Subscription:\n${JSON.stringify(cancelledSubscription, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'activate_subscription',
+    description: 'Activate a cancelled subscription',
+    inputSchema: activateSubscriptionSchema,
+    execute: async (client, args) => {
+      const { subscription_id } = args;
+      const activatedSubscription = await client.activateSubscription(subscription_id);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Activated Subscription:\n${JSON.stringify(activatedSubscription, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'set_subscription_next_charge_date',
+    description: 'Set the next charge date for a subscription',
+    inputSchema: setNextChargeDateSchema,
+    execute: async (client, args) => {
+      const { subscription_id, date } = args;
+      const updatedSubscription = await client.setNextChargeDate(subscription_id, date);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Updated Subscription Next Charge Date:\n${JSON.stringify(updatedSubscription, null, 2)}`,
           },
         ],
       };
