@@ -10,13 +10,33 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import dotenv from 'dotenv';
 import { RechargeClient } from './recharge-client.js';
 import { tools } from './tools/index.js';
 import { formatErrorResponse } from './utils/error-handler.js';
 
+// Check if running in MCP mode (when stdin is piped or explicitly set)
+const isMCPMode = !process.stdin.isTTY || process.env.MCP_MODE === 'true';
+
+// Suppress dotenv console output only in MCP mode
+const originalLog = console.log;
+const originalError = console.error;
+
+if (isMCPMode) {
+  // Suppress all console output to stdout for MCP compatibility
+  console.log = () => {};
+  console.error = () => {};
+}
+
 // Load environment variables
 dotenv.config();
+
+// Restore console methods
+if (isMCPMode) {
+  console.log = originalLog;
+  console.error = originalError;
+}
 
 /**
  * Server statistics tracking
@@ -78,7 +98,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: tools.map(tool => ({
       name: tool.name,
       description: tool.description,
-      inputSchema: tool.inputSchema,
+      inputSchema: tool.inputSchema ? zodToJsonSchema(tool.inputSchema, {
+        strictUnions: true,
+      }) : {},
     })),
   };
 });
@@ -247,10 +269,10 @@ async function main() {
     
     // Validate required dependencies
     try {
-      require('@modelcontextprotocol/sdk/server/index.js');
-      require('zod');
-      require('axios');
-      require('dotenv');
+      await import('@modelcontextprotocol/sdk/server/index.js');
+      await import('zod');
+      await import('axios');
+      await import('dotenv');
     } catch (error) {
       console.error('[FATAL] Missing required dependencies. Please run: npm install');
       console.error('[DEBUG] Missing dependency:', error.message);

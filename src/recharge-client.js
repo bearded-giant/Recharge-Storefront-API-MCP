@@ -126,7 +126,7 @@ export class RechargeClient {
       }
       try {
         const session = await this.createCustomerSessionById(finalCustomerId);
-        const newToken = session.customer_session?.token || session.token;
+        const newToken = session.customer_session?.apiToken || session.customer_session?.token || session.token;
         
         if (!newToken) {
           throw new Error('Session creation returned no token');
@@ -231,6 +231,13 @@ export class RechargeClient {
     }
 
     try {
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Looking up customer by email: ${email}`);
+        console.error(`[DEBUG] Using admin API URL: ${this.adminApi.defaults.baseURL}/customers`);
+        console.error(`[DEBUG] Admin token present: ${this.adminToken ? 'Yes' : 'No'}`);
+        console.error(`[DEBUG] Admin token prefix: ${this.adminToken ? this.adminToken.substring(0, 10) + '...' : 'N/A'}`);
+      }
+      
       const response = await this.adminApi.get('/customers', {
         params: { email },
         headers: {
@@ -247,6 +254,10 @@ export class RechargeClient {
     } catch (error) {
       // Handle case where customer lookup fails due to expired/invalid admin token
       if (error.response?.status === 401) {
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] 401 Authentication error from Recharge API`);
+          console.error(`[DEBUG] Response data:`, error.response?.data);
+        }
         throw new Error(
           'Admin token authentication failed. Please verify your admin token is valid and has not expired.'
         );
@@ -271,12 +282,22 @@ export class RechargeClient {
         ...options
       };
       
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Creating session for customer ID: ${customerId}`);
+        console.error(`[DEBUG] POST /customers/${customerId}/sessions`);
+        console.error(`[DEBUG] Session data:`, sessionData);
+      }
+      
       const response = await this.adminApi.post(`/customers/${customerId}/sessions`, sessionData, {
         headers: {
           'X-Recharge-Access-Token': this.adminToken,
           'X-Recharge-Version': '2021-11',
         },
       });
+      
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Session creation response:`, JSON.stringify(response.data, null, 2));
+      }
       
       return response.data;
     } catch (error) {
@@ -288,6 +309,9 @@ export class RechargeClient {
         throw new Error(
           'Admin token authentication failed. Please verify your admin token is valid and has not expired.'
         );
+      }
+      if (process.env.DEBUG === 'true') {
+        console.error(`[DEBUG] Session creation error:`, error.response?.data || error.message);
       }
       handleAPIError(error);
     }

@@ -43,9 +43,10 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "latest",
-    "zod": "latest",
     "axios": "latest",
-    "dotenv": "latest"
+    "dotenv": "latest",
+    "zod": "latest",
+    "zod-to-json-schema": "^3.24.6"
   },
   "engines": {
     "node": ">=18.0.0"

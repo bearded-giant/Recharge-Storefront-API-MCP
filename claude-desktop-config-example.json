@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "recharge-storefront": {
+      "command": "node",
+      "args": ["/Users/bryan/dev/llm/Recharge-Storefront-API-MCP/src/server.js"],
+      "env": {
+        "RECHARGE_STOREFRONT_DOMAIN": "beardedgiant-test.myshopify.com",
+        "RECHARGE_ADMIN_TOKEN": "055ee71b3d7c34bd2e49bdbcfb692008bc685feb897bf414750e81fd721eb0a5",
+        "DEBUG": "false"
+      }
+    }
+  }
+}
