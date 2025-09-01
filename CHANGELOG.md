@@ -14,7 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Flexible store URL configuration supporting environment variables and per-tool parameters
 - Comprehensive error handling with detailed error messages
 - Debug mode with detailed logging capabilities
-- Docker support with multi-environment configurations
 - Production-ready features including health checks and monitoring
 - Complete documentation with examples and troubleshooting guides
 - Automated testing and validation scripts
@@ -38,7 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Axios-based HTTP client with interceptors
 - Comprehensive error handling and logging
 - Environment variable configuration
-- Docker containerization
 - Health checks and monitoring
 - Graceful shutdown handling
 - Statistics tracking

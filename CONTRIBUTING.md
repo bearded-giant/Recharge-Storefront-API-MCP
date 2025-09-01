@@ -30,7 +30,6 @@ This project follows a standard code of conduct:
 - Node.js 18.0.0 or higher
 - npm or yarn package manager
 - Git for version control
-- Docker (optional, for containerized development)
 
 ### Development Setup
 
