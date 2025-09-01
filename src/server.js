@@ -164,33 +164,33 @@ class RechargeStorefrontAPIMCPServer {
    * Get or create a Recharge Storefront client
    * @param {string} [toolStoreUrl] - Store URL from tool call
    * @param {string} [toolSessionToken] - Session token from tool call
-   * @param {string} [toolAdminToken] - Admin API token from tool call
+   * @param {string} [toolMerchantToken] - Merchant token from tool call
    * @param {string} [customerId] - Customer ID for automatic session creation
    * @param {string} [customerEmail] - Customer email for automatic lookup and session creation
    * @returns {RechargeClient} Configured Recharge Storefront client
    * @throws {Error} If no store URL or authentication token is available
    */
-  async getRechargeClient(toolStoreUrl, toolSessionToken, toolAdminToken, customerId, customerEmail) {
+  async getRechargeClient(toolStoreUrl, toolSessionToken, toolMerchantToken, customerId, customerEmail) {
     const storeUrl = toolStoreUrl || this.defaultStoreUrl;
     
     // Validate that we have at least one authentication method available
     const hasSessionToken = toolSessionToken || this.defaultSessionToken;
-    const hasAdminToken = toolAdminToken || this.defaultAdminToken;
+    const hasMerchantToken = toolMerchantToken || this.defaultAdminToken;
     const hasCustomerIdentification = customerId || customerEmail;
     
-    if (!hasSessionToken && !hasAdminToken) {
+    if (!hasSessionToken && !hasMerchantToken) {
       throw new Error(
         "No authentication token available. Please provide either:\n" +
         "1. 'session_token' parameter in your tool call, or\n" +
-        "2. 'admin_token' parameter in your tool call, or\n" +
+        "2. 'merchant_token' parameter in your tool call, or\n" +
         "3. Set RECHARGE_SESSION_TOKEN or RECHARGE_ADMIN_TOKEN in your environment variables."
       );
     }
     
-    // If only admin token is available, require customer identification
-    if (!hasSessionToken && hasAdminToken && !hasCustomerIdentification) {
+    // If only merchant token is available, require customer identification
+    if (!hasSessionToken && hasMerchantToken && !hasCustomerIdentification) {
       throw new Error(
-        "Admin API token requires customer identification. Please provide either:\n" +
+        "Merchant token requires customer identification. Please provide either:\n" +
         "1. 'customer_id' parameter for direct session creation, or\n" +
         "2. 'customer_email' parameter for customer lookup and session creation, or\n" +
         "3. Provide a 'session_token' parameter instead."
@@ -241,13 +241,13 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // If email provided but no customer ID, look up customer by email first  
-    if (!resolvedCustomerId && customerEmail && (toolAdminToken || this.defaultAdminToken)) {
-      const adminTokenToUse = toolAdminToken || this.defaultAdminToken;
+    if (!resolvedCustomerId && customerEmail && (toolMerchantToken || this.defaultAdminToken)) {
+      const merchantTokenToUse = toolMerchantToken || this.defaultAdminToken;
       
-      if (!adminTokenToUse) {
+      if (!merchantTokenToUse) {
         throw new Error(
-          "Admin API token required for customer email lookup. Please provide either:\n" +
-          "1. 'admin_token' parameter in your tool call, or\n" +
+          "Merchant token required for customer email lookup. Please provide either:\n" +
+          "1. 'merchant_token' parameter in your tool call, or\n" +
           "2. Set RECHARGE_ADMIN_TOKEN in your environment variables, or\n" +
           "3. Use 'customer_id' instead of 'customer_email' if you have the customer ID."
         );
@@ -263,7 +263,7 @@ class RechargeStorefrontAPIMCPServer {
       // Create temporary client with admin token to look up customer
       const tempClient = new RechargeClient({
         storeUrl: validatedDomain,
-        adminToken: adminTokenToUse,
+        adminToken: merchantTokenToUse,
       });
       
       try {
@@ -315,13 +315,13 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // If we have admin token and customer ID, create session automatically
-    if ((toolAdminToken || this.defaultAdminToken) && resolvedCustomerId) {
-      const adminTokenToUse = toolAdminToken || this.defaultAdminToken;
+    if ((toolMerchantToken || this.defaultAdminToken) && resolvedCustomerId) {
+      const merchantTokenToUse = toolMerchantToken || this.defaultAdminToken;
       
-      if (!adminTokenToUse) {
+      if (!merchantTokenToUse) {
         throw new Error(
-          "Admin API token required for automatic session creation. Please provide either:\n" +
-          "1. 'admin_token' parameter in your tool call, or\n" +
+          "Merchant token required for automatic session creation. Please provide either:\n" +
+          "1. 'merchant_token' parameter in your tool call, or\n" +
           "2. Set RECHARGE_ADMIN_TOKEN in your environment variables."
         );
       }
@@ -334,7 +334,7 @@ class RechargeStorefrontAPIMCPServer {
       // Create temporary client with admin token to create session
       const tempClient = new RechargeClient({
         storeUrl: validatedDomain,
-        adminToken: adminTokenToUse,
+        adminToken: merchantTokenToUse,
       });
       
       try {
@@ -421,15 +421,15 @@ class RechargeStorefrontAPIMCPServer {
     }
     
     // Fallback to admin token if available
-    const adminTokenToUse = toolAdminToken || this.defaultAdminToken;
-    if (adminTokenToUse) {
+    const merchantTokenToUse = toolMerchantToken || this.defaultAdminToken;
+    if (merchantTokenToUse) {
       if (process.env.DEBUG === 'true') {
-        console.error('[DEBUG] Using admin token for authentication');
+        console.error('[DEBUG] Using merchant token for authentication');
       }
       
       return new RechargeClient({
         storeUrl: validatedDomain,
-        adminToken: adminTokenToUse,
+        adminToken: merchantTokenToUse,
       });
     }
     
@@ -534,17 +534,17 @@ class RechargeStorefrontAPIMCPServer {
         const validatedArgs = tool.inputSchema.parse(args || {});
         
         // Extract authentication parameters from validated args
-        const { store_url, session_token, admin_token, customer_id, customer_email, ...toolArgs } = validatedArgs;
+        const { store_url, session_token, merchant_token, customer_id, customer_email, ...toolArgs } = validatedArgs;
         
         if (process.env.DEBUG === 'true') {
           console.error(`[DEBUG] Tool '${name}' called`);
           console.error(`[DEBUG] Store URL: ${store_url ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Session token: ${session_token ? 'provided in call' : 'using environment default'}`);
-          console.error(`[DEBUG] Admin token: ${admin_token ? 'provided in call' : 'using environment default'}`);
+          console.error(`[DEBUG] Merchant token: ${merchant_token ? 'provided in call' : 'using environment default'}`);
           console.error(`[DEBUG] Customer ID: ${customer_id ? 'provided for auto-session' : 'not provided'}`);
           console.error(`[DEBUG] Customer email: ${customer_email ? 'provided for auto-lookup' : 'not provided'}`);
           console.error(`[DEBUG] Final store URL: ${store_url || this.defaultStoreUrl}`);
-          console.error(`[DEBUG] Available tokens: Admin=${!!(admin_token || this.defaultAdminToken)}, Session=${!!(session_token || this.defaultSessionToken)}`);
+          console.error(`[DEBUG] Available tokens: Merchant=${!!(merchant_token || this.defaultAdminToken)}, Session=${!!(session_token || this.defaultSessionToken)}`);
           if (Object.keys(toolArgs).length > 0) {
             console.error(`[DEBUG] Tool arguments:`, JSON.stringify(toolArgs, null, 2));
           }
@@ -558,7 +558,7 @@ class RechargeStorefrontAPIMCPServer {
         
         while (retryCount <= maxRetries) {
           try {
-            rechargeClient = await this.getRechargeClient(store_url, session_token, admin_token, customer_id, customer_email);
+            rechargeClient = await this.getRechargeClient(store_url, session_token, merchant_token, customer_id, customer_email);
             result = await tool.execute(rechargeClient, toolArgs);
             
             this.stats.successfulCalls++;
@@ -571,7 +571,7 @@ class RechargeStorefrontAPIMCPServer {
             
           } catch (error) {
             // Check if this is a session expiry error and we can retry
-            if (error.sessionExpired && retryCount < maxRetries && (customer_id || customer_email) && (admin_token || this.defaultAdminToken)) {
+            if (error.sessionExpired && retryCount < maxRetries && (customer_id || customer_email) && (merchant_token || this.defaultAdminToken)) {
               retryCount++;
               
               if (process.env.DEBUG === 'true') {
