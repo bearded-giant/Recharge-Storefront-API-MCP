@@ -493,18 +493,7 @@ npm run dev:debug
 DEBUG=true npm start
 ```
 
-### Basic Usage Pattern
-
-1. **Install Dependencies**: `npm install`
-2. **Configure Environment**: Edit `.env` file with your credentials
-3. **Start Server**: `npm start`
-4. **Connect MCP Client**: Point your MCP client to the server process
-3. **Make Tool Calls**: Use any of the 37 available tools
-4. **Automatic Sessions**: Server handles authentication automatically
-
-### Common Workflows
-
-#### Customer Service Workflow
+### Customer Service Workflow
 
 ```json
 // 1. Look up customer
@@ -515,7 +504,7 @@ DEBUG=true npm start
 
 // 2. Check their subscriptions
 {
-  "name": "get_subscriptions", 
+  "name": "get_subscriptions",
   "arguments": {"customer_email": "customer@example.com"}
 }
 
@@ -526,7 +515,7 @@ DEBUG=true npm start
 }
 ```
 
-#### Subscription Management Workflow
+### Subscription Management Workflow
 
 ```json
 // 1. Get subscription details
@@ -542,7 +531,7 @@ DEBUG=true npm start
 {
   "name": "skip_subscription",
   "arguments": {
-    "customer_email": "customer@example.com", 
+    "customer_email": "customer@example.com",
     "subscription_id": "sub_123",
     "date": "2024-02-15"
   }
@@ -642,7 +631,7 @@ DEBUG=true npm start
 
 ## Examples
 
-### Complete Customer Service Example
+### Complete Multi-Step Example
 
 ```json
 // 1. Find customer by email
@@ -703,7 +692,7 @@ DEBUG=true npm start
 
 // 2. Update subscription frequency
 {
-  "name": "update_subscription",
+  "name": "update_subscription", 
   "arguments": {
     "customer_email": "customer@example.com",
     "subscription_id": "sub_123456",
@@ -712,13 +701,14 @@ DEBUG=true npm start
   }
 }
 
-// 3. Skip next delivery
+// 3. Add one-time product to next delivery
 {
-  "name": "skip_subscription",
+  "name": "create_onetime",
   "arguments": {
     "customer_email": "customer@example.com",
-    "subscription_id": "sub_123456", 
-    "date": "2024-02-15"
+    "variant_id": 789012,
+    "quantity": 1,
+    "next_charge_scheduled_at": "2024-02-15"
   }
 }
 ```
@@ -750,7 +740,7 @@ DEBUG=true npm start
 ```json
 // This will fail with helpful error message
 {
-  "name": "get_subscription",
+  "name": "get_subscription", 
   "arguments": {
     "subscription_id": "invalid_id"
   }
@@ -758,10 +748,24 @@ DEBUG=true npm start
 
 // Error response:
 {
-  "error": "API Error (404): Subscription not found (Code: SUBSCRIPTION_NOT_FOUND)",
-  "tip": "Verify the subscription ID exists and you have access to it."
+  "content": [
+    {
+      "type": "text",
+      "text": "API Error (404): Subscription not found\n\nTip: Verify the resource ID exists and you have access to it."
+    }
+  ],
+  "isError": true
 }
 ```
+
+### Basic Usage Pattern
+
+1. **Install Dependencies**: `npm install`
+2. **Configure Environment**: Edit `.env` file with your credentials  
+3. **Start Server**: `npm start`
+4. **Connect MCP Client**: Point your MCP client to the server process
+5. **Make Tool Calls**: Use any of the 37 available tools
+6. **Automatic Sessions**: Server handles authentication automatically
 
 ## Development
 
