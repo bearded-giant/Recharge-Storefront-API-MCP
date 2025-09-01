@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Recharge Storefront API MCP Server",
-  "main": "src/server.js",
+  "main": "index.js",
   "bin": {
-    "recharge-storefront-api-mcp": "src/server.js"
+    "recharge-storefront-api-mcp": "index.js"
   },
   "scripts": {
     "start": "node src/server.js",
