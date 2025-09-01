@@ -75,13 +75,6 @@ Model Context Protocol (MCP) is a standardized way for AI assistants to interact
 - **Recharge Account**: Active Recharge merchant account
 - **API Access**: Recharge Admin API token for session creation
 
-### System Requirements
-
-- **Memory**: Minimum 256MB RAM
-- **Storage**: 50MB available disk space
-- **Network**: Internet connection for API access
-- **Platform**: Linux, macOS, or Windows (WebContainer compatible)
-
 ## Installation
 
 ### Quick Start
