@@ -44,6 +44,12 @@ const updateSubscriptionSchema = z.object({
     name: z.string(),
     value: z.string(),
   })).optional().describe('Product properties'),
+}).refine(data => {
+  // At least one field to update must be provided
+  const updateFields = ['next_charge_scheduled_at', 'order_interval_frequency', 'order_interval_unit', 'quantity', 'variant_id', 'properties'];
+  return updateFields.some(field => data[field] !== undefined);
+}, {
+  message: "At least one field to update must be provided"
 });
 
 const skipSubscriptionSchema = z.object({
@@ -75,6 +81,8 @@ const swapSubscriptionSchema = z.object({
   subscription_id: z.string().describe('The subscription ID'),
   variant_id: z.number().describe('New variant ID to swap to'),
   quantity: z.number().optional().describe('New quantity'),
+}).refine(data => data.variant_id > 0, {
+  message: "variant_id must be greater than 0"
 });
 
 const cancelSubscriptionSchema = z.object({

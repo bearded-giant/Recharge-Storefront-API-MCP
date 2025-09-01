@@ -98,9 +98,16 @@ export class RechargeClient {
           if (process.env.DEBUG === 'true') {
             console.error(`[DEBUG] Looking up customer ID for email: ${customerEmail}`);
           }
-          const customer = await this.getCustomerByEmail(customerEmail);
-          finalCustomerId = customer.id.toString();
-          this.sessionCache.setCustomerIdByEmail(customerEmail, finalCustomerId);
+          try {
+            const customer = await this.getCustomerByEmail(customerEmail);
+            finalCustomerId = customer.id.toString();
+            this.sessionCache.setCustomerIdByEmail(customerEmail, finalCustomerId);
+          } catch (error) {
+            if (process.env.DEBUG === 'true') {
+              console.error(`[DEBUG] Customer lookup failed for email ${customerEmail}:`, error.message);
+            }
+            throw error;
+          }
         }
       }
       
@@ -117,13 +124,24 @@ export class RechargeClient {
       if (process.env.DEBUG === 'true') {
         console.error(`[DEBUG] Creating new session for customer ${finalCustomerId}`);
       }
-      const session = await this.createCustomerSessionById(finalCustomerId);
-      const newToken = session.customer_session?.token || session.token;
-      
-      // Cache the new session
-      this.sessionCache.setSessionToken(finalCustomerId, newToken, customerEmail);
-      
-      return newToken;
+      try {
+        const session = await this.createCustomerSessionById(finalCustomerId);
+        const newToken = session.customer_session?.token || session.token;
+        
+        if (!newToken) {
+          throw new Error('Session creation returned no token');
+        }
+        
+        // Cache the new session
+        this.sessionCache.setSessionToken(finalCustomerId, newToken, customerEmail);
+        
+        return newToken;
+      } catch (error) {
+        if (process.env.DEBUG === 'true') {
+          console.error(`[DEBUG] Session creation failed for customer ${finalCustomerId}:`, error.message);
+        }
+        throw error;
+      }
     }
 
     // Security check: prevent using default session when customer sessions exist
@@ -178,17 +196,24 @@ export class RechargeClient {
         const finalCustomerId = customerId || this.sessionCache.getCustomerIdByEmail(customerEmail);
         if (finalCustomerId) {
           this.sessionCache.clearSession(finalCustomerId);
-        } else if (customerEmail) {
-          // Clear by email if we don't have customer ID
+        }
+        if (customerEmail) {
           this.sessionCache.clearSessionByEmail(customerEmail);
         }
         
         // Retry with new session
-        const newSessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
-        config.headers['X-Recharge-Access-Token'] = newSessionToken;
-        
-        const retryResponse = await this.storefrontApi.request(config);
-        return retryResponse.data;
+        try {
+          const newSessionToken = await this.getOrCreateSessionToken(customerId, customerEmail);
+          config.headers['X-Recharge-Access-Token'] = newSessionToken;
+          
+          const retryResponse = await this.storefrontApi.request(config);
+          return retryResponse.data;
+        } catch (retryError) {
+          if (process.env.DEBUG === 'true') {
+            console.error(`[DEBUG] Session retry failed:`, retryError.message);
+          }
+          handleAPIError(retryError);
+        }
       }
       
       handleAPIError(error);

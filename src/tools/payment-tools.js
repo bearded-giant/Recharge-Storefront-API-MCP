@@ -36,6 +36,11 @@ const updatePaymentMethodSchema = z.object({
     company: z.string().optional(),
     phone: z.string().optional(),
   }).optional().describe('Billing address information'),
+}).refine(data => {
+  // billing_address must be provided for update
+  return data.billing_address !== undefined;
+}, {
+  message: "billing_address must be provided for payment method update"
 });
 
 export const paymentTools = [

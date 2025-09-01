@@ -95,7 +95,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   
   if (process.env.DEBUG === 'true') {
     console.error(`[DEBUG] Executing tool: ${name}`);
-    console.error(`[DEBUG] Arguments:`, JSON.stringify(args, null, 2));
+    // Sanitize arguments for logging (remove sensitive data)
+    const sanitizedArgs = { ...args };
+    if (sanitizedArgs.session_token) sanitizedArgs.session_token = '***';
+    if (sanitizedArgs.admin_token) sanitizedArgs.admin_token = '***';
+    console.error(`[DEBUG] Arguments:`, JSON.stringify(sanitizedArgs, null, 2));
   }
 
   // Find the requested tool
@@ -111,7 +115,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     // Validate input schema
-    const validatedArgs = tool.inputSchema.parse(args);
+    const validatedArgs = tool.inputSchema.parse(args || {});
     
     // Extract authentication and configuration
     const storeUrl = validatedArgs.store_url || process.env.RECHARGE_STOREFRONT_DOMAIN;
@@ -128,14 +132,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     
     // Validate store URL format
     let domain;
-    if (storeUrl.startsWith('http://') || storeUrl.startsWith('https://')) {
-      const urlObj = new URL(storeUrl);
-      domain = urlObj.hostname;
-    } else {
-      domain = storeUrl;
-    }
-    
-    if (!domain.includes('.myshopify.com')) {
+    try {
+      if (storeUrl.startsWith('http://') || storeUrl.startsWith('https://')) {
+        const urlObj = new URL(storeUrl);
+        domain = urlObj.hostname;
+      } else {
+        domain = storeUrl;
+      }
+      
+      if (!domain || !domain.includes('.myshopify.com')) {
+        throw new Error('Invalid domain format');
+      }
+    } catch (urlError) {
       throw new Error(
         `Invalid store URL format: ${storeUrl}\n` +
         'Store URL must be a Shopify domain ending with .myshopify.com\n' +
@@ -171,7 +179,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     
     if (process.env.DEBUG === 'true') {
       console.error(`[DEBUG] Tool ${name} failed:`, error.message);
-      console.error(`[DEBUG] Error stack:`, error.stack);
+      if (error.stack) {
+        console.error(`[DEBUG] Error stack:`, error.stack);
+      }
     }
     
     return formatErrorResponse(error);

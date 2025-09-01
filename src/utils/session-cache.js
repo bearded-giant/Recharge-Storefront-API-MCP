@@ -33,6 +33,9 @@ export class SessionCache {
     if (!sessionToken || typeof sessionToken !== 'string') {
       throw new Error('Session token is required and must be a string');
     }
+    if (sessionToken.trim() === '') {
+      throw new Error('Session token cannot be empty');
+    }
     
     this.sessions.set(customerId, {
       token: sessionToken,
@@ -40,7 +43,7 @@ export class SessionCache {
     });
 
     // Cache email -> customer_id mapping if email provided
-    if (email) {
+    if (email && typeof email === 'string' && email.trim() !== '') {
       this.emailToCustomerId.set(email, customerId);
     }
 

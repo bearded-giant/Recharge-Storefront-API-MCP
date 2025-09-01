@@ -52,6 +52,12 @@ const updateAddressSchema = z.object({
   last_name: z.string().optional().describe('Last name'),
   company: z.string().optional().describe('Company name'),
   phone: z.string().optional().describe('Phone number'),
+}).refine(data => {
+  // At least one field to update must be provided
+  const updateFields = ['address1', 'address2', 'city', 'province', 'zip', 'country', 'first_name', 'last_name', 'company', 'phone'];
+  return updateFields.some(field => data[field] !== undefined);
+}, {
+  message: "At least one field to update must be provided"
 });
 
 export const addressTools = [

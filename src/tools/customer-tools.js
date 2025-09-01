@@ -33,6 +33,12 @@ const updateCustomerSchema = z.object({
   first_name: z.string().optional().describe('Customer first name'),
   last_name: z.string().optional().describe('Customer last name'),
   phone: z.string().optional().describe('Customer phone number'),
+}).refine(data => {
+  // At least one field to update must be provided
+  const updateFields = ['email', 'first_name', 'last_name', 'phone'];
+  return updateFields.some(field => data[field] !== undefined);
+}, {
+  message: "At least one field to update must be provided"
 });
 
 const customerByEmailSchema = z.object({

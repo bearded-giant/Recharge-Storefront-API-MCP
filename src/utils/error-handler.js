@@ -224,7 +224,7 @@ export function validateRequiredParams(params, required) {
     params[param] === undefined || 
     params[param] === null || 
     (typeof params[param] === 'string' && params[param].trim() === '') ||
-    (typeof params[param] === 'number' && (isNaN(params[param]) || !isFinite(params[param])))
+    (typeof params[param] === 'number' && (isNaN(params[param]) || !isFinite(params[param]) || params[param] < 0))
   );
   
   if (missing.length > 0) {
@@ -251,6 +251,12 @@ export function validateRequiredParams(params, required) {
       if (!dateRegex.test(params[field])) {
         throw new Error(`Invalid date format for ${field}. Expected YYYY-MM-DD or ISO datetime format`);
       }
+      
+      // Validate that the date is actually valid
+      const dateObj = new Date(params[field]);
+      if (isNaN(dateObj.getTime())) {
+        throw new Error(`Invalid date value for ${field}: ${params[field]}`);
+      }
     }
   });
   
@@ -271,6 +277,9 @@ export function validateRequiredParams(params, required) {
       if (['quantity', 'order_interval_frequency'].includes(field) && num < 1) {
         throw new Error(`${field} must be 1 or greater, got: ${num}`);
       }
+      if (field === 'variant_id' && num < 1) {
+        throw new Error(`${field} must be 1 or greater, got: ${num}`);
+      }
     }
   });
   
@@ -284,8 +293,31 @@ export function validateRequiredParams(params, required) {
       if (typeof params[field] === 'string' && params[field].trim() === '') {
         throw new Error(`${field} cannot be empty`);
       }
+      if (typeof params[field] === 'number' && params[field] < 1) {
+        throw new Error(`${field} must be 1 or greater, got: ${params[field]}`);
+      }
     }
   });
+  
+  // Validate order_interval_unit if present
+  if (params.order_interval_unit && !['day', 'week', 'month'].includes(params.order_interval_unit)) {
+    throw new Error(`Invalid order_interval_unit: ${params.order_interval_unit}. Must be 'day', 'week', or 'month'`);
+  }
+  
+  // Validate status fields if present
+  if (params.status) {
+    const validStatuses = {
+      subscription: ['active', 'cancelled', 'expired'],
+      order: ['success', 'error', 'queued', 'skipped', 'refunded', 'partially_refunded'],
+      charge: ['success', 'error', 'queued', 'skipped', 'refunded', 'partially_refunded']
+    };
+    
+    // We can't know the context here, so we'll allow any of these valid statuses
+    const allValidStatuses = [...new Set(Object.values(validStatuses).flat())];
+    if (!allValidStatuses.includes(params.status)) {
+      throw new Error(`Invalid status: ${params.status}`);
+    }
+  }
 }
 
 /**

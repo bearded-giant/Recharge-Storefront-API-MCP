@@ -69,6 +69,12 @@ const updateBundleSelectionSchema = z.object({
   variant_id: z.number().optional().describe('Selected variant ID'),
   quantity: z.number().optional().describe('Quantity selected'),
   external_variant_id: z.number().optional().describe('External variant ID'),
+}).refine(data => {
+  // At least one field to update must be provided
+  const updateFields = ['variant_id', 'quantity', 'external_variant_id'];
+  return updateFields.some(field => data[field] !== undefined);
+}, {
+  message: "At least one field to update must be provided"
 });
 
 export const bundleTools = [

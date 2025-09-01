@@ -47,6 +47,12 @@ const updateOnetimeSchema = z.object({
     name: z.string(),
     value: z.string(),
   })).optional().describe('Product properties'),
+}).refine(data => {
+  // At least one field to update must be provided
+  const updateFields = ['quantity', 'price', 'next_charge_scheduled_at', 'properties'];
+  return updateFields.some(field => data[field] !== undefined);
+}, {
+  message: "At least one field to update must be provided"
 });
 
 export const onetimeTools = [
