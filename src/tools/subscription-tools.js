@@ -111,29 +111,6 @@ const skipSubscriptionSchema = z.object({
   date: z.string().describe('Date to skip (YYYY-MM-DD format)'),
 });
 
-const unskipSubscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
-  date: z.string().describe('Date to unskip (YYYY-MM-DD format)'),
-});
-
-const swapSubscriptionSchema = z.object({
-  customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
-  customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
-  session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
-  admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
-  store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  subscription_id: z.string().describe('The subscription ID'),
-  variant_id: z.number().describe('New variant ID to swap to'),
-  quantity: z.number().optional().describe('New quantity'),
-}).refine(data => data.variant_id > 0, {
-  message: "variant_id must be greater than 0"
-});
-
 const cancelSubscriptionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
@@ -692,49 +669,6 @@ export const subscriptionTools = [
     },
   },
   {
-    name: 'unskip_subscription',
-    description: 'Unskip a previously skipped subscription delivery',
-    inputSchema: unskipSubscriptionSchema,
-    execute: async (client, args) => {
-      const { subscription_id, date } = args;
-      const result = await client.unskipSubscription(subscription_id, date, args.customer_id, args.customer_email, args.session_token);
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Unskipped Subscription:\n${JSON.stringify(result, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
-    name: 'swap_subscription',
-    description: 'Swap the variant of a subscription',
-    inputSchema: swapSubscriptionSchema,
-    execute: async (client, args) => {
-      const { subscription_id } = args;
-      const swapData = { ...args };
-      delete swapData.subscription_id;
-      delete swapData.customer_id;
-      delete swapData.customer_email;
-      delete swapData.session_token;
-      delete swapData.admin_token;
-      delete swapData.store_url;
-      const swappedSubscription = await client.swapSubscription(subscription_id, swapData, args.customer_id, args.customer_email, args.session_token);
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Swapped Subscription Product:\n${JSON.stringify(swappedSubscription, null, 2)}`,
-          },
-        ],
-      };
-    },
-  },
-  {
     name: 'cancel_subscription',
     description: 'Cancel a subscription',
     inputSchema: cancelSubscriptionSchema,
@@ -815,7 +749,7 @@ export const subscriptionTools = [
   },
   {
     name: 'skip_gift_subscription_charge',
-    description: 'Gift a subscription by skipping charges for the customer and creating onetime products for the recipient',
+    description: 'Gift a subscription by skipping charges for the customer and creating onetime products for the recipient. Requires full recipient shipping address.',
     inputSchema: z.object({
       customer_id: z.string().optional().describe('Customer ID for automatic session creation'),
       customer_email: z.string().email().optional().describe('Customer email for automatic lookup'),
@@ -823,16 +757,32 @@ export const subscriptionTools = [
       admin_token: z.string().optional().describe('Recharge admin token'),
       store_url: z.string().optional().describe('Store URL'),
       subscription_ids: z.array(z.string()).min(1).describe('Array of subscription IDs to gift'),
-      recipient_email: z.string().email().describe('Email address of the gift recipient'),
-      recipient_name: z.string().optional().describe('Name of the gift recipient'),
+      email: z.string().email().describe('Email address of the gift recipient'),
+      first_name: z.string().describe('Recipient first name'),
+      last_name: z.string().describe('Recipient last name'),
+      address1: z.string().describe('Recipient street address'),
+      address2: z.string().optional().describe('Recipient address line 2'),
+      city: z.string().describe('Recipient city'),
+      province: z.string().describe('Recipient state/province'),
+      zip: z.string().describe('Recipient ZIP/postal code'),
+      country_code: z.string().describe('Recipient 2-letter ISO country code'),
+      phone: z.string().optional().describe('Recipient phone number'),
       message: z.string().optional().describe('Gift message to include'),
     }),
     execute: async (client, args) => {
-      const { subscription_ids, recipient_email, recipient_name, message } = args;
+      const { subscription_ids, email, first_name, last_name, address1, address2, city, province, zip, country_code, phone, message } = args;
       const data = {
-        recipient_email,
-        ...(recipient_name && { recipient_name }),
-        ...(message && { message })
+        email,
+        first_name,
+        last_name,
+        address1,
+        city,
+        province,
+        zip,
+        country_code,
+        ...(address2 && { address2 }),
+        ...(phone && { phone }),
+        ...(message && { message }),
       };
       const result = await client.skipGiftSubscriptionCharge(subscription_ids, data, args.customer_id, args.customer_email, args.session_token);
 

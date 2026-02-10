@@ -850,26 +850,6 @@ export class RechargeClient {
     return await this.makeRequest('POST', `/subscriptions/${subscriptionId}/skip`, { date }, null, customerId, customerEmail, sessionToken);
   }
 
-  async unskipSubscription(subscriptionId, date, customerId = null, customerEmail = null, sessionToken = null) {
-    if (!subscriptionId) {
-      throw new Error('Subscription ID is required');
-    }
-    if (!date) {
-      throw new Error('Date is required for unskipping subscription');
-    }
-    return await this.makeRequest('POST', `/subscriptions/${subscriptionId}/unskip`, { date }, null, customerId, customerEmail, sessionToken);
-  }
-
-  async swapSubscription(subscriptionId, swapData, customerId = null, customerEmail = null, sessionToken = null) {
-    if (!subscriptionId) {
-      throw new Error('Subscription ID is required');
-    }
-    if (!swapData || typeof swapData !== 'object') {
-      throw new Error('Swap data is required');
-    }
-    return await this.makeRequest('POST', `/subscriptions/${subscriptionId}/swap`, swapData, null, customerId, customerEmail, sessionToken);
-  }
-
   async cancelSubscription(subscriptionId, cancelData = {}, customerId = null, customerEmail = null, sessionToken = null) {
     if (!subscriptionId) {
       throw new Error('Subscription ID is required');
@@ -974,6 +954,13 @@ export class RechargeClient {
       throw new Error('Order ID is required');
     }
     return await this.makeRequest('GET', `/orders/${orderId}`, null, null, customerId, customerEmail, sessionToken);
+  }
+
+  async delayOrder(orderId, customerId = null, customerEmail = null, sessionToken = null) {
+    if (!orderId) {
+      throw new Error('Order ID is required');
+    }
+    return await this.makeRequest('POST', `/orders/${orderId}/delay`, null, null, customerId, customerEmail, sessionToken);
   }
 
   // Charge Management Methods
@@ -1133,104 +1120,6 @@ export class RechargeClient {
       throw new Error('Maximum 20 subscriptions can be updated at once');
     }
     return await this.makeRequest('PUT', `/addresses/${addressId}/subscriptions/bulk`, { subscriptions, ...options }, null, customerId, customerEmail, sessionToken);
-  }
-
-  // Authentication Methods
-  async loginShopifyAppProxy() {
-    // App Proxy context - session is obtained from Shopify context
-    const response = await this.storefrontApi.post('/sessions', {}, {
-      headers: {
-        'X-Recharge-Access-Token': this.storefrontAccessToken,
-        'X-Recharge-Version': '2021-11',
-      },
-    });
-    return response.data;
-  }
-
-  async loginWithShopifyStorefront(shopifyStorefrontToken, shopifyCustomerAccessToken = null) {
-    if (!shopifyStorefrontToken) {
-      throw new Error('Shopify Storefront token is required');
-    }
-    const data = {
-      shopify_storefront_token: shopifyStorefrontToken,
-      ...(shopifyCustomerAccessToken && { shopify_customer_access_token: shopifyCustomerAccessToken }),
-    };
-    const response = await this.storefrontApi.post('/sessions', data, {
-      headers: {
-        'X-Recharge-Access-Token': this.storefrontAccessToken,
-        'X-Recharge-Version': '2021-11',
-      },
-    });
-    return response.data;
-  }
-
-  async loginWithShopifyCustomerAccount(shopifyCustomerAccessToken) {
-    if (!shopifyCustomerAccessToken) {
-      throw new Error('Shopify Customer Access Token is required');
-    }
-    const response = await this.storefrontApi.post('/sessions', {
-      shopify_customer_access_token: shopifyCustomerAccessToken,
-    }, {
-      headers: {
-        'X-Recharge-Access-Token': this.storefrontAccessToken,
-        'X-Recharge-Version': '2021-11',
-      },
-    });
-    return response.data;
-  }
-
-  async sendPasswordlessCode(email, options = {}) {
-    if (!email || typeof email !== 'string' || email.trim() === '') {
-      throw new Error('Email is required');
-    }
-    const response = await this.storefrontApi.post('/passwordless/send-code', {
-      email: email.trim(),
-      ...options,
-    }, {
-      headers: {
-        'X-Recharge-Access-Token': this.storefrontAccessToken,
-        'X-Recharge-Version': '2021-11',
-      },
-    });
-    return response.data.session_token || response.data;
-  }
-
-  async validatePasswordlessCode(email, sessionToken, code) {
-    if (!email || !sessionToken || !code) {
-      throw new Error('Email, session token, and code are required');
-    }
-    const response = await this.storefrontApi.post('/passwordless/validate-code', {
-      email: email.trim(),
-      session_token: sessionToken,
-      code: code.trim(),
-    }, {
-      headers: {
-        'X-Recharge-Access-Token': this.storefrontAccessToken,
-        'X-Recharge-Version': '2021-11',
-      },
-    });
-    return response.data;
-  }
-
-  async sendPasswordlessCodeAppProxy(email, options = {}) {
-    // Same as sendPasswordlessCode but routed through App Proxy
-    return this.sendPasswordlessCode(email, options);
-  }
-
-  async validatePasswordlessCodeAppProxy(email, sessionToken, code) {
-    // Same as validatePasswordlessCode but routed through App Proxy
-    return this.validatePasswordlessCode(email, sessionToken, code);
-  }
-
-  async loginCustomerPortal() {
-    // Customer Portal context - session obtained from portal environment
-    const response = await this.storefrontApi.post('/sessions/portal', {}, {
-      headers: {
-        'X-Recharge-Access-Token': this.storefrontAccessToken,
-        'X-Recharge-Version': '2021-11',
-      },
-    });
-    return response.data;
   }
 
   // Collection Methods

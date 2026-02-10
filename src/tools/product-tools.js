@@ -80,10 +80,14 @@ export const productTools = [
     inputSchema: baseSchema.extend({
       query: z.string().describe('Search query string'),
       limit: z.number().max(250).default(50).optional().describe('Number of results to return'),
+      format_version: z.enum(['2020-12', '2022-06']).default('2022-06').optional().describe('API response format version'),
     }),
     execute: async (client, args) => {
-      const { query, limit } = args;
-      const params = limit ? { limit } : {};
+      const { query, limit, format_version } = args;
+      const params = {
+        ...(limit && { limit }),
+        ...(format_version && { format_version }),
+      };
       const products = await client.productSearch(query, params, args.customer_id, args.customer_email, args.session_token);
 
       return {

@@ -63,12 +63,30 @@ export const orderTools = [
     execute: async (client, args) => {
       const { order_id } = args;
       const order = await client.getOrder(order_id, args.customer_id, args.customer_email, args.session_token);
-      
+
       return {
         content: [
           {
             type: 'text',
             text: `Order Details:\n${JSON.stringify(order, null, 2)}`,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: 'delay_order',
+    description: 'Delay a prepaid subscription order by one charge interval',
+    inputSchema: orderSchema,
+    execute: async (client, args) => {
+      const { order_id } = args;
+      const result = await client.delayOrder(order_id, args.customer_id, args.customer_email, args.session_token);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Order delayed:\n${JSON.stringify(result, null, 2)}`,
           },
         ],
       };

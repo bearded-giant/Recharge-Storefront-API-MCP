@@ -13,7 +13,6 @@ import { chargeTools } from './charge-tools.js';
 import { onetimeTools } from './onetimes-tools.js';
 import { bundleTools } from './bundle-tools.js';
 import { utilityTools } from './utility-tools.js';
-import { authTools } from './auth-tools.js';
 import { collectionTools } from './collection-tools.js';
 import { creditTools } from './credit-tools.js';
 import { giftTools } from './gift-tools.js';
@@ -31,7 +30,6 @@ export const tools = [
   ...onetimeTools,
   ...bundleTools,
   ...utilityTools,
-  ...authTools,
   ...collectionTools,
   ...creditTools,
   ...giftTools,

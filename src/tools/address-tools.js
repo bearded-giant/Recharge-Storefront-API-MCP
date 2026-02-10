@@ -48,9 +48,9 @@ const createAddressSchema = z.object({
     .refine(val => /^[\p{L}\p{N}\s\-]{2,12}$/u.test(val.trim()), {
       message: "Postal code format is invalid"
     }),
-  country: z.string().min(2).max(100).describe('Country (full name or ISO code)')
-    .refine(val => /^[\p{L}\p{M}\p{N}\p{Pd}\p{Po}\p{Zs}]+$/u.test(val.trim()), {
-      message: "Country contains unsupported characters. Only letters, numbers, basic punctuation, and spaces are allowed."
+  country_code: z.string().length(2).describe('2-letter ISO country code (e.g., US, CA, GB)')
+    .refine(val => /^[A-Z]{2}$/.test(val.trim()), {
+      message: "Country code must be a 2-letter uppercase ISO code (e.g., US, CA, GB)"
     }),
   first_name: z.string().min(1).max(255).describe('First name (supports international characters)')
     .refine(val => /^[\p{L}\p{M}\p{N}\p{Pd}\p{Po}\p{Zs}]+$/u.test(val.trim()), {
@@ -97,9 +97,9 @@ const updateAddressSchema = z.object({
     .refine(val => val === undefined || /^[\p{L}\p{N}\s\-]{2,12}$/u.test(val.trim()), {
       message: "Postal code format is invalid"
     }),
-  country: z.string().min(2).max(100).optional().describe('Country (full name or ISO code)')
-    .refine(val => val === undefined || /^[\p{L}\p{M}\p{N}\p{Pd}\p{Po}\p{Zs}]+$/u.test(val.trim()), {
-      message: "Country contains unsupported characters. Only letters, numbers, basic punctuation, and spaces are allowed."
+  country_code: z.string().length(2).optional().describe('2-letter ISO country code (e.g., US, CA, GB)')
+    .refine(val => val === undefined || /^[A-Z]{2}$/.test(val.trim()), {
+      message: "Country code must be a 2-letter uppercase ISO code (e.g., US, CA, GB)"
     }),
   first_name: z.string().min(1).max(255).optional().describe('First name (supports international characters)')
     .refine(val => val === undefined || /^[\p{L}\p{M}\p{N}\p{Pd}\p{Po}\p{Zs}]+$/u.test(val.trim()), {
@@ -119,7 +119,7 @@ const updateAddressSchema = z.object({
     }),
 }).refine(data => {
   // At least one field to update must be provided
-  const updateFields = ['address1', 'address2', 'city', 'province', 'zip', 'country', 'first_name', 'last_name', 'company', 'phone'];
+  const updateFields = ['address1', 'address2', 'city', 'province', 'zip', 'country_code', 'first_name', 'last_name', 'company', 'phone'];
   return updateFields.some(field => data[field] !== undefined);
 }, {
   message: "At least one field to update must be provided"
@@ -141,8 +141,8 @@ const mergeAddressesSchema = z.object({
   session_token: z.string().optional().describe('Recharge session token'),
   admin_token: z.string().optional().describe('Recharge admin token'),
   store_url: z.string().optional().describe('Store URL'),
-  address_id: z.string().describe('The destination address ID (subscriptions will be moved here)'),
-  source_address_id: z.string().describe('The source address ID (will be deleted after merge)'),
+  target_address_id: z.string().describe('The destination address ID (subscriptions will be moved here)'),
+  source_address_ids: z.array(z.string()).min(1).max(9).describe('Array of source address IDs to merge into the target (max 9)'),
 });
 
 const skipAddressChargeSchema = z.object({
@@ -152,7 +152,8 @@ const skipAddressChargeSchema = z.object({
   admin_token: z.string().optional().describe('Recharge admin token'),
   store_url: z.string().optional().describe('Store URL'),
   address_id: z.string().describe('The address ID'),
-  charge_id: z.string().describe('The charge ID to skip'),
+  date: z.string().describe('Date of the charge to skip (YYYY-MM-DD format)'),
+  subscription_ids: z.array(z.string()).min(1).describe('Array of subscription IDs at this address to skip'),
 });
 
 export const addressTools = [
@@ -221,41 +222,37 @@ export const addressTools = [
         }
         
         if (addressData.zip !== undefined) {
-          addressData.zip = validatePostalCode(addressData.zip, addressData.country);
+          addressData.zip = validatePostalCode(addressData.zip, addressData.country_code);
         }
-        
-        if (addressData.country !== undefined) {
-          addressData.country = validateUnicodeAddressText(addressData.country, 'Country', 100);
-        }
-        
+
         if (addressData.first_name !== undefined) {
           addressData.first_name = validateUnicodeAddressText(addressData.first_name, 'First name', 255);
         }
-        
+
         if (addressData.last_name !== undefined) {
           addressData.last_name = validateUnicodeAddressText(addressData.last_name, 'Last name', 255);
         }
-        
+
         if (addressData.company !== undefined && addressData.company !== '') {
           addressData.company = validateUnicodeAddressText(addressData.company, 'Company name', 255);
         }
-        
+
         if (addressData.phone !== undefined && addressData.phone !== '') {
           addressData.phone = validatePhoneNumber(addressData.phone);
         }
-        
+
       } catch (validationError) {
         return {
           content: [
             {
               type: 'text',
-              text: `Address Validation Error: ${validationError.message}\n\nTips for international addresses:\n- Use proper Unicode characters (letters, numbers, spaces)\n- Basic punctuation allowed: hyphens (-), periods (.), apostrophes (')\n- Emojis and special symbols are NOT supported by shipping providers\n- Maximum lengths: Address (255), City/Province (100), Names (255)\n- Postal codes: 2-12 characters, alphanumeric with spaces/hyphens\n- Phone numbers: International format (+1-555-123-4567)\n\nCountry-specific postal code formats:\n- US: 12345 or 12345-6789\n- Canada: A1A 1A1 or A1A1A1\n- UK: SW1A 1AA or M1 1AA`,
+              text: `Address Validation Error: ${validationError.message}\n\nTips for international addresses:\n- Use proper Unicode characters (letters, numbers, spaces)\n- Basic punctuation allowed: hyphens (-), periods (.), apostrophes (')\n- Emojis and special symbols are NOT supported by shipping providers\n- Maximum lengths: Address (255), City/Province (100), Names (255)\n- Postal codes: 2-12 characters, alphanumeric with spaces/hyphens\n- Phone numbers: International format (+1-555-123-4567)\n- Country code: 2-letter ISO format (US, CA, GB)`,
             },
           ],
           isError: true,
         };
       }
-      
+
       const address = await client.createAddress(addressData, args.customer_id, args.customer_email, args.session_token);
       
       return {
@@ -301,41 +298,37 @@ export const addressTools = [
         }
         
         if (addressData.zip !== undefined) {
-          addressData.zip = validatePostalCode(addressData.zip, addressData.country);
+          addressData.zip = validatePostalCode(addressData.zip, addressData.country_code);
         }
-        
-        if (addressData.country !== undefined) {
-          addressData.country = validateUnicodeAddressText(addressData.country, 'Country', 100);
-        }
-        
+
         if (addressData.first_name !== undefined) {
           addressData.first_name = validateUnicodeAddressText(addressData.first_name, 'First name', 255);
         }
-        
+
         if (addressData.last_name !== undefined) {
           addressData.last_name = validateUnicodeAddressText(addressData.last_name, 'Last name', 255);
         }
-        
+
         if (addressData.company !== undefined && addressData.company !== '') {
           addressData.company = validateUnicodeAddressText(addressData.company, 'Company name', 255);
         }
-        
+
         if (addressData.phone !== undefined && addressData.phone !== '') {
           addressData.phone = validatePhoneNumber(addressData.phone);
         }
-        
+
       } catch (validationError) {
         return {
           content: [
             {
               type: 'text',
-              text: `Address Validation Error: ${validationError.message}\n\nTips for international addresses:\n- Use proper Unicode characters (letters, numbers, spaces)\n- Basic punctuation allowed: hyphens (-), periods (.), apostrophes (')\n- Emojis and special symbols are NOT supported by shipping providers\n- Maximum lengths: Address (255), City/Province (100), Names (255)\n- Postal codes: 2-12 characters, alphanumeric with spaces/hyphens\n- Phone numbers: International format (+1-555-123-4567)\n\nCountry-specific postal code formats:\n- US: 12345 or 12345-6789\n- Canada: A1A 1A1 or A1A1A1\n- UK: SW1A 1AA or M1 1AA`,
+              text: `Address Validation Error: ${validationError.message}\n\nTips for international addresses:\n- Use proper Unicode characters (letters, numbers, spaces)\n- Basic punctuation allowed: hyphens (-), periods (.), apostrophes (')\n- Emojis and special symbols are NOT supported by shipping providers\n- Maximum lengths: Address (255), City/Province (100), Names (255)\n- Postal codes: 2-12 characters, alphanumeric with spaces/hyphens\n- Phone numbers: International format (+1-555-123-4567)\n- Country code: 2-letter ISO format (US, CA, GB)`,
             },
           ],
           isError: true,
         };
       }
-      
+
       const updatedAddress = await client.updateAddress(address_id, addressData, args.customer_id, args.customer_email, args.session_token);
       
       return {
@@ -407,8 +400,12 @@ export const addressTools = [
     description: 'Merge two addresses by moving all subscriptions from source to destination address',
     inputSchema: mergeAddressesSchema,
     execute: async (client, args) => {
-      const { address_id, source_address_id } = args;
-      const result = await client.post(`/addresses/${address_id}/merge`, { source_address_id }, args.customer_id, args.customer_email, args.session_token);
+      const { target_address_id, source_address_ids } = args;
+      const body = {
+        target_address: { id: target_address_id },
+        source_addresses: source_address_ids.map(id => ({ id })),
+      };
+      const result = await client.post('/addresses/merge', body, args.customer_id, args.customer_email, args.session_token);
 
       return {
         content: [
@@ -425,8 +422,8 @@ export const addressTools = [
     description: 'Skip a future charge for all subscriptions at an address',
     inputSchema: skipAddressChargeSchema,
     execute: async (client, args) => {
-      const { address_id, charge_id } = args;
-      const result = await client.post(`/addresses/${address_id}/charges/${charge_id}/skip`, {}, args.customer_id, args.customer_email, args.session_token);
+      const { address_id, date, subscription_ids } = args;
+      const result = await client.post(`/addresses/${address_id}/charges/skip`, { date, subscription_ids }, args.customer_id, args.customer_email, args.session_token);
 
       return {
         content: [

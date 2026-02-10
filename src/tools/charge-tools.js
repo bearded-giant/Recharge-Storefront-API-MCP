@@ -49,7 +49,7 @@ const chargeRescheduleSchema = z.object({
   admin_token: z.string().optional().describe('Recharge admin token'),
   store_url: z.string().optional().describe('Store URL'),
   charge_id: z.string().describe('The charge ID'),
-  scheduled_at: z.string().describe('New scheduled date (YYYY-MM-DD format)'),
+  date: z.string().describe('New scheduled date (YYYY-MM-DD format)'),
 });
 
 export const chargeTools = [
@@ -132,11 +132,13 @@ export const chargeTools = [
   },
   {
     name: 'skip_charge',
-    description: 'Skip a scheduled charge (it will not be processed)',
-    inputSchema: chargeSchema,
+    description: 'Skip a scheduled charge (it will not be processed). Requires the purchase item IDs from the charge to skip.',
+    inputSchema: chargeSchema.extend({
+      purchase_item_ids: z.array(z.number()).min(1).describe('Array of purchase item IDs to skip within this charge'),
+    }),
     execute: async (client, args) => {
-      const { charge_id } = args;
-      const result = await client.post(`/charges/${charge_id}/skip`, {}, args.customer_id, args.customer_email, args.session_token);
+      const { charge_id, purchase_item_ids } = args;
+      const result = await client.post(`/charges/${charge_id}/skip`, { purchase_item_ids }, args.customer_id, args.customer_email, args.session_token);
 
       return {
         content: [
@@ -150,11 +152,13 @@ export const chargeTools = [
   },
   {
     name: 'unskip_charge',
-    description: 'Unskip a previously skipped charge',
-    inputSchema: chargeSchema,
+    description: 'Unskip a previously skipped charge. Requires the purchase item IDs from the charge to unskip.',
+    inputSchema: chargeSchema.extend({
+      purchase_item_ids: z.array(z.number()).min(1).describe('Array of purchase item IDs to unskip within this charge'),
+    }),
     execute: async (client, args) => {
-      const { charge_id } = args;
-      const result = await client.post(`/charges/${charge_id}/unskip`, {}, args.customer_id, args.customer_email, args.session_token);
+      const { charge_id, purchase_item_ids } = args;
+      const result = await client.post(`/charges/${charge_id}/unskip`, { purchase_item_ids }, args.customer_id, args.customer_email, args.session_token);
 
       return {
         content: [
@@ -189,8 +193,8 @@ export const chargeTools = [
     description: 'Reschedule a charge to a different date',
     inputSchema: chargeRescheduleSchema,
     execute: async (client, args) => {
-      const { charge_id, scheduled_at } = args;
-      const result = await client.post(`/charges/${charge_id}/change_date`, { scheduled_at }, args.customer_id, args.customer_email, args.session_token);
+      const { charge_id, date } = args;
+      const result = await client.post(`/charges/${charge_id}/change_date`, { date }, args.customer_id, args.customer_email, args.session_token);
 
       return {
         content: [

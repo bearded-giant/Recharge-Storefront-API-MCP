@@ -180,9 +180,13 @@ export const customerTools = [
     description: 'Get upcoming delivery schedule for a customer. Shows future charges, delivery dates, and subscription details.',
     inputSchema: baseSchema.extend({
       limit: z.number().max(100).default(10).optional().describe('Number of upcoming deliveries to return'),
+      date_max: z.string().optional().describe('Maximum date for delivery schedule (YYYY-MM-DD format)'),
     }),
     execute: async (client, args) => {
-      const params = args.limit ? { limit: args.limit } : {};
+      const params = {
+        ...(args.limit && { limit: args.limit }),
+        ...(args.date_max && { date_max: args.date_max }),
+      };
       const schedule = await client.getDeliverySchedule(params, args.customer_id, args.customer_email, args.session_token);
       return {
         content: [

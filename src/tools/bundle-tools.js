@@ -51,16 +51,22 @@ const bundleSelectionSchema = z.object({
   bundle_selection_id: z.string().describe('The bundle selection ID'),
 });
 
+const bundleSelectionItemSchema = z.object({
+  collection_id: z.number().describe('Collection ID for the item'),
+  collection_source: z.string().describe('Source of the collection (e.g., "recharge")'),
+  external_product_id: z.number().describe('External (Shopify) product ID'),
+  external_variant_id: z.number().describe('External (Shopify) variant ID'),
+  quantity: z.number().min(1).describe('Quantity of this item'),
+});
+
 const createBundleSelectionSchema = z.object({
   customer_id: z.string().optional().describe('Customer ID for automatic session creation (optional, used when no session_token provided)'),
   customer_email: z.string().email().optional().describe('Customer email for automatic lookup and session creation (optional, used when no session_token or customer_id provided)'),
   session_token: z.string().optional().describe('Recharge session token (optional, takes precedence over environment variable if provided)'),
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
-  bundle_id: z.string().describe('The bundle ID'),
-  variant_id: z.number().describe('Selected variant ID'),
-  quantity: z.number().describe('Quantity selected'),
-  external_variant_id: z.number().optional().describe('External variant ID'),
+  purchase_item_id: z.number().describe('The purchase item ID this bundle selection belongs to'),
+  items: z.array(bundleSelectionItemSchema).min(1).describe('Array of items in the bundle selection'),
 });
 
 const updateBundleSelectionSchema = z.object({
@@ -70,15 +76,8 @@ const updateBundleSelectionSchema = z.object({
   admin_token: z.string().optional().describe('Recharge admin token (optional, takes precedence over environment variable if provided)'),
   store_url: z.string().optional().describe('Store URL (optional, takes precedence over environment variable if provided)'),
   bundle_selection_id: z.string().describe('The bundle selection ID'),
-  variant_id: z.number().optional().describe('Selected variant ID'),
-  quantity: z.number().optional().describe('Quantity selected'),
-  external_variant_id: z.number().optional().describe('External variant ID'),
-}).refine(data => {
-  // At least one field to update must be provided
-  const updateFields = ['variant_id', 'quantity', 'external_variant_id'];
-  return updateFields.some(field => data[field] !== undefined);
-}, {
-  message: "At least one field to update must be provided"
+  purchase_item_id: z.number().optional().describe('The purchase item ID this bundle selection belongs to'),
+  items: z.array(bundleSelectionItemSchema).min(1).describe('Array of items in the bundle selection'),
 });
 
 export const bundleTools = [
@@ -168,15 +167,11 @@ export const bundleTools = [
   },
   {
     name: 'create_bundle_selection',
-    description: 'Create a bundle selection',
+    description: 'Create a bundle selection with items for a specific purchase item',
     inputSchema: createBundleSelectionSchema,
     execute: async (client, args) => {
-      const selectionData = { ...args };
-      delete selectionData.customer_id;
-      delete selectionData.customer_email;
-      delete selectionData.session_token;
-      delete selectionData.admin_token;
-      delete selectionData.store_url;
+      const { purchase_item_id, items } = args;
+      const selectionData = { purchase_item_id, items };
       const selection = await client.createBundleSelection(selectionData, args.customer_id, args.customer_email, args.session_token);
       
       return {
@@ -191,17 +186,14 @@ export const bundleTools = [
   },
   {
     name: 'update_bundle_selection',
-    description: 'Update a bundle selection',
+    description: 'Update a bundle selection with new items',
     inputSchema: updateBundleSelectionSchema,
     execute: async (client, args) => {
-      const { bundle_selection_id } = args;
-      const selectionData = { ...args };
-      delete selectionData.bundle_selection_id;
-      delete selectionData.customer_id;
-      delete selectionData.customer_email;
-      delete selectionData.session_token;
-      delete selectionData.admin_token;
-      delete selectionData.store_url;
+      const { bundle_selection_id, purchase_item_id, items } = args;
+      const selectionData = { items };
+      if (purchase_item_id !== undefined) {
+        selectionData.purchase_item_id = purchase_item_id;
+      }
       const updatedSelection = await client.updateBundleSelection(bundle_selection_id, selectionData, args.customer_id, args.customer_email, args.session_token);
       
       return {
